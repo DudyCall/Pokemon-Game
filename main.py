@@ -293,8 +293,9 @@ class Game:
             self.world.interior_origin_coords = (self.player.grid_x, self.player.grid_y)
         # If exiting interior, return to recorded origin or fallback
         elif target_map in ["Route 1", "Viridian City", "Pallet Town", "Viridian Forest"] and self.player.current_map in ["Pokecenter", "Mart"]:
-            target_map = self.world.interior_origin_map
-            target_x, target_y = self.world.interior_origin_coords
+            target_map = getattr(self.world, "interior_origin_map", target_map)
+            coords = getattr(self.world, "interior_origin_coords", (target_x, target_y))
+            target_x, target_y = coords
             target_y += 1 # step 1 tile down outside the door
 
         self.player.current_map = target_map

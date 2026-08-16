@@ -304,6 +304,8 @@ class World:
         self.defeated_trainers = set()
         self.water_anim_timer = 0.0
         self.water_frame = 0
+        self.interior_origin_map = "Pallet Town"
+        self.interior_origin_coords = (4, 4)
 
     def update(self, dt):
         self.water_anim_timer += dt
