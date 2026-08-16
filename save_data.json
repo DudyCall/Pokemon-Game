@@ -1,0 +1,384 @@
+{
+  "player": {
+    "grid_x": 17,
+    "grid_y": 7,
+    "map": "Viridian City",
+    "facing": 3
+  },
+  "party": [
+    {
+      "species": "Squirtle",
+      "nickname": "Squirtle",
+      "level": 13,
+      "current_hp": 35,
+      "exp": 2274,
+      "status": null,
+      "ivs": {
+        "hp": 11,
+        "atk": 16,
+        "def": 15,
+        "spatk": 25,
+        "spdef": 19,
+        "spd": 22
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stat": "def",
+            "stages": -1
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Bubble",
+          "type": "Water",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Fires bubbles that may slow the foe.",
+          "effect": {
+            "stat": "spd",
+            "stages": -1,
+            "chance": 20
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Water Gun",
+          "type": "Water",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Squirts water to attack the target.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Rattata",
+      "nickname": "Rattata",
+      "level": 4,
+      "current_hp": 17,
+      "exp": 64,
+      "status": null,
+      "ivs": {
+        "hp": 27,
+        "atk": 29,
+        "def": 22,
+        "spatk": 30,
+        "spdef": 14,
+        "spd": 20
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stat": "def",
+            "stages": -1
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pidgey",
+      "nickname": "Pidgey",
+      "level": 4,
+      "current_hp": 18,
+      "exp": 101,
+      "status": null,
+      "ivs": {
+        "hp": 24,
+        "atk": 11,
+        "def": 14,
+        "spatk": 16,
+        "spdef": 23,
+        "spd": 30
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Gust",
+          "type": "Flying",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Strikes the foe with wing gusts.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Eevee",
+      "nickname": "Eevee",
+      "level": 9,
+      "current_hp": 29,
+      "exp": 812,
+      "status": null,
+      "ivs": {
+        "hp": 10,
+        "atk": 28,
+        "def": 21,
+        "spatk": 22,
+        "spdef": 14,
+        "spd": 14
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stat": "def",
+            "stages": -1
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pikachu",
+      "nickname": "Pikachu",
+      "level": 6,
+      "current_hp": 20,
+      "exp": 237,
+      "status": null,
+      "ivs": {
+        "hp": 12,
+        "atk": 30,
+        "def": 16,
+        "spatk": 17,
+        "spdef": 27,
+        "spd": 17
+      },
+      "moves": [
+        {
+          "name": "Thunder Shock",
+          "type": "Electric",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An electric jolt that may paralyze.",
+          "effect": {
+            "status": "Paralysis",
+            "chance": 15
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stat": "atk",
+            "stages": -1
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stat": "def",
+            "stages": -1
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Gastly",
+      "nickname": "Gastly",
+      "level": 6,
+      "current_hp": 21,
+      "exp": 216,
+      "status": null,
+      "ivs": {
+        "hp": 26,
+        "atk": 15,
+        "def": 22,
+        "spatk": 29,
+        "spdef": 28,
+        "spd": 16
+      },
+      "moves": [
+        {
+          "name": "Lick",
+          "type": "Ghost",
+          "power": 30,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Licks with a long tongue.",
+          "effect": {
+            "status": "Paralysis",
+            "chance": 30
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Hypnosis",
+          "type": "Psychic",
+          "power": 0,
+          "accuracy": 60,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Puts the foe into deep sleep.",
+          "effect": {
+            "status": "Sleep",
+            "chance": 100
+          },
+          "crit_bonus": false
+        }
+      ]
+    }
+  ],
+  "inventory": {
+    "money": 4820,
+    "items": {
+      "Poke Ball": 1,
+      "Antidote": 2,
+      "Revive": 1,
+      "Ultra Ball": 1
+    }
+  },
+  "pokedex": {
+    "seen": [
+      "Pikachu",
+      "Pidgey",
+      "Geodude",
+      "Gastly",
+      "Rattata",
+      "Eevee",
+      "Squirtle",
+      "Snorlax"
+    ],
+    "caught": [
+      "Pikachu",
+      "Pidgey",
+      "Gastly",
+      "Rattata",
+      "Eevee",
+      "Squirtle"
+    ]
+  },
+  "defeated_trainers": [
+    "bug_catcher_sammy",
+    "lass_haley",
+    "youngster_joey"
+  ]
+}
