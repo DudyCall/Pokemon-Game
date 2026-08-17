@@ -319,7 +319,11 @@ class Game:
         # Save Dialog State update
         elif self.state == GameState.SAVE:
             if self.save_dialog:
-                self.save_dialog.update(dt, self.world)
+                auto_res = self.save_dialog.update(dt, self.world)
+                if auto_res == "DONE":
+                    self.save_dialog = None
+                    self.state = GameState.OVERWORLD
+                    self.show_notification("Game saved successfully!")
 
         # Overworld & Sub-Menus update
         elif self.state in [GameState.OVERWORLD, GameState.PARTY_MENU]:

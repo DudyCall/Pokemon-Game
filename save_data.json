@@ -14,12 +14,12 @@
       "exp": 512,
       "status": null,
       "ivs": {
-        "hp": 25,
-        "atk": 29,
-        "def": 13,
-        "spatk": 20,
-        "spdef": 24,
-        "spd": 31
+        "hp": 31,
+        "atk": 10,
+        "def": 18,
+        "spatk": 18,
+        "spdef": 21,
+        "spd": 26
       },
       "moves": [
         {

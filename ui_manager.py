@@ -143,7 +143,7 @@ class SaveDialog:
             return None
             
         if self.state == "CONFIRM":
-            if any(event.key == k for k in KEY_LEFT or event.key == k for k in KEY_RIGHT or event.key == k for k in KEY_UP or event.key == k for k in KEY_DOWN):
+            if any(event.key == k for k in KEY_LEFT + KEY_RIGHT + KEY_UP + KEY_DOWN):
                 self.selected_yes = not self.selected_yes
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_CANCEL):
@@ -157,18 +157,22 @@ class SaveDialog:
                     sound_mgr.play_sfx("cancel")
                     return "CANCEL"
         elif self.state == "SAVED":
-            if any(event.key == k for k in KEY_CONFIRM or event.key == k for k in KEY_CANCEL):
+            if any(event.key == k for k in KEY_CONFIRM + KEY_CANCEL + KEY_MENU):
                 return "DONE"
         return None
 
     def update(self, dt, world):
         self.timer += dt
-        if self.state == "SAVING" and self.timer >= 0.4:
+        if self.state == "SAVING" and self.timer >= 0.2:
             from save_system import SaveSystem
             SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, world)
             sound_mgr.play_sfx("confirm")
             self.state = "SAVED"
             self.timer = 0.0
+        elif self.state == "SAVED" and self.timer >= 1.2:
+            # Automatically close after 1.2 seconds if not already closed
+            return "DONE"
+        return None
 
     def draw(self, surf):
         # Center Save Card
