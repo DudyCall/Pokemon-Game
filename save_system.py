@@ -1,12 +1,17 @@
 """
-save_system.py - Persistent JSON save and load system.
+save_system.py - Persistent Multi-Slot JSON Save & Load System.
+Supports multiple save slots with rich metadata, timestamps, and legacy save migration.
 """
 import os
 import json
+import datetime
 from pokemon import Pokemon
 from inventory import Inventory
 
-SAVE_FILE_PATH = os.path.join(os.path.dirname(__file__), "save_data.json")
+BASE_DIR = os.path.dirname(__file__)
+SAVES_DIR = os.path.join(BASE_DIR, "saves")
+LEGACY_SAVE_FILE = os.path.join(BASE_DIR, "save_data.json")
+NUM_SAVE_SLOTS = 3
 
 class Pokedex:
     def __init__(self, seen=None, caught=None):
@@ -31,10 +36,53 @@ class Pokedex:
         return cls(seen=data.get("seen", []), caught=data.get("caught", []))
 
 class SaveSystem:
-    @staticmethod
-    def save_game(player, party, inventory, pokedex, world):
+    _active_slot = 1
+
+    @classmethod
+    def _ensure_saves_dir(cls):
+        os.makedirs(SAVES_DIR, exist_ok=True)
+        # Check and migrate legacy single save file to Slot 1 if needed
+        slot1_path = cls.get_slot_path(1)
+        if os.path.exists(LEGACY_SAVE_FILE) and not os.path.exists(slot1_path):
+            try:
+                with open(LEGACY_SAVE_FILE, "r", encoding="utf-8") as src:
+                    data = json.load(src)
+                data["slot"] = 1
+                data["timestamp"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                with open(slot1_path, "w", encoding="utf-8") as dst:
+                    json.dump(data, dst, indent=2)
+            except Exception:
+                pass
+
+    @classmethod
+    def get_slot_path(cls, slot=1):
+        slot_num = max(1, min(NUM_SAVE_SLOTS, int(slot)))
+        return os.path.join(SAVES_DIR, f"slot_{slot_num}.json")
+
+    @classmethod
+    def set_active_slot(cls, slot):
+        cls._active_slot = max(1, min(NUM_SAVE_SLOTS, int(slot)))
+
+    @classmethod
+    def get_active_slot(cls):
+        return cls._active_slot
+
+    @classmethod
+    def save_game(cls, player, party, inventory, pokedex, world, slot=None):
+        cls._ensure_saves_dir()
+        target_slot = slot if slot is not None else cls._active_slot
+        target_slot = max(1, min(NUM_SAVE_SLOTS, int(target_slot)))
+        cls._active_slot = target_slot
+
         data = {
+            "slot": target_slot,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
             "player": {
+                "name": getattr(player, "name", "Red"),
+                "gender": getattr(player, "gender", "Boy"),
+                "outfit_theme": getattr(player, "outfit_theme", "Classic Red"),
+                "hat_style": getattr(player, "hat_style", "Trainer Cap"),
+                "hair_color": getattr(player, "hair_color", "Dark Brown"),
                 "grid_x": player.grid_x,
                 "grid_y": player.grid_y,
                 "map": player.current_map,
@@ -46,59 +94,122 @@ class SaveSystem:
             "defeated_trainers": list(world.defeated_trainers)
         }
         try:
-            with open(SAVE_FILE_PATH, "w") as f:
+            slot_path = cls.get_slot_path(target_slot)
+            with open(slot_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
-            return True, "Game successfully saved!"
+            # Also keep legacy save file updated if slot 1
+            if target_slot == 1:
+                try:
+                    with open(LEGACY_SAVE_FILE, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2)
+                except Exception:
+                    pass
+            return True, f"Game successfully saved to Slot {target_slot}!"
         except Exception as e:
-            return False, f"Failed to save game: {e}"
+            return False, f"Failed to save game to Slot {target_slot}: {e}"
 
-    @staticmethod
-    def load_game(player, world):
-        if not os.path.exists(SAVE_FILE_PATH):
-            return None, "No save file found."
-            
+    @classmethod
+    def load_game(cls, player, world, slot=None):
+        cls._ensure_saves_dir()
+        target_slot = slot if slot is not None else cls._active_slot
+        target_slot = max(1, min(NUM_SAVE_SLOTS, int(target_slot)))
+        slot_path = cls.get_slot_path(target_slot)
+
+        if not os.path.exists(slot_path):
+            # Fallback to legacy file if loading slot 1 and slot 1 file not yet created
+            if target_slot == 1 and os.path.exists(LEGACY_SAVE_FILE):
+                slot_path = LEGACY_SAVE_FILE
+            else:
+                return None, f"No save data found in Slot {target_slot}."
+
         try:
-            with open(SAVE_FILE_PATH, "r") as f:
+            with open(slot_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                
+
             p_data = data["player"]
+            player.name = p_data.get("name", "Red")
+            player.gender = p_data.get("gender", "Boy")
+            player.outfit_theme = p_data.get("outfit_theme", "Classic Red")
+            player.hat_style = p_data.get("hat_style", "Trainer Cap")
+            player.hair_color = p_data.get("hair_color", "Dark Brown")
             player.grid_x = p_data.get("grid_x", 8)
             player.grid_y = p_data.get("grid_y", 6)
             player.current_map = p_data.get("map", "Pallet Town")
             player.facing = p_data.get("facing", 0)
             player.pixel_x = player.grid_x * 32
             player.pixel_y = player.grid_y * 32
-            
+
+            from graphics_manager import gfx
+            gfx.set_custom_player_appearance(player.gender, player.outfit_theme, player.hat_style, player.hair_color)
+
             party = [Pokemon.from_dict(pd) for pd in data.get("party", [])]
             inventory = Inventory.from_dict(data.get("inventory", {}))
             pokedex = Pokedex.from_dict(data.get("pokedex", {}))
             world.defeated_trainers = set(data.get("defeated_trainers", []))
-            
-            return (party, inventory, pokedex), "Game loaded successfully!"
+
+            cls._active_slot = target_slot
+            return (party, inventory, pokedex), f"Slot {target_slot} loaded successfully!"
         except Exception as e:
-            return None, f"Error loading save file: {e}"
+            return None, f"Error loading Slot {target_slot}: {e}"
 
-    @staticmethod
-    def has_save():
-        return os.path.exists(SAVE_FILE_PATH)
+    @classmethod
+    def delete_slot(cls, slot):
+        cls._ensure_saves_dir()
+        slot_path = cls.get_slot_path(slot)
+        if os.path.exists(slot_path):
+            try:
+                os.remove(slot_path)
+                return True
+            except Exception:
+                return False
+        return False
 
-    @staticmethod
-    def get_save_summary():
-        if not os.path.exists(SAVE_FILE_PATH):
-            return None
+    @classmethod
+    def has_save(cls, slot=None):
+        cls._ensure_saves_dir()
+        if slot is not None:
+            target_slot = max(1, min(NUM_SAVE_SLOTS, int(slot)))
+            slot_path = cls.get_slot_path(target_slot)
+            return os.path.exists(slot_path) or (target_slot == 1 and os.path.exists(LEGACY_SAVE_FILE))
+        # Any save exists
+        for s in range(1, NUM_SAVE_SLOTS + 1):
+            if os.path.exists(cls.get_slot_path(s)):
+                return True
+        return os.path.exists(LEGACY_SAVE_FILE)
+
+    @classmethod
+    def get_slot_summary(cls, slot=1):
+        cls._ensure_saves_dir()
+        target_slot = max(1, min(NUM_SAVE_SLOTS, int(slot)))
+        slot_path = cls.get_slot_path(target_slot)
+
+        if not os.path.exists(slot_path):
+            if target_slot == 1 and os.path.exists(LEGACY_SAVE_FILE):
+                slot_path = LEGACY_SAVE_FILE
+            else:
+                return None
+
         try:
-            with open(SAVE_FILE_PATH, "r") as f:
+            with open(slot_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             p_data = data.get("player", {})
             party_data = data.get("party", [])
             inv_data = data.get("inventory", {})
             pdx_data = data.get("pokedex", {})
-            
+
             lead_name = party_data[0]["nickname"] if party_data else "None"
             lead_species = party_data[0]["species"] if party_data else "Pikachu"
             lead_lvl = party_data[0].get("level", 5) if party_data else 5
-            
+
             return {
+                "slot": target_slot,
+                "exists": True,
+                "trainer_name": p_data.get("name", "Red"),
+                "gender": p_data.get("gender", "Boy"),
+                "outfit_theme": p_data.get("outfit_theme", "Classic Red"),
+                "hat_style": p_data.get("hat_style", "Trainer Cap"),
+                "hair_color": p_data.get("hair_color", "Dark Brown"),
+                "timestamp": data.get("timestamp", "Unknown Date"),
                 "map": p_data.get("map", "Pallet Town"),
                 "party_count": len(party_data),
                 "lead_name": lead_name,
@@ -110,3 +221,32 @@ class SaveSystem:
             }
         except Exception:
             return None
+
+    @classmethod
+    def get_save_summary(cls):
+        """Returns summary of active slot (or slot 1) for backward compatibility."""
+        return cls.get_slot_summary(cls._active_slot) or cls.get_slot_summary(1)
+
+    @classmethod
+    def get_all_slots_summary(cls):
+        cls._ensure_saves_dir()
+        summaries = []
+        for s in range(1, NUM_SAVE_SLOTS + 1):
+            summary = cls.get_slot_summary(s)
+            if summary is None:
+                summaries.append({
+                    "slot": s,
+                    "exists": False,
+                    "timestamp": "",
+                    "map": "",
+                    "party_count": 0,
+                    "lead_name": "",
+                    "lead_species": "Pikachu",
+                    "lead_level": 0,
+                    "money": 0,
+                    "seen_count": 0,
+                    "caught_count": 0
+                })
+            else:
+                summaries.append(summary)
+        return summaries

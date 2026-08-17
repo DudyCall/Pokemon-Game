@@ -1,0 +1,187 @@
+{
+  "slot": 2,
+  "timestamp": "2026-08-17 20:37",
+  "player": {
+    "name": "Red",
+    "gender": "Boy",
+    "outfit_theme": "Classic Red",
+    "hat_style": "Trainer Cap",
+    "hair_color": "Dark Brown",
+    "grid_x": 12,
+    "grid_y": 8,
+    "map": "Route 1",
+    "facing": 0
+  },
+  "party": [
+    {
+      "species": "Charmander",
+      "nickname": "Charmander",
+      "level": 12,
+      "current_hp": 32,
+      "exp": 1728,
+      "status": null,
+      "ivs": {
+        "hp": 11,
+        "atk": 25,
+        "def": 14,
+        "spatk": 12,
+        "spdef": 26,
+        "spd": 12
+      },
+      "moves": [
+        {
+          "name": "Scratch",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Hard, pointed claws rake the foe.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Ember",
+          "type": "Fire",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Small flames hit the target.",
+          "effect": {
+            "chance": 15,
+            "status": "Burn"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pikachu",
+      "nickname": "Pikachu",
+      "level": 10,
+      "current_hp": 28,
+      "exp": 1000,
+      "status": null,
+      "ivs": {
+        "hp": 18,
+        "atk": 19,
+        "def": 19,
+        "spatk": 13,
+        "spdef": 15,
+        "spd": 22
+      },
+      "moves": [
+        {
+          "name": "Thunder Shock",
+          "type": "Electric",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An electric jolt that may paralyze.",
+          "effect": {
+            "chance": 15,
+            "status": "Paralysis"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Thunder Wave",
+          "type": "Electric",
+          "power": 0,
+          "accuracy": 90,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "A weak shock that paralyzes.",
+          "effect": {
+            "chance": 100,
+            "status": "Paralysis"
+          },
+          "crit_bonus": false
+        }
+      ]
+    }
+  ],
+  "inventory": {
+    "money": 8200,
+    "items": {
+      "Poke Ball": 10,
+      "Potion": 5,
+      "Antidote": 2,
+      "Revive": 1
+    }
+  },
+  "pokedex": {
+    "seen": [
+      "Charmander",
+      "Pikachu"
+    ],
+    "caught": [
+      "Charmander",
+      "Pikachu"
+    ]
+  },
+  "defeated_trainers": []
+}

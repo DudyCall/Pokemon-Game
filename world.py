@@ -211,7 +211,7 @@ MAP_DEFINITIONS = {
 }
 
 class Player:
-    def __init__(self, x=8, y=6, current_map="Pallet Town"):
+    def __init__(self, x=8, y=6, current_map="Pallet Town", name="Red", gender="Boy", outfit_theme="Classic Red", hat_style="Trainer Cap", hair_color="Dark Brown"):
         self.grid_x = x
         self.grid_y = y
         self.pixel_x = x * TILE_SIZE
@@ -228,6 +228,16 @@ class Player:
         self.in_tall_grass = False
         self.last_overworld_map = "Pallet Town"
         self.last_overworld_pos = (8, 6)
+        
+        # Trainer Customization
+        self.name = name
+        self.gender = gender
+        self.outfit_theme = outfit_theme
+        self.hat_style = hat_style
+        self.hair_color = hair_color
+        
+        # Sync graphics manager sprites
+        gfx.set_custom_player_appearance(self.gender, self.outfit_theme, self.hat_style, self.hair_color)
 
     def update(self, dt, world):
         if self.is_moving:

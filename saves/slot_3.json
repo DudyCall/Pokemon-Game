@@ -1,0 +1,364 @@
+{
+  "slot": 3,
+  "timestamp": "2026-08-17 21:17",
+  "player": {
+    "name": "hakun",
+    "gender": "Boy",
+    "outfit_theme": "Shadow Black",
+    "hat_style": "Bandana",
+    "hair_color": "Raven Black",
+    "grid_x": 27,
+    "grid_y": 9,
+    "map": "Viridian Forest",
+    "facing": 1
+  },
+  "party": [
+    {
+      "species": "Bulbasaur",
+      "nickname": "Bulbasaur",
+      "level": 11,
+      "current_hp": 15,
+      "exp": 1450,
+      "status": "Poison",
+      "ivs": {
+        "hp": 18,
+        "atk": 10,
+        "def": 13,
+        "spatk": 16,
+        "spdef": 31,
+        "spd": 30
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 11,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Vine Whip",
+          "type": "Grass",
+          "power": 45,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 25,
+          "pp": 23,
+          "desc": "Strikes the foe with slender vines.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Poison Powder",
+          "type": "Poison",
+          "power": 0,
+          "accuracy": 75,
+          "category": "Status",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Scatters a toxic powder.",
+          "effect": {
+            "chance": 100,
+            "status": "Poison"
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pidgey",
+      "nickname": "Pidgey",
+      "level": 6,
+      "current_hp": 22,
+      "exp": 232,
+      "status": null,
+      "ivs": {
+        "hp": 23,
+        "atk": 28,
+        "def": 28,
+        "spatk": 23,
+        "spdef": 11,
+        "spd": 10
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Gust",
+          "type": "Flying",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Strikes the foe with wing gusts.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Rattata",
+      "nickname": "Rattata",
+      "level": 8,
+      "current_hp": 24,
+      "exp": 673,
+      "status": null,
+      "ivs": {
+        "hp": 22,
+        "atk": 10,
+        "def": 12,
+        "spatk": 24,
+        "spdef": 11,
+        "spd": 13
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Weedle",
+      "nickname": "Weedle",
+      "level": 3,
+      "current_hp": 15,
+      "exp": 48,
+      "status": null,
+      "ivs": {
+        "hp": 14,
+        "atk": 29,
+        "def": 16,
+        "spatk": 12,
+        "spdef": 10,
+        "spd": 18
+      },
+      "moves": [
+        {
+          "name": "Poison Sting",
+          "type": "Poison",
+          "power": 15,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Stabs with a poisonous barb.",
+          "effect": {
+            "chance": 30,
+            "status": "Poison"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "String Shot",
+          "type": "Bug",
+          "power": 0,
+          "accuracy": 95,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Binds foe with silk string.",
+          "effect": {
+            "stages": -1,
+            "stat": "spd"
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Bellsprout",
+      "nickname": "Bellsprout",
+      "level": 8,
+      "current_hp": 6,
+      "exp": 512,
+      "status": null,
+      "ivs": {
+        "hp": 24,
+        "atk": 27,
+        "def": 28,
+        "spatk": 10,
+        "spdef": 27,
+        "spd": 29
+      },
+      "moves": [
+        {
+          "name": "Vine Whip",
+          "type": "Grass",
+          "power": 45,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Strikes the foe with slender vines.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Poison Powder",
+          "type": "Poison",
+          "power": 0,
+          "accuracy": 75,
+          "category": "Status",
+          "max_pp": 35,
+          "pp": 33,
+          "desc": "Scatters a toxic powder.",
+          "effect": {
+            "chance": 100,
+            "status": "Poison"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Sleep Powder",
+          "type": "Grass",
+          "power": 0,
+          "accuracy": 75,
+          "category": "Status",
+          "max_pp": 15,
+          "pp": 14,
+          "desc": "Scatters a powder that induces sleep.",
+          "effect": {
+            "chance": 100,
+            "status": "Sleep"
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Oddish",
+      "nickname": "Oddish",
+      "level": 5,
+      "current_hp": 4,
+      "exp": 125,
+      "status": null,
+      "ivs": {
+        "hp": 26,
+        "atk": 11,
+        "def": 18,
+        "spatk": 19,
+        "spdef": 21,
+        "spd": 28
+      },
+      "moves": [
+        {
+          "name": "Absorb",
+          "type": "Grass",
+          "power": 20,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 23,
+          "desc": "Drains nutrients from the foe.",
+          "effect": {
+            "drain_percent": 50
+          },
+          "crit_bonus": false
+        }
+      ]
+    }
+  ],
+  "inventory": {
+    "money": 3520,
+    "items": {
+      "Poke Ball": 3,
+      "Potion": 3,
+      "Antidote": 2,
+      "Revive": 1
+    }
+  },
+  "pokedex": {
+    "seen": [
+      "Weedle",
+      "Geodude",
+      "Bellsprout",
+      "Bulbasaur",
+      "Pidgey",
+      "Caterpie",
+      "Oddish",
+      "Rattata",
+      "Pikachu"
+    ],
+    "caught": [
+      "Weedle",
+      "Bellsprout",
+      "Bulbasaur",
+      "Pidgey",
+      "Oddish",
+      "Rattata",
+      "Pikachu"
+    ]
+  },
+  "defeated_trainers": [
+    "youngster_joey",
+    "bug_catcher_sammy",
+    "lass_haley"
+  ]
+}

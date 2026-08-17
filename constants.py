@@ -47,7 +47,8 @@ TYPE_COLORS = {
     "Ghost": (112, 88, 152),
     "Dragon": (112, 56, 248),
     "Steel": (184, 184, 208),
-    "Fairy": (238, 153, 172)
+    "Fairy": (238, 153, 172),
+    "Dark": (112, 88, 72)
 }
 
 # Full 18-Type Matchup Effectiveness Matrix: Attacker -> Defender -> Multiplier
@@ -58,23 +59,26 @@ TYPE_CHART = {
     "Electric": {"Water": 2.0, "Electric": 0.5, "Grass": 0.5, "Ground": 0.0, "Flying": 2.0, "Dragon": 0.5},
     "Grass": {"Fire": 0.5, "Water": 2.0, "Grass": 0.5, "Poison": 0.5, "Ground": 2.0, "Flying": 0.5, "Bug": 0.5, "Rock": 2.0, "Dragon": 0.5, "Steel": 0.5},
     "Ice": {"Fire": 0.5, "Water": 0.5, "Grass": 2.0, "Ice": 0.5, "Ground": 2.0, "Flying": 2.0, "Dragon": 2.0, "Steel": 0.5},
-    "Fighting": {"Normal": 2.0, "Ice": 2.0, "Poison": 0.5, "Flying": 0.5, "Psychic": 0.5, "Bug": 0.5, "Rock": 2.0, "Ghost": 0.0, "Steel": 2.0, "Fairy": 0.5},
+    "Fighting": {"Normal": 2.0, "Ice": 2.0, "Poison": 0.5, "Flying": 0.5, "Psychic": 0.5, "Bug": 0.5, "Rock": 2.0, "Ghost": 0.0, "Steel": 2.0, "Fairy": 0.5, "Dark": 2.0},
     "Poison": {"Grass": 2.0, "Poison": 0.5, "Ground": 0.5, "Rock": 0.5, "Ghost": 0.5, "Steel": 0.0, "Fairy": 2.0},
     "Ground": {"Fire": 2.0, "Electric": 2.0, "Grass": 0.5, "Poison": 2.0, "Flying": 0.0, "Bug": 0.5, "Rock": 2.0, "Steel": 2.0},
     "Flying": {"Electric": 0.5, "Grass": 2.0, "Fighting": 2.0, "Bug": 2.0, "Rock": 0.5, "Steel": 0.5},
-    "Psychic": {"Fighting": 2.0, "Poison": 2.0, "Psychic": 0.5, "Steel": 0.5},
-    "Bug": {"Fire": 0.5, "Grass": 2.0, "Fighting": 0.5, "Poison": 0.5, "Flying": 0.5, "Psychic": 2.0, "Ghost": 0.5, "Steel": 0.5, "Fairy": 0.5},
+    "Psychic": {"Fighting": 2.0, "Poison": 2.0, "Psychic": 0.5, "Steel": 0.5, "Dark": 0.0},
+    "Bug": {"Fire": 0.5, "Grass": 2.0, "Fighting": 0.5, "Poison": 0.5, "Flying": 0.5, "Psychic": 2.0, "Ghost": 0.5, "Steel": 0.5, "Fairy": 0.5, "Dark": 2.0},
     "Rock": {"Fire": 2.0, "Ice": 2.0, "Fighting": 0.5, "Ground": 0.5, "Flying": 2.0, "Bug": 2.0, "Steel": 0.5},
-    "Ghost": {"Normal": 0.0, "Psychic": 2.0, "Ghost": 2.0},
+    "Ghost": {"Normal": 0.0, "Psychic": 2.0, "Ghost": 2.0, "Dark": 0.5},
     "Dragon": {"Dragon": 2.0, "Steel": 0.5, "Fairy": 0.0},
     "Steel": {"Fire": 0.5, "Water": 0.5, "Electric": 0.5, "Ice": 2.0, "Rock": 2.0, "Steel": 0.5, "Fairy": 2.0},
-    "Fairy": {"Fire": 0.5, "Fighting": 2.0, "Poison": 0.5, "Dragon": 2.0, "Steel": 0.5}
+    "Fairy": {"Fire": 0.5, "Fighting": 2.0, "Poison": 0.5, "Dragon": 2.0, "Steel": 0.5, "Dark": 2.0},
+    "Dark": {"Psychic": 2.0, "Ghost": 2.0, "Fighting": 0.5, "Dark": 0.5, "Fairy": 0.5}
 }
 
 # Game States
 class GameState:
     TITLE = "TITLE"
+    TRAINER_CUSTOMIZE = "TRAINER_CUSTOMIZE"
     STARTER_SELECT = "STARTER_SELECT"
+    SAVE_SLOTS = "SAVE_SLOTS"
     OVERWORLD = "OVERWORLD"
     BATTLE = "BATTLE"
     PARTY_MENU = "PARTY_MENU"
@@ -85,6 +89,28 @@ class GameState:
     EVOLUTION = "EVOLUTION"
     TRAINER_CARD = "TRAINER_CARD"
     SAVE = "SAVE"
+
+# Trainer Customization Presets
+OUTFIT_THEMES = {
+    "Classic Red": {"shirt": (220, 40, 40), "pants": (30, 60, 120), "hat": (200, 30, 30), "accent": WHITE},
+    "Ocean Blue": {"shirt": (30, 100, 220), "pants": (20, 30, 60), "hat": (20, 80, 190), "accent": (240, 240, 255)},
+    "Emerald Green": {"shirt": (30, 160, 60), "pants": (70, 50, 40), "hat": (20, 130, 50), "accent": (255, 230, 120)},
+    "Shadow Black": {"shirt": (40, 40, 45), "pants": (25, 25, 30), "hat": (35, 35, 40), "accent": (220, 60, 60)},
+    "Electric Gold": {"shirt": (240, 180, 20), "pants": (50, 50, 60), "hat": (220, 160, 10), "accent": (30, 30, 30)},
+    "Cherry Pink": {"shirt": (230, 70, 130), "pants": (240, 240, 245), "hat": (220, 50, 110), "accent": WHITE},
+    "Lavender Purple": {"shirt": (140, 80, 200), "pants": (40, 40, 60), "hat": (120, 60, 180), "accent": (255, 215, 0)}
+}
+
+HAIR_COLORS = {
+    "Dark Brown": (70, 40, 20),
+    "Golden Blonde": (235, 195, 75),
+    "Raven Black": (25, 25, 30),
+    "Auburn Red": (160, 55, 25),
+    "Silver Gray": (180, 185, 195)
+}
+
+HAT_STYLES = ["Trainer Cap", "Bandana", "Beanie", "No Hat"]
+STARTER_CHOICES = ["Charmander", "Squirtle", "Bulbasaur", "Pikachu", "Eevee"]
 
 # Directions
 class Direction:
@@ -99,6 +125,6 @@ KEY_DOWN = [pygame.K_DOWN, pygame.K_s]
 KEY_LEFT = [pygame.K_LEFT, pygame.K_a]
 KEY_RIGHT = [pygame.K_RIGHT, pygame.K_d]
 KEY_CONFIRM = [pygame.K_z, pygame.K_RETURN, pygame.K_SPACE]
-KEY_CANCEL = [pygame.K_x, pygame.K_ESCAPE, pygame.K_BACKSPACE]
-KEY_MENU = [pygame.K_c, pygame.K_TAB, pygame.K_m]
+KEY_CANCEL = [pygame.K_x, pygame.K_ESCAPE]
+KEY_MENU = [pygame.K_c, pygame.K_m, pygame.K_TAB]
 KEY_QUICKSAVE = [pygame.K_F5, pygame.K_k]

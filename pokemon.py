@@ -76,9 +76,10 @@ class Pokemon:
     def init_moves_for_level(self):
         available_moves = []
         learnset = self.species_data.get("learnset", {})
-        for lvl in sorted(learnset.keys()):
+        for lvl in sorted(int(k) for k in learnset.keys()):
             if lvl <= self.level:
-                for move_name in learnset[lvl]:
+                moves_at_lvl = learnset.get(lvl) or learnset.get(str(lvl), [])
+                for move_name in moves_at_lvl:
                     if move_name in MOVES and move_name not in [m["name"] for m in available_moves]:
                         available_moves.append(self.create_move_slot(move_name))
         
@@ -127,10 +128,10 @@ class Pokemon:
             
             # Check for new moves
             learnset = self.species_data.get("learnset", {})
-            if self.level in learnset:
-                for m_name in learnset[self.level]:
-                    if m_name in MOVES and m_name not in [m["name"] for m in self.moves]:
-                        events.append(("LEARN_MOVE", m_name))
+            new_moves = learnset.get(self.level) or learnset.get(str(self.level), [])
+            for m_name in new_moves:
+                if m_name in MOVES and m_name not in [m["name"] for m in self.moves]:
+                    events.append(("LEARN_MOVE", m_name))
             
             # Check evolution
             evo = self.species_data.get("evolution")
