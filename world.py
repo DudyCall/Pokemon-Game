@@ -195,7 +195,8 @@ MAP_DEFINITIONS = {
             (6, 7): {"target_map": "Pallet Town", "target_x": 4, "target_y": 5}
         },
         "npcs": [
-            {"name": "Nurse Joy", "x": 5, "y": 3, "dir": Direction.DOWN, "dialog": "Welcome to our Pokémon Center! We heal your Pokémon back to full health!", "is_healer": True}
+            {"name": "Nurse Joy", "x": 5, "y": 3, "dir": Direction.DOWN, "dialog": "Welcome to our Pokémon Center! We heal your Pokémon back to full health!", "is_healer": True},
+            {"name": "PC Storage Terminal", "x": 8, "y": 5, "dir": Direction.DOWN, "dialog": "Booting up Pokémon Storage System...", "is_pc": True}
         ]
     },
     "Mart": {

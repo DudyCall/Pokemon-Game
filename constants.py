@@ -89,6 +89,7 @@ class GameState:
     EVOLUTION = "EVOLUTION"
     TRAINER_CARD = "TRAINER_CARD"
     SAVE = "SAVE"
+    PC_BOX = "PC_BOX"
 
 # Trainer Customization Presets
 OUTFIT_THEMES = {

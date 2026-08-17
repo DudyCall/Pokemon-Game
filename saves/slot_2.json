@@ -1,43 +1,43 @@
 {
   "slot": 2,
-  "timestamp": "2026-08-17 20:37",
+  "timestamp": "2026-08-17 21:32",
   "player": {
     "name": "Red",
     "gender": "Boy",
     "outfit_theme": "Classic Red",
     "hat_style": "Trainer Cap",
     "hair_color": "Dark Brown",
-    "grid_x": 12,
-    "grid_y": 8,
-    "map": "Route 1",
+    "grid_x": 6,
+    "grid_y": 6,
+    "map": "Pokecenter",
     "facing": 0
   },
   "party": [
     {
-      "species": "Charmander",
-      "nickname": "Charmander",
-      "level": 12,
-      "current_hp": 32,
-      "exp": 1728,
+      "species": "Bulbasaur",
+      "nickname": "Bulbasaur",
+      "level": 11,
+      "current_hp": 34,
+      "exp": 1331,
       "status": null,
       "ivs": {
-        "hp": 11,
-        "atk": 25,
-        "def": 14,
-        "spatk": 12,
-        "spdef": 26,
-        "spd": 12
+        "hp": 26,
+        "atk": 24,
+        "def": 25,
+        "spatk": 28,
+        "spdef": 27,
+        "spd": 22
       },
       "moves": [
         {
-          "name": "Scratch",
+          "name": "Tackle",
           "type": "Normal",
           "power": 40,
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 35,
           "pp": 35,
-          "desc": "Hard, pointed claws rake the foe.",
+          "desc": "A physical charge attack.",
           "effect": null,
           "crit_bonus": false
         },
@@ -57,29 +57,26 @@
           "crit_bonus": false
         },
         {
-          "name": "Ember",
-          "type": "Fire",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Small flames hit the target.",
-          "effect": {
-            "chance": 15,
-            "status": "Burn"
-          },
+          "name": "Leech Seed",
+          "type": "Grass",
+          "power": 0,
+          "accuracy": 90,
+          "category": "Status",
+          "max_pp": 10,
+          "pp": 10,
+          "desc": "Plants a seed on the target to steal HP every turn.",
+          "effect": null,
           "crit_bonus": false
         },
         {
-          "name": "Quick Attack",
-          "type": "Normal",
-          "power": 40,
+          "name": "Vine Whip",
+          "type": "Grass",
+          "power": 45,
           "accuracy": 100,
           "category": "Physical",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "An extremely fast physical strike.",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Strikes the foe with slender vines.",
           "effect": null,
           "crit_bonus": false
         }
@@ -93,12 +90,12 @@
       "exp": 1000,
       "status": null,
       "ivs": {
-        "hp": 18,
-        "atk": 19,
-        "def": 19,
-        "spatk": 13,
-        "spdef": 15,
-        "spd": 22
+        "hp": 20,
+        "atk": 22,
+        "def": 18,
+        "spatk": 25,
+        "spdef": 20,
+        "spd": 30
       },
       "moves": [
         {
@@ -109,9 +106,9 @@
           "category": "Special",
           "max_pp": 30,
           "pp": 30,
-          "desc": "An electric jolt that may paralyze.",
+          "desc": "An electric shock that may paralyze.",
           "effect": {
-            "chance": 15,
+            "chance": 10,
             "status": "Paralysis"
           },
           "crit_bonus": false
@@ -129,6 +126,105 @@
             "stages": -1,
             "stat": "atk"
           },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Thunder Wave",
+          "type": "Electric",
+          "power": 0,
+          "accuracy": 90,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Paralyzes the target.",
+          "effect": {
+            "chance": 100,
+            "status": "Paralysis"
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pidgey",
+      "nickname": "Pidgey",
+      "level": 6,
+      "current_hp": 22,
+      "exp": 216,
+      "status": null,
+      "ivs": {
+        "hp": 24,
+        "atk": 22,
+        "def": 24,
+        "spatk": 28,
+        "spdef": 21,
+        "spd": 21
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Gust",
+          "type": "Flying",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Strikes the foe with wing gusts.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Rattata",
+      "nickname": "Rattata",
+      "level": 8,
+      "current_hp": 25,
+      "exp": 512,
+      "status": null,
+      "ivs": {
+        "hp": 22,
+        "atk": 28,
+        "def": 20,
+        "spatk": 18,
+        "spdef": 20,
+        "spd": 29
+      },
+      "moves": [
+        {
+          "name": "Tackle",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "A physical charge attack.",
+          "effect": null,
           "crit_bonus": false
         },
         {
@@ -147,17 +243,163 @@
           "crit_bonus": false
         },
         {
-          "name": "Thunder Wave",
-          "type": "Electric",
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Bellsprout",
+      "nickname": "Bellsprout",
+      "level": 8,
+      "current_hp": 27,
+      "exp": 512,
+      "status": null,
+      "ivs": {
+        "hp": 27,
+        "atk": 29,
+        "def": 20,
+        "spatk": 28,
+        "spdef": 19,
+        "spd": 22
+      },
+      "moves": [
+        {
+          "name": "Vine Whip",
+          "type": "Grass",
+          "power": 45,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Strikes the foe with slender vines.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Growth",
+          "type": "Normal",
           "power": 0,
-          "accuracy": 90,
+          "accuracy": 100,
           "category": "Status",
           "max_pp": 20,
           "pp": 20,
-          "desc": "A weak shock that paralyzes.",
+          "desc": "Raises Attack and Sp. Atk.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Wrap",
+          "type": "Normal",
+          "power": 15,
+          "accuracy": 90,
+          "category": "Physical",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Traps and squeezes the foe.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Oddish",
+      "nickname": "Oddish",
+      "level": 5,
+      "current_hp": 21,
+      "exp": 125,
+      "status": null,
+      "ivs": {
+        "hp": 25,
+        "atk": 24,
+        "def": 26,
+        "spatk": 29,
+        "spdef": 27,
+        "spd": 18
+      },
+      "moves": [
+        {
+          "name": "Absorb",
+          "type": "Grass",
+          "power": 20,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "An attack that absorbs half the damage inflicted.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Sweet Scent",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Lowers the foe's evasiveness.",
           "effect": {
-            "chance": 100,
-            "status": "Paralysis"
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        }
+      ]
+    }
+  ],
+  "pc_box": [
+    {
+      "species": "Weedle",
+      "nickname": "Weedle",
+      "level": 3,
+      "current_hp": 16,
+      "exp": 27,
+      "status": null,
+      "ivs": {
+        "hp": 29,
+        "atk": 24,
+        "def": 16,
+        "spatk": 29,
+        "spdef": 17,
+        "spd": 27
+      },
+      "moves": [
+        {
+          "name": "Poison Sting",
+          "type": "Poison",
+          "power": 15,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Stabs with a poisonous barb.",
+          "effect": {
+            "chance": 30,
+            "status": "Poison"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "String Shot",
+          "type": "Bug",
+          "power": 0,
+          "accuracy": 95,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Binds foe with silk string.",
+          "effect": {
+            "stages": -1,
+            "stat": "spd"
           },
           "crit_bonus": false
         }
@@ -165,7 +407,7 @@
     }
   ],
   "inventory": {
-    "money": 8200,
+    "money": 5500,
     "items": {
       "Poke Ball": 10,
       "Potion": 5,
@@ -175,12 +417,22 @@
   },
   "pokedex": {
     "seen": [
-      "Charmander",
-      "Pikachu"
+      "Bulbasaur",
+      "Pikachu",
+      "Pidgey",
+      "Rattata",
+      "Bellsprout",
+      "Oddish",
+      "Weedle"
     ],
     "caught": [
-      "Charmander",
-      "Pikachu"
+      "Bulbasaur",
+      "Pikachu",
+      "Pidgey",
+      "Rattata",
+      "Bellsprout",
+      "Oddish",
+      "Weedle"
     ]
   },
   "defeated_trainers": []

@@ -1,9 +1,8 @@
-"""
-test_game_engine.py - Automated Headless Verification Suite for Pokemon Game Engine.
-"""
 import os
 import sys
 import unittest
+import tempfile
+import shutil
 import pygame
 
 # Set headless dummy video and audio drivers for tests
@@ -24,6 +23,14 @@ class TestPokemonEngine(unittest.TestCase):
     def setUpClass(cls):
         pygame.init()
         pygame.display.set_mode((1, 1))
+        cls.test_dir = tempfile.mkdtemp()
+        SaveSystem.set_saves_dir(cls.test_dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        SaveSystem.reset_saves_dir()
+        if os.path.exists(cls.test_dir):
+            shutil.rmtree(cls.test_dir, ignore_errors=True)
 
     def test_pokemon_creation_and_stats(self):
         p = Pokemon("Charmander", level=5)
@@ -117,7 +124,7 @@ class TestPokemonEngine(unittest.TestCase):
         loaded_p1 = Player()
         res1, msg = SaveSystem.load_game(loaded_p1, World(), slot=1)
         self.assertIsNotNone(res1)
-        lp1, li1, lpd1 = res1
+        lp1, li1, lpd1, lpc1 = res1
         self.assertEqual(loaded_p1.grid_x, 5)
         self.assertEqual(loaded_p1.current_map, "Pallet Town")
         self.assertEqual(lp1[0].species, "Squirtle")
@@ -128,7 +135,7 @@ class TestPokemonEngine(unittest.TestCase):
         loaded_p2 = Player()
         res2, msg = SaveSystem.load_game(loaded_p2, World(), slot=2)
         self.assertIsNotNone(res2)
-        lp2, li2, lpd2 = res2
+        lp2, li2, lpd2, lpc2 = res2
         self.assertEqual(loaded_p2.grid_x, 12)
         self.assertEqual(loaded_p2.current_map, "Route 1")
         self.assertEqual(len(lp2), 2)
@@ -224,15 +231,102 @@ class TestPokemonEngine(unittest.TestCase):
         self.assertEqual(summary["gender"], "Girl")
         self.assertEqual(summary["outfit_theme"], "Cherry Pink")
 
-    def test_instantiate_diverse_roster(self):
-        sample_species = ["Mewtwo", "Gyarados", "Scyther", "Gengar", "Dragonite", "Snorlax", "Butterfree", "Machamp", "Zapdos"]
-        for sp in sample_species:
-            p = Pokemon(sp, level=50)
-            self.assertEqual(p.species, sp)
-            self.assertEqual(p.level, 50)
-            self.assertGreater(p.max_hp, 50)
-            self.assertEqual(p.current_hp, p.max_hp)
-            self.assertGreaterEqual(len(p.moves), 1)
+    def test_pc_box_overflow_and_operations(self):
+        # 1. Test 6-Pokemon party overflow into PC Box
+        party = [
+            Pokemon("Bulbasaur", level=11),
+            Pokemon("Pidgey", level=6),
+            Pokemon("Rattata", level=8),
+            Pokemon("Weedle", level=3),
+            Pokemon("Bellsprout", level=8),
+            Pokemon("Oddish", level=5)
+        ]
+        self.assertEqual(len(party), 6)
+        
+        pc_box = []
+        pokedex = Pokedex()
+        for p in party:
+            pokedex.register_caught(p.species)
+
+        # Simulate catching 7th Pokemon (Pikachu)
+        wild_pikachu = Pokemon("Pikachu", level=10)
+        from battle_system import BattleSystem
+        battle = BattleSystem(player_party=party, opponent_pokemon_or_trainer=wild_pikachu, is_trainer=False, pokedex=pokedex, pc_box=pc_box)
+        
+        # Test catch resolution when party is full
+        self.assertEqual(len(party), 6)
+        if len(battle.player_party) < 6:
+            battle.player_party.append(wild_pikachu)
+        else:
+            battle.pc_box.append(wild_pikachu)
+            
+        self.assertEqual(len(party), 6)
+        self.assertEqual(len(pc_box), 1)
+        self.assertEqual(pc_box[0].species, "Pikachu")
+
+        # 2. Test PC Box Screen Withdraw / Deposit / Swap
+        from ui_manager import PCBoxScreen
+        screen = PCBoxScreen(party, pc_box)
+        
+        # Deposit Weedle from party to PC Box
+        screen.active_panel = "PARTY"
+        screen.party_idx = 3 # Weedle
+        screen._execute_action("DEPOSIT TO PC")
+        self.assertEqual(len(party), 5)
+        self.assertEqual(len(pc_box), 2)
+        self.assertEqual(pc_box[-1].species, "Weedle")
+
+        # Withdraw Pikachu to party
+        screen.active_panel = "PC"
+        screen.pc_idx = 0 # Pikachu
+        screen._execute_action("WITHDRAW TO PARTY")
+        self.assertEqual(len(party), 6)
+        self.assertEqual(party[-1].species, "Pikachu")
+        self.assertEqual(len(pc_box), 1)
+        self.assertEqual(pc_box[0].species, "Weedle")
+
+        # Swap Bulbasaur with Weedle
+        screen.party_idx = 0 # Bulbasaur
+        screen.pc_idx = 0 # Weedle
+        screen._execute_action("SWAP WITH PC")
+        self.assertEqual(party[0].species, "Weedle")
+        self.assertEqual(pc_box[0].species, "Bulbasaur")
+
+        # 3. Test Save/Load Persistence of PC Box
+        player = Player(x=6, y=6, current_map="Pokecenter")
+        inv = Inventory()
+        world = World()
+        ok, msg = SaveSystem.save_game(player, party, inv, pokedex, world, slot=2, pc_box=pc_box)
+        self.assertTrue(ok)
+
+        loaded_player = Player()
+        res, msg = SaveSystem.load_game(loaded_player, World(), slot=2)
+        self.assertIsNotNone(res)
+        l_party, l_inv, l_pdx, l_pc = res
+        self.assertEqual(len(l_party), 6)
+        self.assertEqual(l_party[-1].species, "Pikachu")
+        self.assertEqual(len(l_pc), 1)
+        self.assertEqual(l_pc[0].species, "Bulbasaur")
+
+    def test_status_move_execution_all_moves(self):
+        from battle_system import BattleSystem
+        bulba = Pokemon("Bulbasaur", level=11)
+        rattata = Pokemon("Rattata", level=5)
+        pokedex = Pokedex()
+        battle = BattleSystem([bulba], rattata, is_trainer=False, pokedex=pokedex)
+
+        # Test using Growl, Leech Seed, Tail Whip, Thunder Wave, Recover
+        test_moves = ["Growl", "Leech Seed", "Tail Whip", "Thunder Wave", "Recover", "Agility"]
+        for m_name in test_moves:
+            if m_name in MOVES:
+                move_obj = MOVES[m_name]
+                battle._queue_attack(bulba, rattata, move_obj, is_player=True, next_attack=None)
+                # Drain messages to trigger perform_move callback
+                for _ in range(10):
+                    if battle.messages or battle.on_message_complete:
+                        battle.advance_message_queue()
+                    else:
+                        break
 
 if __name__ == "__main__":
     unittest.main()

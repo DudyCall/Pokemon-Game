@@ -18,7 +18,7 @@ from battle_system import BattleSystem
 from save_system import SaveSystem, Pokedex
 from ui_manager import (
     TitleScreen, StarterSelectScreen, TrainerCustomizationScreen, PauseMenu, PokedexScreen,
-    PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen
+    PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen, PCBoxScreen
 )
 
 class Game:
@@ -35,6 +35,7 @@ class Game:
         self.world = World()
         self.player = Player(x=8, y=6, current_map="Pallet Town")
         self.party = []
+        self.pc_box = []
         self.inventory = Inventory()
         self.pokedex = Pokedex()
         
@@ -46,6 +47,7 @@ class Game:
         self.title_screen = TitleScreen()
         self.starter_screen = StarterSelectScreen()
         self.trainer_customize_screen = TrainerCustomizationScreen()
+        self.pc_box_screen = None
         self.save_slot_screen = None
         self.pause_menu = PauseMenu()
         self.save_dialog = None
@@ -77,6 +79,7 @@ class Game:
 
         starter = Pokemon(starter_species, level=5)
         self.party = [starter]
+        self.pc_box = []
         self.pokedex.register_caught(starter_species)
         self.player = Player(
             x=8, y=6, current_map="Pallet Town",
@@ -86,7 +89,7 @@ class Game:
         self.state = GameState.OVERWORLD
         sound_mgr.play_bgm("town")
         # Save initial game state to selected slot
-        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot)
+        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
         self.show_notification(f"Welcome, {self.player.name}! Received {starter_species}!")
 
     def start_wild_battle(self, encounter_zone):
@@ -110,7 +113,8 @@ class Game:
             opponent_pokemon_or_trainer=wild_pkmn,
             is_trainer=False,
             inventory=self.inventory,
-            pokedex=self.pokedex
+            pokedex=self.pokedex,
+            pc_box=self.pc_box
         )
         self.state = GameState.BATTLE
 
@@ -121,7 +125,8 @@ class Game:
             opponent_pokemon_or_trainer=trainer_data,
             is_trainer=True,
             inventory=self.inventory,
-            pokedex=self.pokedex
+            pokedex=self.pokedex,
+            pc_box=self.pc_box
         )
         self.state = GameState.BATTLE
 
@@ -133,13 +138,34 @@ class Game:
 
             # Title State
             if self.state == GameState.TITLE:
-                opt = self.title_screen.handle_input(event)
-                if opt == "CONTINUE":
-                    self.save_slot_screen = SaveSlotSelectScreen(mode="LOAD", active_slot=self.current_save_slot)
-                    self.state = GameState.SAVE_SLOTS
-                elif opt == "NEW GAME":
-                    self.save_slot_screen = SaveSlotSelectScreen(mode="NEW_GAME", active_slot=self.current_save_slot)
-                    self.state = GameState.SAVE_SLOTS
+                action_data = self.title_screen.handle_input(event)
+                if action_data:
+                    if isinstance(action_data, tuple):
+                        opt, chosen_slot = action_data
+                    else:
+                        opt, chosen_slot = action_data, 1
+
+                    if opt == "LOAD_SLOT":
+                        self.current_save_slot = chosen_slot
+                        res, msg = SaveSystem.load_game(self.player, self.world, slot=chosen_slot)
+                        if res:
+                            if len(res) == 4:
+                                self.party, self.inventory, self.pokedex, self.pc_box = res
+                            else:
+                                self.party, self.inventory, self.pokedex = res[:3]
+                                self.pc_box = []
+                            self.state = GameState.OVERWORLD
+                            sound_mgr.play_bgm("town")
+                            self.show_notification(f"Slot {chosen_slot} loaded successfully!")
+                        else:
+                            self.save_slot_screen = SaveSlotSelectScreen(mode="LOAD", active_slot=chosen_slot)
+                            self.state = GameState.SAVE_SLOTS
+                    elif opt in ["SELECT_SLOT", "ALL_SLOTS", "CONTINUE"]:
+                        self.save_slot_screen = SaveSlotSelectScreen(mode="LOAD", active_slot=chosen_slot)
+                        self.state = GameState.SAVE_SLOTS
+                    elif opt in ["NEW_GAME", "NEW GAME"]:
+                        self.save_slot_screen = SaveSlotSelectScreen(mode="NEW_GAME", active_slot=chosen_slot)
+                        self.state = GameState.SAVE_SLOTS
                 continue
 
             # Save Slots Selection State
@@ -152,7 +178,11 @@ class Game:
                             self.current_save_slot = chosen_slot
                             res, msg = SaveSystem.load_game(self.player, self.world, slot=chosen_slot)
                             if res:
-                                self.party, self.inventory, self.pokedex = res
+                                if len(res) == 4:
+                                    self.party, self.inventory, self.pokedex, self.pc_box = res
+                                else:
+                                    self.party, self.inventory, self.pokedex = res[:3]
+                                    self.pc_box = []
                                 self.save_slot_screen = None
                                 self.state = GameState.OVERWORLD
                                 sound_mgr.play_bgm("town")
@@ -200,7 +230,7 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     # Quick Save (F5 or K)
                     if any(event.key == k for k in KEY_QUICKSAVE):
-                        ok, msg = SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot)
+                        ok, msg = SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
                         sound_mgr.play_sfx("confirm" if ok else "cancel")
                         self.show_notification(f"Quick-Saved to Slot {self.current_save_slot}!")
                         continue
@@ -231,6 +261,9 @@ class Game:
                 elif action == "BAG":
                     self.shop_screen = ShopScreen(self.inventory)
                     self.state = GameState.SHOP
+                elif action == "PC BOX":
+                    self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
+                    self.state = GameState.PC_BOX
                 elif action == "SAVE":
                     self.save_slot_screen = SaveSlotSelectScreen(
                         mode="SAVE",
@@ -239,9 +272,19 @@ class Game:
                         party=self.party,
                         inventory=self.inventory,
                         pokedex=self.pokedex,
-                        world=self.world
+                        world=self.world,
+                        pc_box=self.pc_box
                     )
                     self.state = GameState.SAVE_SLOTS
+                continue
+
+            # PC Box State
+            if self.state == GameState.PC_BOX:
+                if self.pc_box_screen:
+                    res = self.pc_box_screen.handle_input(event)
+                    if res == "EXIT":
+                        self.pc_box_screen = None
+                        self.state = GameState.OVERWORLD
                 continue
 
             # Save Dialog State
@@ -306,16 +349,26 @@ class Game:
         elif self.player.facing == Direction.RIGHT:
             fx += 1
             
+        # Check PC Terminal tile or interaction in Pokecenter
+        if self.player.current_map == "Pokecenter" and fx == 8 and fy in [4, 5]:
+            sound_mgr.play_sfx("confirm")
+            self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
+            self.state = GameState.PC_BOX
+            return
+
         # Check NPC
         npc = self.world.get_npc_at(self.player.current_map, fx, fy)
         if npc:
             sound_mgr.play_sfx("confirm")
-            if npc.get("is_healer"):
+            if npc.get("is_pc"):
+                self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
+                self.state = GameState.PC_BOX
+            elif npc.get("is_healer"):
                 # Nurse Joy Healer
                 for p in self.party:
                     p.full_restore()
                 # Auto-save at Pokemon Center
-                SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot)
+                SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
                 sound_mgr.play_sfx("heal")
                 self.current_dialogue = DialogueBox("Nurse Joy", f"Your Pokémon are fully healed and your progress was saved to Slot {self.current_save_slot}!", on_complete=None)
                 self.state = GameState.DIALOGUE
@@ -446,6 +499,10 @@ class Game:
         elif self.state == GameState.TRAINER_CUSTOMIZE and self.trainer_customize_screen:
             self.trainer_customize_screen.update(dt)
 
+        # PC Box State update
+        elif self.state == GameState.PC_BOX and self.pc_box_screen:
+            self.pc_box_screen.update(dt)
+
         # Dialogue State update
         elif self.state == GameState.DIALOGUE:
             if self.current_dialogue:
@@ -486,15 +543,19 @@ class Game:
         elif self.state == GameState.TRAINER_CUSTOMIZE and self.trainer_customize_screen:
             self.trainer_customize_screen.draw(self.screen)
 
-        # 3. Starter Select State (Fallback)
+        # 3. PC Box Storage Screen
+        elif self.state == GameState.PC_BOX and self.pc_box_screen:
+            self.pc_box_screen.draw(self.screen)
+
+        # 4. Starter Select State (Fallback)
         elif self.state == GameState.STARTER_SELECT:
             self.starter_screen.draw(self.screen)
 
-        # 4. Save Slots Screen State
+        # 5. Save Slots Screen State
         elif self.state == GameState.SAVE_SLOTS and self.save_slot_screen:
             self.save_slot_screen.draw(self.screen)
 
-        # 5. Overworld & Sub-Menus & Save
+        # 6. Overworld & Sub-Menus & Save
         elif self.state in [GameState.OVERWORLD, GameState.PARTY_MENU, GameState.DIALOGUE, GameState.SAVE]:
             self.world.draw(self.screen, self.player.current_map, self.camera_x, self.camera_y)
             self.player.draw(self.screen, self.camera_x, self.camera_y)
@@ -517,19 +578,19 @@ class Game:
             if self.state == GameState.SAVE and self.save_dialog:
                 self.save_dialog.draw(self.screen)
 
-        # 5. Pokédex Screen
+        # 7. Pokédex Screen
         elif self.state == GameState.POKEDEX and self.pokedex_screen:
             self.pokedex_screen.draw(self.screen)
 
-        # 6. Party Summary Screen
+        # 8. Party Summary Screen
         elif self.state == GameState.TRAINER_CARD and self.party_screen:
             self.party_screen.draw(self.screen)
 
-        # 7. Shop Screen
+        # 9. Shop Screen
         elif self.state == GameState.SHOP and self.shop_screen:
             self.shop_screen.draw(self.screen)
 
-        # 8. Battle Screen
+        # 10. Battle Screen
         elif self.state == GameState.BATTLE and self.battle_system:
             self.battle_system.draw(self.screen)
 

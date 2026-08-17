@@ -16,30 +16,43 @@ from sound_manager import sound_mgr
 from pokemon_data import POKEMON_SPECIES, ITEMS, MOVES
 
 class TitleScreen:
+    """
+    Title screen with interactive save slot carousel preview.
+    Allows cycling through all 3 save slots directly on the main screen,
+    loading any slot instantly, or starting a new adventure in any slot.
+    """
     def __init__(self):
         self.timer = 0.0
         self.starter_index = 0
         self.starters = ["Charmander", "Squirtle", "Bulbasaur", "Pikachu"]
-        self.menu_options = ["CONTINUE", "NEW GAME"]
+        self.menu_options = ["CONTINUE", "ALL_SLOTS", "NEW_GAME"]
         self.selected_idx = 0
+        self.slot_preview_idx = 0 # 0: Slot 1, 1: Slot 2, 2: Slot 3
+        self.slots = []
         self.has_save = False
-        self.save_summary = None
         self.refresh_save_status()
 
     def refresh_save_status(self):
         from save_system import SaveSystem
-        self.has_save = SaveSystem.has_save()
-        self.save_summary = SaveSystem.get_save_summary()
+        self.slots = SaveSystem.get_all_slots_summary()
+        self.has_save = any(s.get("exists") for s in self.slots)
+        
+        # Pick first active slot by default
+        for i, s in enumerate(self.slots):
+            if s.get("exists"):
+                self.slot_preview_idx = i
+                break
+
         if not self.has_save:
-            self.menu_options = ["NEW GAME"]
+            self.menu_options = ["NEW_GAME"]
             self.selected_idx = 0
         else:
-            self.menu_options = ["CONTINUE", "NEW GAME"]
+            self.menu_options = ["CONTINUE", "ALL_SLOTS", "NEW_GAME"]
 
     def handle_input(self, event):
         if event.type != pygame.KEYDOWN:
             return None
-            
+
         if self.has_save:
             if any(event.key == k for k in KEY_UP):
                 self.selected_idx = (self.selected_idx - 1) % len(self.menu_options)
@@ -47,10 +60,31 @@ class TitleScreen:
             elif any(event.key == k for k in KEY_DOWN):
                 self.selected_idx = (self.selected_idx + 1) % len(self.menu_options)
                 sound_mgr.play_sfx("select")
-                
+            elif self.selected_idx == 0: # On CONTINUE slot preview
+                if any(event.key == k for k in KEY_LEFT):
+                    self.slot_preview_idx = (self.slot_preview_idx - 1) % len(self.slots)
+                    sound_mgr.play_sfx("select")
+                elif any(event.key == k for k in KEY_RIGHT):
+                    self.slot_preview_idx = (self.slot_preview_idx + 1) % len(self.slots)
+                    sound_mgr.play_sfx("select")
+
         if any(event.key == k for k in KEY_CONFIRM):
             sound_mgr.play_sfx("confirm")
-            return self.menu_options[self.selected_idx]
+            chosen_opt = self.menu_options[self.selected_idx]
+            chosen_slot_num = self.slot_preview_idx + 1
+            curr_slot_data = self.slots[self.slot_preview_idx]
+
+            if chosen_opt == "CONTINUE":
+                if curr_slot_data.get("exists"):
+                    return ("LOAD_SLOT", chosen_slot_num)
+                else:
+                    # Slot is empty -> start new game in this slot
+                    return ("NEW_GAME", chosen_slot_num)
+            elif chosen_opt == "ALL_SLOTS":
+                return ("SELECT_SLOT", chosen_slot_num)
+            elif chosen_opt == "NEW_GAME":
+                return ("NEW_GAME", chosen_slot_num)
+
         return None
 
     def update(self, dt):
@@ -69,62 +103,88 @@ class TitleScreen:
             pygame.draw.line(surf, col, (0, y), (SCREEN_WIDTH, y))
 
         # Title Card
-        title_y = 60 + int(math.sin(self.timer * 2.0) * 6)
+        title_y = 45 + int(math.sin(self.timer * 2.0) * 5)
         title_txt = gfx.fonts["title"].render("POKÉMON", True, (255, 215, 0)) # Gold
         sub_txt = gfx.fonts["large"].render("PYGAME EDITION", True, (240, 60, 60)) # Red
         
         # Shadow & Glow
         surf.blit(gfx.fonts["title"].render("POKÉMON", True, (30, 30, 40)), (SCREEN_WIDTH // 2 - title_txt.get_width() // 2 + 4, title_y + 4))
         surf.blit(title_txt, (SCREEN_WIDTH // 2 - title_txt.get_width() // 2, title_y))
-        surf.blit(sub_txt, (SCREEN_WIDTH // 2 - sub_txt.get_width() // 2, title_y + 55))
+        surf.blit(sub_txt, (SCREEN_WIDTH // 2 - sub_txt.get_width() // 2, title_y + 50))
 
         if self.has_save:
-            # Show Save Card and Continue / New Game
-            for i, opt in enumerate(self.menu_options):
-                by = 220 + i * 140
-                is_sel = (i == self.selected_idx)
-                bw, bh = 480, 115 if opt == "CONTINUE" else 65
-                bx = (SCREEN_WIDTH - bw) // 2
+            # 1. CONTINUE (Slot Carousel Card)
+            cur_slot = self.slots[self.slot_preview_idx]
+            cur_num = self.slot_preview_idx + 1
+            is_sel_cont = (self.selected_idx == 0)
+            
+            cw, ch = 520, 135
+            cx = (SCREEN_WIDTH - cw) // 2
+            cy = 180
+
+            pygame.draw.rect(surf, (240, 140, 40) if is_sel_cont else UI_BORDER_LIGHT, (cx - 2, cy - 2, cw + 4, ch + 4), border_radius=12)
+            pygame.draw.rect(surf, (255, 248, 230) if is_sel_cont else WHITE, (cx, cy, cw, ch), border_radius=10)
+
+            # Slot Header with Arrow Indicators & Dots
+            slot_dots = " ".join(["●" if i == self.slot_preview_idx else "○" for i in range(3)])
+            header_txt = gfx.fonts["large"].render(f"CONTINUE GAME  ◀  SLOT {cur_num} / 3  ▶", True, (220, 80, 0) if is_sel_cont else UI_TEXT)
+            surf.blit(header_txt, (cx + 20, cy + 12))
+            
+            dots_txt = gfx.fonts["small"].render(slot_dots, True, (200, 80, 0) if is_sel_cont else UI_TEXT_MUTED)
+            surf.blit(dots_txt, (cx + cw - dots_txt.get_width() - 20, cy + 16))
+
+            if cur_slot.get("exists"):
+                # Lead Pokémon Sprite
+                lead_sp = gfx.get_pokemon_sprite(cur_slot.get("lead_species", "Pikachu"), is_back=False, size=(75, 75))
+                surf.blit(lead_sp, (cx + 15, cy + 45))
+
+                # Trainer & Location Details
+                t_name = cur_slot.get("trainer_name", "Red")
+                t_gender = cur_slot.get("gender", "Boy")
+                info_l1 = gfx.fonts["regular"].render(f"Trainer: {t_name} ({t_gender})  |  Map: {cur_slot.get('map', 'Pallet Town')}", True, UI_TEXT)
+                info_l2 = gfx.fonts["regular"].render(f"Lead: {cur_slot.get('lead_name', 'Pokémon')} (Lv.{cur_slot.get('lead_level', 5)})", True, (40, 120, 220))
+                info_l3 = gfx.fonts["small"].render(f"Team: {cur_slot.get('party_count', 1)} | Money: ${cur_slot.get('money', 0)} | Pokédex: {cur_slot.get('caught_count', 0)}/151 | {cur_slot.get('timestamp', '')}", True, UI_TEXT_MUTED)
                 
-                bdr_col = (240, 140, 40) if is_sel else UI_BORDER_LIGHT
-                bg_col = (255, 248, 230) if is_sel else WHITE
-                pygame.draw.rect(surf, bdr_col, (bx - 2, by - 2, bw + 4, bh + 4), border_radius=10)
-                pygame.draw.rect(surf, bg_col, (bx, by, bw, bh), border_radius=8)
-                
-                if opt == "CONTINUE" and self.save_summary:
-                    # Continue Card Details
-                    head_txt = gfx.fonts["large"].render(f"CONTINUE (Slot {self.save_summary.get('slot', 1)})", True, (220, 80, 0) if is_sel else UI_TEXT)
-                    surf.blit(head_txt, (bx + 20, by + 12))
-                    
-                    # Lead Pokemon Sprite
-                    lead_sp = gfx.get_pokemon_sprite(self.save_summary.get("lead_species", "Pikachu"), is_back=False, size=(70, 70))
-                    surf.blit(lead_sp, (bx + 20, by + 40))
-                    
-                    # Details
-                    loc_txt = gfx.fonts["regular"].render(f"Location: {self.save_summary.get('map', 'Pallet Town')}", True, UI_TEXT)
-                    lead_txt = gfx.fonts["regular"].render(f"{self.save_summary.get('lead_name', 'Pokémon')} (Lv.{self.save_summary.get('lead_level', 5)})", True, (40, 120, 220))
-                    stat_txt = gfx.fonts["small"].render(f"Team: {self.save_summary.get('party_count', 1)} | Money: ${self.save_summary.get('money', 0)} | Pokédex: {self.save_summary.get('caught_count', 0)}/151", True, UI_TEXT_MUTED)
-                    
-                    surf.blit(loc_txt, (bx + 105, by + 40))
-                    surf.blit(lead_txt, (bx + 105, by + 64))
-                    surf.blit(stat_txt, (bx + 105, by + 88))
-                else:
-                    # New Game Card
-                    opt_txt = gfx.fonts["large"].render("NEW GAME", True, (220, 80, 0) if is_sel else UI_TEXT)
-                    surf.blit(opt_txt, (bx + (bw - opt_txt.get_width()) // 2, by + (bh - opt_txt.get_height()) // 2))
-                    
-            ctrl_hint = gfx.fonts["small"].render("Arrow Keys: Select  |  [Z / Enter]: Choose Save Slot", True, LIGHT_GRAY)
-            surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 550))
+                surf.blit(info_l1, (cx + 98, cy + 46))
+                surf.blit(info_l2, (cx + 98, cy + 72))
+                surf.blit(info_l3, (cx + 98, cy + 98))
+            else:
+                # Empty Slot state
+                emp_txt = gfx.fonts["large"].render("- Empty Save Slot -", True, (160, 170, 185))
+                emp_sub = gfx.fonts["regular"].render("Press [Enter] to start a new adventure in Slot " + str(cur_num), True, UI_TEXT_MUTED)
+                surf.blit(emp_txt, (cx + (cw - emp_txt.get_width()) // 2, cy + 50))
+                surf.blit(emp_sub, (cx + (cw - emp_sub.get_width()) // 2, cy + 85))
+
+            # 2. ALL SAVE SLOTS Button
+            is_sel_all = (self.selected_idx == 1)
+            by_all = cy + ch + 18
+            bh_btn = 52
+            pygame.draw.rect(surf, (240, 140, 40) if is_sel_all else UI_BORDER_LIGHT, (cx - 2, by_all - 2, cw + 4, bh_btn + 4), border_radius=10)
+            pygame.draw.rect(surf, (255, 248, 230) if is_sel_all else WHITE, (cx, by_all, cw, bh_btn), border_radius=8)
+            all_txt = gfx.fonts["medium"].render("VIEW ALL 3 SAVE SLOTS", True, (220, 80, 0) if is_sel_all else UI_TEXT)
+            surf.blit(all_txt, (cx + (cw - all_txt.get_width()) // 2, by_all + 14))
+
+            # 3. NEW GAME Button
+            is_sel_new = (self.selected_idx == 2)
+            by_new = by_all + bh_btn + 14
+            pygame.draw.rect(surf, (240, 140, 40) if is_sel_new else UI_BORDER_LIGHT, (cx - 2, by_new - 2, cw + 4, bh_btn + 4), border_radius=10)
+            pygame.draw.rect(surf, (255, 248, 230) if is_sel_new else WHITE, (cx, by_new, cw, bh_btn), border_radius=8)
+            new_txt = gfx.fonts["medium"].render("START NEW ADVENTURE", True, (220, 80, 0) if is_sel_new else UI_TEXT)
+            surf.blit(new_txt, (cx + (cw - new_txt.get_width()) // 2, by_new + 14))
+
+            ctrl_hint = gfx.fonts["small"].render("Up/Down: Choose Menu  |  Left/Right: Switch Slot (1-3)  |  [Enter]: Start", True, LIGHT_GRAY)
+            surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 560))
+
         else:
-            # Featured Starter Sprite
+            # Featured Starter Sprite for fresh start
             feat_species = self.starters[self.starter_index]
             p_surf = gfx.get_pokemon_sprite(feat_species, is_back=False, size=(200, 200))
-            surf.blit(p_surf, (SCREEN_WIDTH // 2 - 100, 210))
+            surf.blit(p_surf, (SCREEN_WIDTH // 2 - 100, 195))
 
             # Blinking "PRESS ENTER OR Z TO START"
             if int(self.timer * 2) % 2 == 0:
                 start_txt = gfx.fonts["medium"].render("PRESS [ENTER] OR [Z] TO START", True, WHITE)
-                surf.blit(start_txt, (SCREEN_WIDTH // 2 - start_txt.get_width() // 2, 470))
+                surf.blit(start_txt, (SCREEN_WIDTH // 2 - start_txt.get_width() // 2, 460))
                 
             ctrl_hint = gfx.fonts["small"].render("Arrow Keys: Move  |  Z: Confirm  |  X: Back  |  C: Menu  |  F5: Quick Save", True, LIGHT_GRAY)
             surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 545))
@@ -137,7 +197,7 @@ class SaveSlotSelectScreen:
       - 'NEW_GAME': User picks a slot to start a new journey.
       - 'SAVE': In-game menu to save into any slot.
     """
-    def __init__(self, mode="LOAD", active_slot=1, player=None, party=None, inventory=None, pokedex=None, world=None):
+    def __init__(self, mode="LOAD", active_slot=1, player=None, party=None, inventory=None, pokedex=None, world=None, pc_box=None):
         self.mode = mode # "LOAD", "NEW_GAME", "SAVE"
         self.active_slot = active_slot
         self.player = player
@@ -145,6 +205,7 @@ class SaveSlotSelectScreen:
         self.inventory = inventory
         self.pokedex = pokedex
         self.world = world
+        self.pc_box = pc_box
         self.selected_idx = max(0, min(2, active_slot - 1))
         self.slots = []
         self.refresh_slots()
@@ -182,7 +243,7 @@ class SaveSlotSelectScreen:
                         return ("NEW_GAME", self.target_slot_for_modal)
                     elif self.mode == "SAVE":
                         from save_system import SaveSystem
-                        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.target_slot_for_modal)
+                        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.target_slot_for_modal, pc_box=self.pc_box)
                         self.refresh_slots()
                         return ("SAVED", self.target_slot_for_modal)
                 else:
@@ -231,7 +292,7 @@ class SaveSlotSelectScreen:
                     self.modal_selected_yes = False
                 else:
                     from save_system import SaveSystem
-                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=chosen_slot)
+                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=chosen_slot, pc_box=self.pc_box)
                     sound_mgr.play_sfx("confirm")
                     self.refresh_slots()
                     return ("SAVED", chosen_slot)
@@ -763,7 +824,7 @@ StarterSelectScreen = TrainerCustomizationScreen
 
 class PauseMenu:
     def __init__(self):
-        self.options = ["POKÉDEX", "POKÉMON", "BAG", "TRAINER", "SAVE", "EXIT"]
+        self.options = ["POKÉDEX", "POKÉMON", "BAG", "PC BOX", "TRAINER", "SAVE", "EXIT"]
         self.selected_idx = 0
 
     def handle_input(self, event):
@@ -786,7 +847,7 @@ class PauseMenu:
 
     def draw(self, surf):
         # Draw on top-right of screen
-        mw, mh = 200, 260
+        mw, mh = 200, 300
         mx = SCREEN_WIDTH - mw - 20
         my = 20
         
@@ -1142,3 +1203,403 @@ class DialogueBox:
         for i, l_str in enumerate(lines[:3]):
             ltxt = gfx.fonts["medium"].render(l_str, True, UI_TEXT)
             surf.blit(ltxt, (bx + 25, by + 28 + i * 32))
+
+class PCBoxScreen:
+    """
+    Comprehensive Pokémon Storage System (PC Box) screen.
+    Allows withdrawing, depositing, swapping, and inspecting Pokémon
+    between the active party (max 6) and the storage PC box.
+    """
+    def __init__(self, party, pc_box):
+        self.party = party
+        self.pc_box = pc_box
+        self.active_panel = "PARTY" if len(party) > 0 else "PC" # "PARTY" or "PC"
+        self.party_idx = 0
+        self.pc_idx = 0
+        self.pc_scroll = 0
+        self.menu_mode = "NAVIGATE" # "NAVIGATE", "ACTIONS", "SUMMARY"
+        self.action_idx = 0
+        self.summary_pokemon = None
+        self.notification = ""
+        self.notification_timer = 0.0
+
+    def show_notification(self, text, duration=2.5):
+        self.notification = text
+        self.notification_timer = duration
+
+    def update(self, dt):
+        if self.notification_timer > 0:
+            self.notification_timer -= dt
+            if self.notification_timer <= 0:
+                self.notification = ""
+
+    def handle_input(self, event):
+        if event.type != pygame.KEYDOWN:
+            return None
+
+        # 1. Summary Mode View
+        if self.menu_mode == "SUMMARY":
+            if any(event.key == k for k in KEY_CONFIRM + KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                self.menu_mode = "NAVIGATE"
+                self.summary_pokemon = None
+            return None
+
+        # 2. Action Sub-Menu Mode
+        if self.menu_mode == "ACTIONS":
+            actions = self._get_available_actions()
+            if any(event.key == k for k in KEY_UP):
+                self.action_idx = (self.action_idx - 1) % len(actions)
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_DOWN):
+                self.action_idx = (self.action_idx + 1) % len(actions)
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                self.menu_mode = "NAVIGATE"
+            elif any(event.key == k for k in KEY_CONFIRM):
+                chosen_action = actions[self.action_idx]
+                self._execute_action(chosen_action)
+            return None
+
+        # 3. Main Navigation Mode
+        if any(event.key == k for k in KEY_LEFT):
+            if self.active_panel == "PC":
+                self.active_panel = "PARTY"
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_RIGHT):
+            if self.active_panel == "PARTY":
+                self.active_panel = "PC"
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_UP):
+            if self.active_panel == "PARTY" and len(self.party) > 0:
+                self.party_idx = (self.party_idx - 1) % len(self.party)
+                sound_mgr.play_sfx("select")
+            elif self.active_panel == "PC" and len(self.pc_box) > 0:
+                self.pc_idx = (self.pc_idx - 1) % len(self.pc_box)
+                self._adjust_pc_scroll()
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_DOWN):
+            if self.active_panel == "PARTY" and len(self.party) > 0:
+                self.party_idx = (self.party_idx + 1) % len(self.party)
+                sound_mgr.play_sfx("select")
+            elif self.active_panel == "PC" and len(self.pc_box) > 0:
+                self.pc_idx = (self.pc_idx + 1) % len(self.pc_box)
+                self._adjust_pc_scroll()
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_CONFIRM):
+            if self.active_panel == "PARTY" and len(self.party) > 0:
+                self.menu_mode = "ACTIONS"
+                self.action_idx = 0
+                sound_mgr.play_sfx("confirm")
+            elif self.active_panel == "PC" and len(self.pc_box) > 0:
+                self.menu_mode = "ACTIONS"
+                self.action_idx = 0
+                sound_mgr.play_sfx("confirm")
+            else:
+                self.show_notification("No Pokémon selected in this panel!")
+        elif any(event.key == k for k in KEY_CANCEL):
+            sound_mgr.play_sfx("cancel")
+            return "EXIT"
+
+        return None
+
+    def _adjust_pc_scroll(self):
+        if self.pc_idx < self.pc_scroll:
+            self.pc_scroll = self.pc_idx
+        elif self.pc_idx >= self.pc_scroll + 6:
+            self.pc_scroll = self.pc_idx - 5
+
+    def _get_available_actions(self):
+        if self.active_panel == "PARTY":
+            return ["DEPOSIT TO PC", "SWAP WITH PC", "SUMMARY", "CANCEL"]
+        else:
+            return ["WITHDRAW TO PARTY", "SWAP WITH PARTY", "SUMMARY", "CANCEL"]
+
+    def _execute_action(self, action):
+        if action == "DEPOSIT TO PC":
+            if len(self.party) <= 1:
+                self.show_notification("Cannot deposit your last Pokémon!")
+                sound_mgr.play_sfx("cancel")
+            else:
+                pkmn = self.party.pop(self.party_idx)
+                self.pc_box.append(pkmn)
+                self.party_idx = max(0, min(len(self.party) - 1, self.party_idx))
+                self.show_notification(f"Deposited {pkmn.nickname or pkmn.species} into PC Box!")
+                sound_mgr.play_sfx("confirm")
+                self.menu_mode = "NAVIGATE"
+
+        elif action == "WITHDRAW TO PARTY":
+            if len(self.party) >= 6:
+                self.show_notification("Party is full! (Max 6). Use Swap instead.")
+                sound_mgr.play_sfx("cancel")
+            else:
+                pkmn = self.pc_box.pop(self.pc_idx)
+                self.party.append(pkmn)
+                self.pc_idx = max(0, min(len(self.pc_box) - 1, self.pc_idx))
+                self._adjust_pc_scroll()
+                self.show_notification(f"Withdrew {pkmn.nickname or pkmn.species} to Party!")
+                sound_mgr.play_sfx("confirm")
+                self.menu_mode = "NAVIGATE"
+
+        elif action in ["SWAP WITH PC", "SWAP WITH PARTY"]:
+            if len(self.party) == 0 or len(self.pc_box) == 0:
+                self.show_notification("Need at least 1 Pokémon in both Party and PC to swap!")
+                sound_mgr.play_sfx("cancel")
+            else:
+                p_party = self.party[self.party_idx]
+                p_pc = self.pc_box[self.pc_idx]
+                self.party[self.party_idx] = p_pc
+                self.pc_box[self.pc_idx] = p_party
+                self.show_notification(f"Swapped {p_party.species} with {p_pc.species}!")
+                sound_mgr.play_sfx("confirm")
+                self.menu_mode = "NAVIGATE"
+
+        elif action == "SUMMARY":
+            if self.active_panel == "PARTY" and len(self.party) > self.party_idx:
+                self.summary_pokemon = self.party[self.party_idx]
+                self.menu_mode = "SUMMARY"
+                sound_mgr.play_sfx("confirm")
+            elif self.active_panel == "PC" and len(self.pc_box) > self.pc_idx:
+                self.summary_pokemon = self.pc_box[self.pc_idx]
+                self.menu_mode = "SUMMARY"
+                sound_mgr.play_sfx("confirm")
+
+        elif action == "CANCEL":
+            self.menu_mode = "NAVIGATE"
+            sound_mgr.play_sfx("cancel")
+
+    def draw(self, surf):
+        # Background
+        surf.fill((228, 236, 248))
+
+        # Title Header
+        title_txt = gfx.fonts["title"].render("POKÉMON STORAGE SYSTEM", True, (20, 70, 160))
+        sub_txt = gfx.fonts["regular"].render("Manage your active battle team & stored Pokémon in the PC box", True, UI_TEXT_MUTED)
+        surf.blit(title_txt, (SCREEN_WIDTH // 2 - title_txt.get_width() // 2, 16))
+        surf.blit(sub_txt, (SCREEN_WIDTH // 2 - sub_txt.get_width() // 2, 54))
+
+        # 1. Left Column: Active Party (Max 6)
+        lx, ly, lw, lh = 35, 86, 350, 460
+        is_party_active = (self.active_panel == "PARTY")
+        bdr_color = (240, 140, 40) if is_party_active else UI_BORDER_LIGHT
+        pygame.draw.rect(surf, bdr_color, (lx - 2, ly - 2, lw + 4, lh + 4), border_radius=12)
+        pygame.draw.rect(surf, WHITE, (lx, ly, lw, lh), border_radius=10)
+
+        p_header = gfx.fonts["large"].render(f"ACTIVE TEAM ({len(self.party)}/6)", True, (20, 80, 180) if is_party_active else UI_TEXT)
+        surf.blit(p_header, (lx + 20, ly + 14))
+
+        # Party Slot Cards (Up to 6)
+        for i in range(6):
+            cy = ly + 50 + i * 66
+            cw, ch = lw - 30, 60
+            cx = lx + 15
+
+            if i < len(self.party):
+                p = self.party[i]
+                is_sel = (is_party_active and i == self.party_idx)
+                card_bdr = (240, 140, 40) if is_sel else UI_BORDER_LIGHT
+                card_bg = (255, 248, 230) if is_sel else (250, 252, 255)
+
+                pygame.draw.rect(surf, card_bdr, (cx, cy, cw, ch), border_radius=8)
+                pygame.draw.rect(surf, card_bg, (cx + 1, cy + 1, cw - 2, ch - 2), border_radius=7)
+
+                # Mini Sprite
+                sprite = gfx.get_pokemon_sprite(p.species, is_back=False, size=(46, 46))
+                surf.blit(sprite, (cx + 4, cy + 6))
+
+                # Name & Level
+                name_txt = gfx.fonts["regular"].render(f"{p.nickname or p.species}", True, (200, 80, 0) if is_sel else UI_TEXT)
+                lvl_txt = gfx.fonts["small"].render(f"Lv.{p.level}", True, UI_TEXT_MUTED)
+                surf.blit(name_txt, (cx + 56, cy + 8))
+                surf.blit(lvl_txt, (cx + 56 + name_txt.get_width() + 8, cy + 10))
+
+                # HP Bar
+                hp_w = 110
+                hp_pct = max(0.0, min(1.0, p.current_hp / p.max_hp))
+                hp_col = HP_GREEN if hp_pct > 0.5 else (HP_YELLOW if hp_pct > 0.2 else HP_RED)
+                pygame.draw.rect(surf, (200, 205, 215), (cx + 56, cy + 34, hp_w, 8), border_radius=3)
+                pygame.draw.rect(surf, hp_col, (cx + 56, cy + 34, int(hp_w * hp_pct), 8), border_radius=3)
+
+                hp_lbl = gfx.fonts["small"].render(f"{p.current_hp}/{p.max_hp}", True, UI_TEXT_MUTED)
+                surf.blit(hp_lbl, (cx + 56 + hp_w + 8, cy + 30))
+
+                # Types
+                p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
+                for t_idx, t_name in enumerate(p_types):
+                    gfx.draw_type_badge(surf, t_name, cx + cw - 70 + t_idx * 34, cy + 8, width=32, height=16)
+
+            else:
+                # Empty Party Slot
+                pygame.draw.rect(surf, (230, 235, 245), (cx, cy, cw, ch), border_radius=8)
+                empty_lbl = gfx.fonts["small"].render("- Empty Slot -", True, (160, 170, 185))
+                surf.blit(empty_lbl, (cx + (cw - empty_lbl.get_width()) // 2, cy + 22))
+
+        # 2. Right Column: PC Storage Box
+        rx, ry, rw, rh = 415, 86, 350, 460
+        is_pc_active = (self.active_panel == "PC")
+        bdr_color_pc = (240, 140, 40) if is_pc_active else UI_BORDER_LIGHT
+        pygame.draw.rect(surf, bdr_color_pc, (rx - 2, ry - 2, rw + 4, rh + 4), border_radius=12)
+        pygame.draw.rect(surf, WHITE, (rx, ry, rw, rh), border_radius=10)
+
+        pc_header = gfx.fonts["large"].render(f"PC STORAGE BOX ({len(self.pc_box)})", True, (20, 80, 180) if is_pc_active else UI_TEXT)
+        surf.blit(pc_header, (rx + 20, ry + 14))
+
+        if len(self.pc_box) == 0:
+            # Empty state message
+            no_pkmn_txt = gfx.fonts["regular"].render("No Pokémon stored in PC Box.", True, UI_TEXT_MUTED)
+            hint_txt = gfx.fonts["small"].render("Caught Pokémon will be stored here", True, UI_TEXT_MUTED)
+            hint_txt2 = gfx.fonts["small"].render("when your party is full (6 Pokémon).", True, UI_TEXT_MUTED)
+            surf.blit(no_pkmn_txt, (rx + (rw - no_pkmn_txt.get_width()) // 2, ry + 180))
+            surf.blit(hint_txt, (rx + (rw - hint_txt.get_width()) // 2, ry + 215))
+            surf.blit(hint_txt2, (rx + (rw - hint_txt2.get_width()) // 2, ry + 238))
+        else:
+            # Display up to 6 visible slots in scroll view
+            visible_count = min(6, len(self.pc_box) - self.pc_scroll)
+            for idx in range(6):
+                actual_idx = self.pc_scroll + idx
+                cy = ry + 50 + idx * 66
+                cw, ch = rw - 30, 60
+                cx = rx + 15
+
+                if actual_idx < len(self.pc_box):
+                    p = self.pc_box[actual_idx]
+                    is_sel = (is_pc_active and actual_idx == self.pc_idx)
+                    card_bdr = (240, 140, 40) if is_sel else UI_BORDER_LIGHT
+                    card_bg = (255, 248, 230) if is_sel else (250, 252, 255)
+
+                    pygame.draw.rect(surf, card_bdr, (cx, cy, cw, ch), border_radius=8)
+                    pygame.draw.rect(surf, card_bg, (cx + 1, cy + 1, cw - 2, ch - 2), border_radius=7)
+
+                    # Mini Sprite
+                    sprite = gfx.get_pokemon_sprite(p.species, is_back=False, size=(46, 46))
+                    surf.blit(sprite, (cx + 4, cy + 6))
+
+                    # Name & Level
+                    name_txt = gfx.fonts["regular"].render(f"{p.nickname or p.species}", True, (200, 80, 0) if is_sel else UI_TEXT)
+                    lvl_txt = gfx.fonts["small"].render(f"Lv.{p.level}", True, UI_TEXT_MUTED)
+                    surf.blit(name_txt, (cx + 56, cy + 8))
+                    surf.blit(lvl_txt, (cx + 56 + name_txt.get_width() + 8, cy + 10))
+
+                    # HP Bar
+                    hp_w = 110
+                    hp_pct = max(0.0, min(1.0, p.current_hp / p.max_hp))
+                    hp_col = HP_GREEN if hp_pct > 0.5 else (HP_YELLOW if hp_pct > 0.2 else HP_RED)
+                    pygame.draw.rect(surf, (200, 205, 215), (cx + 56, cy + 34, hp_w, 8), border_radius=3)
+                    pygame.draw.rect(surf, hp_col, (cx + 56, cy + 34, int(hp_w * hp_pct), 8), border_radius=3)
+
+                    hp_lbl = gfx.fonts["small"].render(f"{p.current_hp}/{p.max_hp}", True, UI_TEXT_MUTED)
+                    surf.blit(hp_lbl, (cx + 56 + hp_w + 8, cy + 30))
+
+                    # Types
+                    p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
+                    for t_idx, t_name in enumerate(p_types):
+                        gfx.draw_type_badge(surf, t_name, cx + cw - 70 + t_idx * 34, cy + 8, width=32, height=16)
+
+            # Scroll indicator
+            if len(self.pc_box) > 6:
+                scroll_info = gfx.fonts["small"].render(f"▲ ▼ ({self.pc_idx + 1}/{len(self.pc_box)})", True, (200, 80, 0))
+                surf.blit(scroll_info, (rx + rw - scroll_info.get_width() - 20, ry + 16))
+
+        # 3. Action Modal Popup Overlay
+        if self.menu_mode == "ACTIONS":
+            # Semi-transparent overlay
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 110))
+            surf.blit(overlay, (0, 0))
+
+            actions = self._get_available_actions()
+            mw, mh = 260, 48 + len(actions) * 44
+            mx = (SCREEN_WIDTH - mw) // 2
+            my = (SCREEN_HEIGHT - mh) // 2
+
+            pygame.draw.rect(surf, UI_BORDER_DARK, (mx - 2, my - 2, mw + 4, mh + 4), border_radius=12)
+            pygame.draw.rect(surf, WHITE, (mx, my, mw, mh), border_radius=10)
+
+            act_title = gfx.fonts["large"].render("CHOOSE ACTION", True, (20, 70, 160))
+            surf.blit(act_title, (mx + (mw - act_title.get_width()) // 2, my + 14))
+
+            for a_idx, act_name in enumerate(actions):
+                ay = my + 48 + a_idx * 44
+                is_sel = (a_idx == self.action_idx)
+                bdr_col = (240, 140, 40) if is_sel else UI_BORDER_LIGHT
+                bg_col = (255, 240, 210) if is_sel else (250, 250, 252)
+
+                pygame.draw.rect(surf, bdr_col, (mx + 16, ay, mw - 32, 36), border_radius=8)
+                pygame.draw.rect(surf, bg_col, (mx + 17, ay + 1, mw - 34, 34), border_radius=7)
+
+                atxt = gfx.fonts["regular"].render(act_name, True, (200, 80, 0) if is_sel else UI_TEXT)
+                surf.blit(atxt, (mx + (mw - atxt.get_width()) // 2, ay + 8))
+
+        # 4. Summary Card Modal Popup Overlay
+        if self.menu_mode == "SUMMARY" and self.summary_pokemon:
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 130))
+            surf.blit(overlay, (0, 0))
+
+            p = self.summary_pokemon
+            sw, sh = 520, 390
+            sx = (SCREEN_WIDTH - sw) // 2
+            sy = (SCREEN_HEIGHT - sh) // 2
+
+            pygame.draw.rect(surf, UI_BORDER_DARK, (sx - 2, sy - 2, sw + 4, sh + 4), border_radius=14)
+            pygame.draw.rect(surf, WHITE, (sx, sy, sw, sh), border_radius=12)
+
+            # Header
+            shead = gfx.fonts["title"].render(f"{p.nickname or p.species} - Level {p.level}", True, (20, 70, 160))
+            surf.blit(shead, (sx + 24, sy + 18))
+
+            # Sprite & Types
+            sp_surf = gfx.get_pokemon_sprite(p.species, is_back=False, size=(120, 120))
+            surf.blit(sp_surf, (sx + 24, sy + 58))
+
+            p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
+            for t_idx, t_name in enumerate(p_types):
+                gfx.draw_type_badge(surf, t_name, sx + 24 + t_idx * 70, sy + 185, width=64, height=22)
+
+            # Stats Column
+            stat_x = sx + 170
+            s_hp = gfx.fonts["regular"].render(f"HP: {p.current_hp}/{p.max_hp}", True, UI_TEXT)
+            s_atk = gfx.fonts["regular"].render(f"Attack: {p.stats['atk']}", True, UI_TEXT)
+            s_def = gfx.fonts["regular"].render(f"Defense: {p.stats['def']}", True, UI_TEXT)
+            s_spd = gfx.fonts["regular"].render(f"Speed: {p.stats['spd']}", True, UI_TEXT)
+            s_exp = gfx.fonts["small"].render(f"EXP: {p.exp}", True, UI_TEXT_MUTED)
+
+            surf.blit(s_hp, (stat_x, sy + 65))
+            surf.blit(s_atk, (stat_x, sy + 95))
+            surf.blit(s_def, (stat_x, sy + 125))
+            surf.blit(s_spd, (stat_x, sy + 155))
+            surf.blit(s_exp, (stat_x, sy + 185))
+
+            # Moves Box
+            moves_y = sy + 225
+            pygame.draw.rect(surf, (245, 248, 255), (sx + 20, moves_y, sw - 40, 115), border_radius=8)
+            pygame.draw.rect(surf, UI_BORDER_LIGHT, (sx + 20, moves_y, sw - 40, 115), 1, border_radius=8)
+
+            m_title = gfx.fonts["small"].render("KNOWN MOVES", True, (40, 100, 200))
+            surf.blit(m_title, (sx + 30, moves_y + 8))
+
+            for m_i, m in enumerate(p.moves[:4]):
+                mx_pos = sx + 30 + (m_i % 2) * 240
+                my_pos = moves_y + 32 + (m_i // 2) * 36
+                m_name = gfx.fonts["regular"].render(m.name, True, UI_TEXT)
+                m_pp = gfx.fonts["small"].render(f"PP: {m.pp}/{m.max_pp} ({m.type})", True, UI_TEXT_MUTED)
+                surf.blit(m_name, (mx_pos, my_pos))
+                surf.blit(m_pp, (mx_pos, my_pos + 18))
+
+            close_hint = gfx.fonts["small"].render("Press [Z / X / Enter / ESC] to Close Summary", True, (200, 80, 0))
+            surf.blit(close_hint, (sx + (sw - close_hint.get_width()) // 2, sy + 355))
+
+        # 5. On-screen Toast Notification
+        if self.notification_timer > 0:
+            nw = gfx.fonts["regular"].size(self.notification)[0] + 36
+            nx = (SCREEN_WIDTH - nw) // 2
+            ny = 20
+            pygame.draw.rect(surf, (30, 36, 50), (nx - 2, ny - 2, nw + 4, 36), border_radius=8)
+            pygame.draw.rect(surf, (255, 235, 180), (nx, ny, nw, 32), border_radius=6)
+            ntxt = gfx.fonts["regular"].render(self.notification, True, (180, 60, 0))
+            surf.blit(ntxt, (nx + 18, ny + 5))
+
+        # 6. Bottom Navigation Hint Bar
+        hint = gfx.fonts["small"].render("Left/Right: Switch Panel  |  Up/Down: Select Pokémon  |  [Enter]: Options  |  [X]: Exit PC", True, UI_TEXT_MUTED)
+        surf.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, 565))

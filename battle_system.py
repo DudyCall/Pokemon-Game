@@ -34,10 +34,11 @@ class BattlePhase:
     FINISHED = "FINISHED"
 
 class BattleSystem:
-    def __init__(self, player_party, opponent_pokemon_or_trainer, is_trainer=False, inventory=None, pokedex=None):
+    def __init__(self, player_party, opponent_pokemon_or_trainer, is_trainer=False, inventory=None, pokedex=None, pc_box=None):
         self.player_party = player_party
         self.inventory = inventory
         self.pokedex = pokedex
+        self.pc_box = pc_box if pc_box is not None else []
         self.is_trainer = is_trainer
         self.trainer_data = opponent_pokemon_or_trainer if is_trainer else None
         
@@ -226,6 +227,7 @@ class BattleSystem:
                                 self.player_party.append(self.enemy_pokemon)
                                 self.queue_message(f"Gotcha! {self.enemy_pokemon.species.upper()} was caught!", on_done=self._end_battle_victory)
                             else:
+                                self.pc_box.append(self.enemy_pokemon)
                                 self.queue_message(f"{self.enemy_pokemon.species.upper()} was sent to PC Box!", on_done=self._end_battle_victory)
                         else:
                             self.catch_phase = 3 # Break out!
@@ -574,18 +576,24 @@ class BattleSystem:
                         
                 self.on_hp_done = on_damage_applied
             else:
-                # Status only move (e.g. Growl, Tail Whip, Recover)
-                eff = move.get("effect", {})
+                # Status only move (e.g. Growl, Tail Whip, Recover, Leech Seed)
+                eff = move.get("effect") or {}
                 if "heal_percent" in eff:
                     healed = attacker.heal(int(attacker.max_hp * (eff["heal_percent"] / 100)))
                     self.queue_message(f"{attacker.nickname} restored {healed} HP!", on_done=next_attack)
                 elif "status" in eff:
                     if defender.apply_status(eff["status"]):
-                        self.queue_message(f"{defender.nickname} was {eff['status'].lower()}ed!", on_done=next_attack)
+                        self.queue_message(f"{defender.nickname} became {eff['status']}ed!", on_done=next_attack)
                     else:
                         self.queue_message("But it failed!", on_done=next_attack)
+                elif "stat" in eff and "stages" in eff:
+                    stat_name = eff["stat"].upper()
+                    stages = eff["stages"]
+                    target = defender if stages < 0 else attacker
+                    change_word = "harshly fell" if stages <= -2 else ("fell" if stages < 0 else ("sharply rose" if stages >= 2 else "rose"))
+                    self.queue_message(f"{target.nickname}'s {stat_name} {change_word}!", on_done=next_attack)
                 else:
-                    self.queue_message("Stat changes applied!", on_done=next_attack)
+                    self.queue_message(f"{attacker.nickname}'s {move['name']} was successful!", on_done=next_attack)
 
         self.queue_message(f"{attacker.nickname} used {move['name']}!", on_done=perform_move)
 

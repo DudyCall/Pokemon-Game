@@ -1,6 +1,6 @@
 {
   "slot": 1,
-  "timestamp": "2026-08-17 20:37",
+  "timestamp": "2026-08-17 21:36",
   "player": {
     "name": "Red",
     "gender": "Boy",
@@ -17,16 +17,16 @@
       "species": "Squirtle",
       "nickname": "Squirtle",
       "level": 8,
-      "current_hp": 27,
+      "current_hp": 26,
       "exp": 512,
       "status": null,
       "ivs": {
-        "hp": 26,
-        "atk": 27,
-        "def": 24,
-        "spatk": 30,
-        "spdef": 14,
-        "spd": 17
+        "hp": 16,
+        "atk": 13,
+        "def": 21,
+        "spatk": 25,
+        "spdef": 10,
+        "spd": 11
       },
       "moves": [
         {
@@ -87,6 +87,7 @@
       ]
     }
   ],
+  "pc_box": [],
   "inventory": {
     "money": 5500,
     "items": {

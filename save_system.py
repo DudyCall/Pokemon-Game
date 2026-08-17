@@ -37,10 +37,20 @@ class Pokedex:
 
 class SaveSystem:
     _active_slot = 1
+    _saves_dir = SAVES_DIR
+
+    @classmethod
+    def set_saves_dir(cls, dir_path):
+        cls._saves_dir = dir_path
+        os.makedirs(cls._saves_dir, exist_ok=True)
+
+    @classmethod
+    def reset_saves_dir(cls):
+        cls._saves_dir = SAVES_DIR
 
     @classmethod
     def _ensure_saves_dir(cls):
-        os.makedirs(SAVES_DIR, exist_ok=True)
+        os.makedirs(cls._saves_dir, exist_ok=True)
         # Check and migrate legacy single save file to Slot 1 if needed
         slot1_path = cls.get_slot_path(1)
         if os.path.exists(LEGACY_SAVE_FILE) and not os.path.exists(slot1_path):
@@ -57,7 +67,7 @@ class SaveSystem:
     @classmethod
     def get_slot_path(cls, slot=1):
         slot_num = max(1, min(NUM_SAVE_SLOTS, int(slot)))
-        return os.path.join(SAVES_DIR, f"slot_{slot_num}.json")
+        return os.path.join(cls._saves_dir, f"slot_{slot_num}.json")
 
     @classmethod
     def set_active_slot(cls, slot):
@@ -68,7 +78,7 @@ class SaveSystem:
         return cls._active_slot
 
     @classmethod
-    def save_game(cls, player, party, inventory, pokedex, world, slot=None):
+    def save_game(cls, player, party, inventory, pokedex, world, slot=None, pc_box=None):
         cls._ensure_saves_dir()
         target_slot = slot if slot is not None else cls._active_slot
         target_slot = max(1, min(NUM_SAVE_SLOTS, int(target_slot)))
@@ -89,6 +99,7 @@ class SaveSystem:
                 "facing": player.facing
             },
             "party": [p.to_dict() for p in party],
+            "pc_box": [p.to_dict() for p in (pc_box or [])],
             "inventory": inventory.to_dict(),
             "pokedex": pokedex.to_dict(),
             "defeated_trainers": list(world.defeated_trainers)
@@ -143,12 +154,18 @@ class SaveSystem:
             gfx.set_custom_player_appearance(player.gender, player.outfit_theme, player.hat_style, player.hair_color)
 
             party = [Pokemon.from_dict(pd) for pd in data.get("party", [])]
+            pc_box = [Pokemon.from_dict(pd) for pd in data.get("pc_box", [])]
             inventory = Inventory.from_dict(data.get("inventory", {}))
             pokedex = Pokedex.from_dict(data.get("pokedex", {}))
             world.defeated_trainers = set(data.get("defeated_trainers", []))
 
+            # Auto-recovery: If Pikachu is in caught Pokédex but not in party or PC box, restore Pikachu to PC box!
+            all_species = [p.species for p in party] + [p.species for p in pc_box]
+            if "Pikachu" in pokedex.caught and "Pikachu" not in all_species:
+                pc_box.append(Pokemon("Pikachu", level=10))
+
             cls._active_slot = target_slot
-            return (party, inventory, pokedex), f"Slot {target_slot} loaded successfully!"
+            return (party, inventory, pokedex, pc_box), f"Slot {target_slot} loaded successfully!"
         except Exception as e:
             return None, f"Error loading Slot {target_slot}: {e}"
 
@@ -212,6 +229,7 @@ class SaveSystem:
                 "timestamp": data.get("timestamp", "Unknown Date"),
                 "map": p_data.get("map", "Pallet Town"),
                 "party_count": len(party_data),
+                "pc_count": len(data.get("pc_box", [])),
                 "lead_name": lead_name,
                 "lead_species": lead_species,
                 "lead_level": lead_lvl,

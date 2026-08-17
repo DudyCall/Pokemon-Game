@@ -1,32 +1,32 @@
 {
   "slot": 3,
-  "timestamp": "2026-08-17 21:17",
+  "timestamp": "2026-08-17 21:32",
   "player": {
-    "name": "hakun",
+    "name": "Red",
     "gender": "Boy",
-    "outfit_theme": "Shadow Black",
-    "hat_style": "Bandana",
-    "hair_color": "Raven Black",
-    "grid_x": 27,
-    "grid_y": 9,
-    "map": "Viridian Forest",
-    "facing": 1
+    "outfit_theme": "Emerald Green",
+    "hat_style": "Trainer Cap",
+    "hair_color": "Dark Brown",
+    "grid_x": 6,
+    "grid_y": 6,
+    "map": "Pokecenter",
+    "facing": 0
   },
   "party": [
     {
       "species": "Bulbasaur",
       "nickname": "Bulbasaur",
       "level": 11,
-      "current_hp": 15,
-      "exp": 1450,
-      "status": "Poison",
+      "current_hp": 34,
+      "exp": 1331,
+      "status": null,
       "ivs": {
-        "hp": 18,
-        "atk": 10,
-        "def": 13,
-        "spatk": 16,
-        "spdef": 31,
-        "spd": 30
+        "hp": 26,
+        "atk": 24,
+        "def": 25,
+        "spatk": 28,
+        "spdef": 27,
+        "spd": 22
       },
       "moves": [
         {
@@ -36,7 +36,7 @@
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 35,
-          "pp": 11,
+          "pp": 35,
           "desc": "A physical charge attack.",
           "effect": null,
           "crit_bonus": false
@@ -57,29 +57,101 @@
           "crit_bonus": false
         },
         {
+          "name": "Leech Seed",
+          "type": "Grass",
+          "power": 0,
+          "accuracy": 90,
+          "category": "Status",
+          "max_pp": 10,
+          "pp": 10,
+          "desc": "Plants a seed on the target to steal HP every turn.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
           "name": "Vine Whip",
           "type": "Grass",
           "power": 45,
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 25,
-          "pp": 23,
+          "pp": 25,
           "desc": "Strikes the foe with slender vines.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pikachu",
+      "nickname": "Pikachu",
+      "level": 10,
+      "current_hp": 28,
+      "exp": 1000,
+      "status": null,
+      "ivs": {
+        "hp": 20,
+        "atk": 22,
+        "def": 18,
+        "spatk": 25,
+        "spdef": 20,
+        "spd": 30
+      },
+      "moves": [
+        {
+          "name": "Thunder Shock",
+          "type": "Electric",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An electric shock that may paralyze.",
+          "effect": {
+            "chance": 10,
+            "status": "Paralysis"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
           "effect": null,
           "crit_bonus": false
         },
         {
-          "name": "Poison Powder",
-          "type": "Poison",
+          "name": "Thunder Wave",
+          "type": "Electric",
           "power": 0,
-          "accuracy": 75,
+          "accuracy": 90,
           "category": "Status",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "Scatters a toxic powder.",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Paralyzes the target.",
           "effect": {
             "chance": 100,
-            "status": "Poison"
+            "status": "Paralysis"
           },
           "crit_bonus": false
         }
@@ -90,15 +162,15 @@
       "nickname": "Pidgey",
       "level": 6,
       "current_hp": 22,
-      "exp": 232,
+      "exp": 216,
       "status": null,
       "ivs": {
-        "hp": 23,
-        "atk": 28,
-        "def": 28,
-        "spatk": 23,
-        "spdef": 11,
-        "spd": 10
+        "hp": 24,
+        "atk": 22,
+        "def": 24,
+        "spatk": 28,
+        "spdef": 21,
+        "spd": 21
       },
       "moves": [
         {
@@ -131,16 +203,16 @@
       "species": "Rattata",
       "nickname": "Rattata",
       "level": 8,
-      "current_hp": 24,
-      "exp": 673,
+      "current_hp": 25,
+      "exp": 512,
       "status": null,
       "ivs": {
         "hp": 22,
-        "atk": 10,
-        "def": 12,
-        "spatk": 24,
-        "spdef": 11,
-        "spd": 13
+        "atk": 28,
+        "def": 20,
+        "spatk": 18,
+        "spdef": 20,
+        "spd": 29
       },
       "moves": [
         {
@@ -185,19 +257,120 @@
       ]
     },
     {
+      "species": "Bellsprout",
+      "nickname": "Bellsprout",
+      "level": 8,
+      "current_hp": 27,
+      "exp": 512,
+      "status": null,
+      "ivs": {
+        "hp": 27,
+        "atk": 29,
+        "def": 20,
+        "spatk": 28,
+        "spdef": 19,
+        "spd": 22
+      },
+      "moves": [
+        {
+          "name": "Vine Whip",
+          "type": "Grass",
+          "power": 45,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Strikes the foe with slender vines.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Growth",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Raises Attack and Sp. Atk.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Wrap",
+          "type": "Normal",
+          "power": 15,
+          "accuracy": 90,
+          "category": "Physical",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Traps and squeezes the foe.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Oddish",
+      "nickname": "Oddish",
+      "level": 5,
+      "current_hp": 21,
+      "exp": 125,
+      "status": null,
+      "ivs": {
+        "hp": 25,
+        "atk": 24,
+        "def": 26,
+        "spatk": 29,
+        "spdef": 27,
+        "spd": 18
+      },
+      "moves": [
+        {
+          "name": "Absorb",
+          "type": "Grass",
+          "power": 20,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "An attack that absorbs half the damage inflicted.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Sweet Scent",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Lowers the foe's evasiveness.",
+          "effect": {
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        }
+      ]
+    }
+  ],
+  "pc_box": [
+    {
       "species": "Weedle",
       "nickname": "Weedle",
       "level": 3,
-      "current_hp": 15,
-      "exp": 48,
+      "current_hp": 16,
+      "exp": 27,
       "status": null,
       "ivs": {
-        "hp": 14,
-        "atk": 29,
+        "hp": 29,
+        "atk": 24,
         "def": 16,
-        "spatk": 12,
-        "spdef": 10,
-        "spd": 18
+        "spatk": 29,
+        "spdef": 17,
+        "spd": 27
       },
       "moves": [
         {
@@ -231,134 +404,36 @@
           "crit_bonus": false
         }
       ]
-    },
-    {
-      "species": "Bellsprout",
-      "nickname": "Bellsprout",
-      "level": 8,
-      "current_hp": 6,
-      "exp": 512,
-      "status": null,
-      "ivs": {
-        "hp": 24,
-        "atk": 27,
-        "def": 28,
-        "spatk": 10,
-        "spdef": 27,
-        "spd": 29
-      },
-      "moves": [
-        {
-          "name": "Vine Whip",
-          "type": "Grass",
-          "power": 45,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Strikes the foe with slender vines.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Poison Powder",
-          "type": "Poison",
-          "power": 0,
-          "accuracy": 75,
-          "category": "Status",
-          "max_pp": 35,
-          "pp": 33,
-          "desc": "Scatters a toxic powder.",
-          "effect": {
-            "chance": 100,
-            "status": "Poison"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Sleep Powder",
-          "type": "Grass",
-          "power": 0,
-          "accuracy": 75,
-          "category": "Status",
-          "max_pp": 15,
-          "pp": 14,
-          "desc": "Scatters a powder that induces sleep.",
-          "effect": {
-            "chance": 100,
-            "status": "Sleep"
-          },
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Oddish",
-      "nickname": "Oddish",
-      "level": 5,
-      "current_hp": 4,
-      "exp": 125,
-      "status": null,
-      "ivs": {
-        "hp": 26,
-        "atk": 11,
-        "def": 18,
-        "spatk": 19,
-        "spdef": 21,
-        "spd": 28
-      },
-      "moves": [
-        {
-          "name": "Absorb",
-          "type": "Grass",
-          "power": 20,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 25,
-          "pp": 23,
-          "desc": "Drains nutrients from the foe.",
-          "effect": {
-            "drain_percent": 50
-          },
-          "crit_bonus": false
-        }
-      ]
     }
   ],
   "inventory": {
-    "money": 3520,
+    "money": 5500,
     "items": {
-      "Poke Ball": 3,
-      "Potion": 3,
+      "Poke Ball": 10,
+      "Potion": 5,
       "Antidote": 2,
       "Revive": 1
     }
   },
   "pokedex": {
     "seen": [
-      "Weedle",
-      "Geodude",
-      "Bellsprout",
       "Bulbasaur",
+      "Pikachu",
       "Pidgey",
-      "Caterpie",
-      "Oddish",
       "Rattata",
-      "Pikachu"
+      "Bellsprout",
+      "Oddish",
+      "Weedle"
     ],
     "caught": [
-      "Weedle",
-      "Bellsprout",
       "Bulbasaur",
+      "Pikachu",
       "Pidgey",
-      "Oddish",
       "Rattata",
-      "Pikachu"
+      "Bellsprout",
+      "Oddish",
+      "Weedle"
     ]
   },
-  "defeated_trainers": [
-    "youngster_joey",
-    "bug_catcher_sammy",
-    "lass_haley"
-  ]
+  "defeated_trainers": []
 }
