@@ -636,6 +636,10 @@ class Game:
         pygame.quit()
         sys.exit()
 
-if __name__ == "__main__":
+def start():
     game = Game()
     game.run()
+
+
+if __name__ == "__main__":
+    start()

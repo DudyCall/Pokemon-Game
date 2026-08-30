@@ -50,3 +50,16 @@ Power the SN30 Pro on in **Windows X-Input mode** (`X + Start`) before pairing o
    ```
 2. Press `Enter` or `Z` at the title screen to begin your adventure.
 3. Choose your starter Pokémon and explore Pallet Town, Route 1, and Viridian City!
+
+## Batocera
+
+Copy the whole project folder to `/userdata/roms/pygame/` and name it with a `.pygame` suffix, for example:
+
+```
+/userdata/roms/pygame/Pokemon-Game.pygame/
+    __main__.py
+    main.py
+    ...
+```
+
+Batocera runs `pygame <that-folder>`, which needs `__main__.py`. Then refresh the gamelist and launch from the Pygame system.
