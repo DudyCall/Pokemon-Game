@@ -84,6 +84,7 @@ class SaveSystem:
         target_slot = max(1, min(NUM_SAVE_SLOTS, int(target_slot)))
         cls._active_slot = target_slot
 
+        defeated = list(getattr(world, "defeated_trainers", [])) if world is not None else []
         data = {
             "slot": target_slot,
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -102,7 +103,7 @@ class SaveSystem:
             "pc_box": [p.to_dict() for p in (pc_box or [])],
             "inventory": inventory.to_dict(),
             "pokedex": pokedex.to_dict(),
-            "defeated_trainers": list(world.defeated_trainers)
+            "defeated_trainers": defeated
         }
         try:
             slot_path = cls.get_slot_path(target_slot)
@@ -120,7 +121,7 @@ class SaveSystem:
             return False, f"Failed to save game to Slot {target_slot}: {e}"
 
     @classmethod
-    def load_game(cls, player, world, slot=None):
+    def load_game(cls, player, world=None, slot=None):
         cls._ensure_saves_dir()
         target_slot = slot if slot is not None else cls._active_slot
         target_slot = max(1, min(NUM_SAVE_SLOTS, int(target_slot)))
@@ -157,7 +158,8 @@ class SaveSystem:
             pc_box = [Pokemon.from_dict(pd) for pd in data.get("pc_box", [])]
             inventory = Inventory.from_dict(data.get("inventory", {}))
             pokedex = Pokedex.from_dict(data.get("pokedex", {}))
-            world.defeated_trainers = set(data.get("defeated_trainers", []))
+            if world is not None:
+                world.defeated_trainers = set(data.get("defeated_trainers", []))
 
             # Auto-recovery: If Pikachu is in caught Pokédex but not in party or PC box, restore Pikachu to PC box!
             all_species = [p.species for p in party] + [p.species for p in pc_box]

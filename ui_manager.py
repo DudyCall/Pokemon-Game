@@ -436,12 +436,13 @@ class SaveSlotSelectScreen:
                 surf.blit(btxt, (btn_x + (btn_w - btxt.get_width()) // 2, btn_y + (btn_h - btxt.get_height()) // 2))
 
 class SaveDialog:
-    def __init__(self, player, party, inventory, pokedex, slot=1):
+    def __init__(self, player, party, inventory, pokedex, slot=1, pc_box=None):
         self.player = player
         self.party = party
         self.inventory = inventory
         self.pokedex = pokedex
         self.slot = slot
+        self.pc_box = pc_box
         self.selected_yes = True
         self.state = "CONFIRM" # "CONFIRM", "SAVING", "SAVED"
         self.timer = 0.0
@@ -473,7 +474,7 @@ class SaveDialog:
         self.timer += dt
         if self.state == "SAVING" and self.timer >= 0.2:
             from save_system import SaveSystem
-            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, world, slot=self.slot)
+            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, world, slot=self.slot, pc_box=self.pc_box)
             sound_mgr.play_sfx("confirm")
             self.state = "SAVED"
             self.timer = 0.0

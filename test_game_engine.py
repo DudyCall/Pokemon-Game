@@ -328,5 +328,53 @@ class TestPokemonEngine(unittest.TestCase):
                     else:
                         break
 
+    def test_defeated_trainers_save_and_reload_persistence(self):
+        # 1. Create a world and mark trainers as defeated
+        world = World()
+        self.assertEqual(len(world.defeated_trainers), 0)
+        
+        # Test line of sight before defeat: Joey is at (12, 8) facing DOWN
+        spotted = world.check_trainer_line_of_sight("Route 1", 12, 10)
+        self.assertIsNotNone(spotted)
+        self.assertEqual(spotted["id"], "youngster_joey")
+        
+        # Mark youngster_joey and gym_leader_brock as defeated
+        world.defeated_trainers.add("youngster_joey")
+        world.defeated_trainers.add("gym_leader_brock")
+        
+        # Test line of sight after defeat: Joey should NOT spot the player
+        spotted_after = world.check_trainer_line_of_sight("Route 1", 12, 10)
+        self.assertIsNone(spotted_after)
+        
+        # 2. Save game with defeated trainers to Slot 1
+        player = Player(x=8, y=6, current_map="Route 1")
+        party = [Pokemon("Squirtle", level=10)]
+        inv = Inventory()
+        pokedex = Pokedex()
+        pokedex.register_caught("Squirtle")
+        
+        ok, msg = SaveSystem.save_game(player, party, inv, pokedex, world, slot=1)
+        self.assertTrue(ok)
+        
+        # 3. Reload into a fresh World instance
+        loaded_player = Player()
+        loaded_world = World()
+        self.assertEqual(len(loaded_world.defeated_trainers), 0)
+        
+        res, msg = SaveSystem.load_game(loaded_player, loaded_world, slot=1)
+        self.assertIsNotNone(res)
+        
+        # 4. Verify defeated trainers persisted into loaded world
+        self.assertIn("youngster_joey", loaded_world.defeated_trainers)
+        self.assertIn("gym_leader_brock", loaded_world.defeated_trainers)
+        self.assertNotIn("bug_catcher_sammy", loaded_world.defeated_trainers)
+        
+        # 5. Verify line of sight on loaded world
+        self.assertIsNone(loaded_world.check_trainer_line_of_sight("Route 1", 12, 10))
+        # Sammy (6, 18 facing RIGHT) is undefeated, should spot player at (8, 18)
+        sammy_spotted = loaded_world.check_trainer_line_of_sight("Route 1", 8, 18)
+        self.assertIsNotNone(sammy_spotted)
+        self.assertEqual(sammy_spotted["id"], "bug_catcher_sammy")
+
 if __name__ == "__main__":
     unittest.main()

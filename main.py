@@ -80,7 +80,9 @@ class Game:
         starter = Pokemon(starter_species, level=5)
         self.party = [starter]
         self.pc_box = []
+        self.pokedex = Pokedex()
         self.pokedex.register_caught(starter_species)
+        self.world = World()
         self.player = Player(
             x=8, y=6, current_map="Pallet Town",
             name=t_name, gender=t_gender, outfit_theme=t_outfit, hat_style=t_hat, hair_color=t_hair
@@ -516,7 +518,14 @@ class Game:
                 # Check Battle Completion
                 if self.battle_system.phase == "FINISHED":
                     if self.battle_system.is_trainer:
-                        self.world.defeated_trainers.add(self.battle_system.trainer_data["id"])
+                        t_id = self.battle_system.trainer_data.get("id") if self.battle_system.trainer_data else None
+                        if t_id:
+                            self.world.defeated_trainers.add(t_id)
+                        # Save game progress immediately so defeated trainers stay defeated across reloads
+                        SaveSystem.save_game(
+                            self.player, self.party, self.inventory, self.pokedex, self.world,
+                            slot=self.current_save_slot, pc_box=self.pc_box
+                        )
                     self.battle_system = None
                     self.state = GameState.OVERWORLD
                     sound_mgr.play_bgm("town")
