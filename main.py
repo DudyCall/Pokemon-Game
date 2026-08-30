@@ -20,6 +20,7 @@ from ui_manager import (
     TitleScreen, StarterSelectScreen, TrainerCustomizationScreen, PauseMenu, PokedexScreen,
     PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen, PCBoxScreen
 )
+from input_manager import InputManager
 
 class Game:
     def __init__(self):
@@ -28,6 +29,7 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.running = True
+        self.input_mgr = InputManager()
         
         # Game State
         self.state = GameState.TITLE
@@ -60,6 +62,8 @@ class Game:
         # Notifications / Overworld text
         self.notification_text = ""
         self.notification_timer = 0.0
+        if self.input_mgr.connected:
+            self.show_notification(f"Controller connected: {self.input_mgr.joystick.get_name()}")
 
     def show_notification(self, text, duration=2.5):
         self.notification_text = text
@@ -132,8 +136,12 @@ class Game:
         )
         self.state = GameState.BATTLE
 
-    def handle_input(self):
-        for event in pygame.event.get():
+    def handle_input(self, dt):
+        raw_events = list(pygame.event.get())
+        extra, notices = self.input_mgr.process(raw_events, dt)
+        for msg in notices:
+            self.show_notification(msg)
+        for event in raw_events + extra:
             if event.type == pygame.QUIT:
                 self.running = False
                 return
@@ -451,13 +459,14 @@ class Game:
             # Continuous grid movement
             if not self.player.is_moving and self.state == GameState.OVERWORLD:
                 keys = pygame.key.get_pressed()
-                if any(keys[k] for k in KEY_UP):
+                pad = self.input_mgr.get_held_directions()
+                if any(keys[k] for k in KEY_UP) or Direction.UP in pad:
                     self.player.move(Direction.UP, self.world)
-                elif any(keys[k] for k in KEY_DOWN):
+                elif any(keys[k] for k in KEY_DOWN) or Direction.DOWN in pad:
                     self.player.move(Direction.DOWN, self.world)
-                elif any(keys[k] for k in KEY_LEFT):
+                elif any(keys[k] for k in KEY_LEFT) or Direction.LEFT in pad:
                     self.player.move(Direction.LEFT, self.world)
-                elif any(keys[k] for k in KEY_RIGHT):
+                elif any(keys[k] for k in KEY_RIGHT) or Direction.RIGHT in pad:
                     self.player.move(Direction.RIGHT, self.world)
 
             was_moving = self.player.is_moving
@@ -620,7 +629,7 @@ class Game:
             dt = self.clock.tick(FPS) / 1000.0
             # Limit dt to prevent large frame skips
             dt = min(0.05, dt)
-            self.handle_input()
+            self.handle_input(dt)
             self.update(dt)
             self.draw()
             

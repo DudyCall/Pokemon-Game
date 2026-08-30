@@ -9,7 +9,7 @@ import pygame
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
 
-from constants import TYPE_CHART, TYPE_COLORS, Direction
+from constants import TYPE_CHART, TYPE_COLORS, Direction, KEY_CONFIRM, KEY_CANCEL, KEY_MENU, KEY_QUICKSAVE, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 from pokemon_data import POKEMON_SPECIES, MOVES, ITEMS, WILD_ENCOUNTERS, TRAINERS
 from pokemon import Pokemon
 from inventory import Inventory
@@ -375,6 +375,71 @@ class TestPokemonEngine(unittest.TestCase):
         sammy_spotted = loaded_world.check_trainer_line_of_sight("Route 1", 8, 18)
         self.assertIsNotNone(sammy_spotted)
         self.assertEqual(sammy_spotted["id"], "bug_catcher_sammy")
+
+    def test_gpad_button_to_key(self):
+        from input_manager import button_to_key, GPAD_CONFIRM, GPAD_CANCEL, GPAD_START, GPAD_SELECT
+        self.assertEqual(button_to_key(GPAD_CONFIRM), KEY_CONFIRM[0])
+        self.assertEqual(button_to_key(GPAD_CANCEL), KEY_CANCEL[0])
+        self.assertEqual(button_to_key(GPAD_START), KEY_MENU[0])
+        self.assertEqual(button_to_key(GPAD_SELECT), KEY_QUICKSAVE[0])
+        self.assertIsNone(button_to_key(2))  # X unused
+        self.assertIsNone(button_to_key(99))
+
+    def test_gpad_hat_and_stick_deadzone(self):
+        from input_manager import hat_to_direction, stick_to_direction, STICK_DEADZONE
+        self.assertEqual(hat_to_direction(0, 1), Direction.UP)
+        self.assertEqual(hat_to_direction(0, -1), Direction.DOWN)
+        self.assertEqual(hat_to_direction(-1, 0), Direction.LEFT)
+        self.assertEqual(hat_to_direction(1, 0), Direction.RIGHT)
+        self.assertIsNone(hat_to_direction(0, 0))
+        self.assertEqual(hat_to_direction(1, 1), Direction.UP)  # up/down beat left/right
+
+        self.assertIsNone(stick_to_direction(0.0, 0.0))
+        self.assertIsNone(stick_to_direction(STICK_DEADZONE - 0.01, 0.0))
+        self.assertIsNone(stick_to_direction(0.0, STICK_DEADZONE - 0.01))
+        self.assertEqual(stick_to_direction(0.0, -0.8), Direction.UP)
+        self.assertEqual(stick_to_direction(0.0, 0.8), Direction.DOWN)
+        self.assertEqual(stick_to_direction(-0.8, 0.0), Direction.LEFT)
+        self.assertEqual(stick_to_direction(0.8, 0.0), Direction.RIGHT)
+        # Dominant axis wins on diagonals
+        self.assertEqual(stick_to_direction(0.4, -0.9), Direction.UP)
+        self.assertEqual(stick_to_direction(0.9, -0.4), Direction.RIGHT)
+
+    def test_gpad_direction_repeat(self):
+        from input_manager import InputManager, REPEAT_DELAY, REPEAT_RATE, direction_to_key, make_keydown
+        mgr = InputManager()
+        first = mgr._update_repeat(Direction.UP, 0.0)
+        self.assertEqual(len(first), 1)
+        self.assertEqual(first[0].type, pygame.KEYDOWN)
+        self.assertEqual(first[0].key, KEY_UP[0])
+        self.assertEqual(mgr.get_held_directions(), {Direction.UP})
+
+        none_yet = mgr._update_repeat(Direction.UP, REPEAT_DELAY - 0.05)
+        self.assertEqual(none_yet, [])
+
+        delayed = mgr._update_repeat(Direction.UP, 0.05)
+        self.assertEqual(len(delayed), 1)
+        self.assertEqual(delayed[0].key, KEY_UP[0])
+
+        none_rate = mgr._update_repeat(Direction.UP, REPEAT_RATE - 0.01)
+        self.assertEqual(none_rate, [])
+        pulsed = mgr._update_repeat(Direction.UP, 0.02)
+        self.assertEqual(len(pulsed), 1)
+
+        switched = mgr._update_repeat(Direction.LEFT, 0.0)
+        self.assertEqual(len(switched), 1)
+        self.assertEqual(switched[0].key, KEY_LEFT[0])
+        self.assertEqual(mgr.get_held_directions(), {Direction.LEFT})
+
+        released = mgr._update_repeat(None, 0.0)
+        self.assertEqual(released, [])
+        self.assertEqual(mgr.get_held_directions(), set())
+
+        evt = make_keydown(KEY_CONFIRM[0])
+        self.assertEqual(evt.type, pygame.KEYDOWN)
+        self.assertEqual(evt.key, KEY_CONFIRM[0])
+        self.assertEqual(direction_to_key(Direction.DOWN), KEY_DOWN[0])
+        self.assertEqual(direction_to_key(Direction.RIGHT), KEY_RIGHT[0])
 
 if __name__ == "__main__":
     unittest.main()

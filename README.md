@@ -32,12 +32,15 @@ An authentic, rich, turn-based Pokémon RPG built with Pygame-CE.
 
 ## Controls
 
-| Action | Primary Key | Alternate Key |
+| Action | Keyboard | 8BitDo SN30 Pro |
 |---|---|---|
-| **Move / Navigate** | Arrow Keys | `W`, `A`, `S`, `D` |
-| **Confirm / Talk / Attack** | `Z` | `Enter` / `Space` |
-| **Cancel / Back / Run** | `X` | `Escape` / `Backspace` |
-| **Open Menu (Pause / Bag / Pokédex)** | `C` | `Tab` / `M` |
+| **Move / Navigate** | Arrow Keys / `W` `A` `S` `D` | D-Pad or Left Stick |
+| **Confirm / Talk / Attack** | `Z` / `Enter` / `Space` | `B` (south) |
+| **Cancel / Back** | `X` / `Escape` | `A` (east) |
+| **Open Menu (Pause / Bag / Pokédex)** | `C` / `Tab` / `M` | `Start` (`+`) |
+| **Quick Save** | `F5` / `K` | `Select` (`-`) |
+
+Power the SN30 Pro on in **Windows X-Input mode** (`X + Start`) before pairing or plugging in USB. Trainer name typing still uses the keyboard.
 
 ## How to Play
 
