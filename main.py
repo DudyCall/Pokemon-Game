@@ -26,7 +26,8 @@ class Game:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Pokémon - Pygame Edition")
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.fullscreen = True
+        self.screen = self._create_display()
         self.clock = pygame.time.Clock()
         self.running = True
         self.input_mgr = InputManager()
@@ -64,6 +65,16 @@ class Game:
         self.notification_timer = 0.0
         if self.input_mgr.connected:
             self.show_notification(f"Controller connected: {self.input_mgr.joystick.get_name()}")
+
+    def _create_display(self):
+        flags = pygame.SCALED
+        if self.fullscreen:
+            flags |= pygame.FULLSCREEN
+        return pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
+
+    def _toggle_fullscreen(self):
+        self.fullscreen = not self.fullscreen
+        self.screen = self._create_display()
 
     def show_notification(self, text, duration=2.5):
         self.notification_text = text
@@ -145,6 +156,12 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
                 return
+
+            if event.type == pygame.KEYDOWN:
+                alt_enter = event.key == pygame.K_RETURN and (event.mod & pygame.KMOD_ALT)
+                if event.key == pygame.K_F11 or alt_enter:
+                    self._toggle_fullscreen()
+                    continue
 
             # Title State
             if self.state == GameState.TITLE:
