@@ -601,7 +601,6 @@ class TestPokemonEngine(unittest.TestCase):
         self.assertEqual(evt.key, KEY_CONFIRM[0])
         self.assertEqual(direction_to_key(Direction.DOWN), KEY_DOWN[0])
         self.assertEqual(direction_to_key(Direction.RIGHT), KEY_RIGHT[0])
->>>>>>> 6cce7fa9a5247546d8dd33ece669bb0800500131
 
 if __name__ == "__main__":
     unittest.main()
