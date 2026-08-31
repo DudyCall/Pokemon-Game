@@ -10,7 +10,7 @@ import urllib.request
 import pygame
 from constants import (
     TILE_SIZE, WHITE, BLACK, GRAY, DARK_GRAY, LIGHT_GRAY,
-    HP_GREEN, HP_YELLOW, HP_RED, EXP_BLUE, TYPE_COLORS, Direction
+    HP_GREEN, HP_YELLOW, HP_RED, EXP_BLUE, TYPE_COLORS, STATUS_COLORS, Direction
 )
 from pokemon_data import POKEMON_SPECIES
 
@@ -558,6 +558,100 @@ class GraphicsManager:
         pygame.draw.rect(counter, (120, 70, 35), (0, 0, T, T), 2)
         self.cached_tiles["counter"] = counter
 
+        # 9. Sand / Beach Shore
+        sand = pygame.Surface((T, T))
+        sand.fill((240, 220, 160)) # Golden sand
+        for _ in range(10):
+            rx = random.randint(1, T - 2)
+            ry = random.randint(1, T - 2)
+            sand.set_at((rx, ry), (220, 200, 140))
+        self.cached_tiles["sand"] = sand
+
+        # 10. Cave Floor (Subterranean)
+        cave_floor = pygame.Surface((T, T))
+        cave_floor.fill((85, 75, 70)) # Dark stone brown
+        for _ in range(12):
+            rx = random.randint(1, T - 2)
+            ry = random.randint(1, T - 2)
+            cave_floor.set_at((rx, ry), (70, 60, 55))
+            if random.random() < 0.3:
+                cave_floor.set_at((rx, ry), (105, 95, 90))
+        self.cached_tiles["cave_floor"] = cave_floor
+
+        # 11. Cave Wall / Mountain Rock (Solid)
+        cave_wall = pygame.Surface((T, T))
+        cave_wall.fill((45, 40, 38))
+        pygame.draw.rect(cave_wall, (65, 58, 55), (2, 2, T - 4, T - 4), border_radius=4)
+        pygame.draw.polygon(cave_wall, (30, 25, 24), [(4, 4), (16, 2), (28, 8), (20, 28), (6, 24)])
+        pygame.draw.polygon(cave_wall, (75, 68, 65), [(8, 8), (18, 6), (24, 12), (18, 22), (10, 18)])
+        self.cached_tiles["cave_wall"] = cave_wall
+
+        # 12. Cave Entrance / Arch
+        cave_door = cave_wall.copy()
+        pygame.draw.arc(cave_door, (10, 10, 12), (6, 4, 20, 26), 0, 3.14, 10)
+        pygame.draw.rect(cave_door, (10, 10, 12), (6, 12, 20, 20))
+        self.cached_tiles["cave_door"] = cave_door
+
+        # 13. Bridge / Wood Pier
+        bridge = pygame.Surface((T, T))
+        bridge.fill((190, 145, 95)) # Warm wood
+        pygame.draw.line(bridge, (140, 95, 55), (0, 0), (T, 0), 2)
+        pygame.draw.line(bridge, (140, 95, 55), (0, T // 2), (T, T // 2), 2)
+        pygame.draw.line(bridge, (140, 95, 55), (0, T - 1), (T, T - 1), 2)
+        pygame.draw.line(bridge, (100, 65, 35), (8, 0), (8, T), 1)
+        pygame.draw.line(bridge, (100, 65, 35), (24, 0), (24, T), 1)
+        self.cached_tiles["bridge"] = bridge
+
+        # 14. Gym Arena Floor & Mat
+        gym_floor = pygame.Surface((T, T))
+        gym_floor.fill((215, 180, 130)) # Polished gym hardwood
+        pygame.draw.line(gym_floor, (185, 150, 100), (0, 0), (T, 0), 1)
+        pygame.draw.line(gym_floor, (185, 150, 100), (0, T - 1), (T, T - 1), 1)
+        self.cached_tiles["gym_floor"] = gym_floor
+
+        gym_mat = gym_floor.copy()
+        pygame.draw.circle(gym_mat, (220, 50, 50), (T // 2, T // 2), 12)
+        pygame.draw.circle(gym_mat, WHITE, (T // 2, T // 2), 6)
+        pygame.draw.circle(gym_mat, BLACK, (T // 2, T // 2), 2)
+        self.cached_tiles["gym_mat"] = gym_mat
+
+        # 15. Gym Statue
+        gym_statue = gym_floor.copy()
+        pygame.draw.rect(gym_statue, (140, 140, 150), (6, 12, 20, 18), border_radius=2)
+        pygame.draw.polygon(gym_statue, (170, 170, 180), [(16, 2), (6, 14), (26, 14)])
+        pygame.draw.rect(gym_statue, (240, 200, 60), (10, 20, 12, 6)) # Gold plaque
+        self.cached_tiles["gym_statue"] = gym_statue
+
+        # 16. Oak Lab Furniture (Table, Bookshelf)
+        lab_floor = floor.copy()
+        table = lab_floor.copy()
+        pygame.draw.rect(table, (100, 140, 180), (4, 4, T - 8, T - 8), border_radius=3)
+        pygame.draw.rect(table, (200, 230, 255), (8, 8, 8, 8)) # Screen
+        pygame.draw.circle(table, (220, 60, 60), (22, 12), 3) # Red bulb
+        self.cached_tiles["lab_table"] = table
+
+        bookshelf = floor.copy()
+        pygame.draw.rect(bookshelf, (130, 80, 45), (2, 2, T - 4, T - 4), border_radius=2)
+        pygame.draw.rect(bookshelf, (200, 70, 70), (4, 6, 6, 8))
+        pygame.draw.rect(bookshelf, (70, 120, 200), (12, 6, 6, 8))
+        pygame.draw.rect(bookshelf, (70, 180, 90), (20, 6, 6, 8))
+        pygame.draw.rect(bookshelf, (220, 180, 50), (4, 18, 7, 8))
+        pygame.draw.rect(bookshelf, (160, 90, 180), (13, 18, 7, 8))
+        self.cached_tiles["bookshelf"] = bookshelf
+
+        # 17. Overworld Item Pokeball
+        item_ball = grass.copy()
+        cx, cy = T // 2, T // 2 + 2
+        pygame.draw.ellipse(item_ball, (0, 0, 0, 80), (cx - 7, cy + 4, 14, 5))
+        pygame.draw.circle(item_ball, (225, 45, 45), (cx, cy), 6) # Top red
+        pygame.draw.arc(item_ball, WHITE, (cx - 6, cy - 6, 12, 12), 3.14, 0, 6)
+        pygame.draw.circle(item_ball, WHITE, (cx, cy + 3), 3)
+        pygame.draw.line(item_ball, BLACK, (cx - 6, cy), (cx + 6, cy), 1)
+        pygame.draw.circle(item_ball, BLACK, (cx, cy), 2)
+        pygame.draw.circle(item_ball, WHITE, (cx, cy), 1)
+        self.cached_tiles["item_ball"] = item_ball
+
+
     def draw_hp_bar(self, surf, x, y, width, height, current_hp, max_hp, label="HP"):
         """Renders an authentic HP bar with color transition (green -> yellow -> red)."""
         ratio = max(0.0, min(1.0, current_hp / max(1, max_hp)))
@@ -605,5 +699,267 @@ class GraphicsManager:
         surf.blit(txt_shd, (tx + 1, ty + 1))
         surf.blit(txt, (tx, ty))
 
+    def draw_gym_badge(self, surf, badge_name, x, y, size=40, is_earned=True):
+        """Renders shiny official Gym Badges on the Trainer Card."""
+        cx = x + size // 2
+        cy = y + size // 2
+        
+        if not is_earned:
+            # Unearned empty socket
+            pygame.draw.circle(surf, (50, 55, 65), (cx, cy), size // 2, 2)
+            pygame.draw.circle(surf, (30, 35, 45), (cx, cy), size // 2 - 2)
+            dash = self.fonts["small"].render("?", True, (80, 90, 110))
+            surf.blit(dash, (cx - dash.get_width() // 2, cy - dash.get_height() // 2))
+            return
+
+        if badge_name == "Boulder Badge":
+            # Grey stone octagon with bevel
+            pts = [
+                (cx - 14, cy - 6), (cx - 6, cy - 14), (cx + 6, cy - 14), (cx + 14, cy - 6),
+                (cx + 14, cy + 6), (cx + 6, cy + 14), (cx - 6, cy + 14), (cx - 14, cy + 6)
+            ]
+            pygame.draw.polygon(surf, (160, 165, 175), pts)
+            pygame.draw.polygon(surf, (220, 225, 235), pts, 2)
+            # Inner bevel facets
+            pygame.draw.polygon(surf, (120, 125, 135), [(cx - 8, cy - 3), (cx - 3, cy - 8), (cx + 3, cy - 8), (cx + 8, cy - 3), (cx + 8, cy + 3), (cx + 3, cy + 8), (cx - 3, cy + 8), (cx - 8, cy + 3)])
+            pygame.draw.polygon(surf, (240, 245, 255), [(cx - 3, cy - 8), (cx + 3, cy - 8), (cx, cy)])
+
+        elif badge_name == "Cascade Badge":
+            # Sky-blue crystal teardrop
+            pts = [(cx, cy - 16), (cx + 14, cy + 6), (cx + 8, cy + 14), (cx - 8, cy + 14), (cx - 14, cy + 6)]
+            pygame.draw.polygon(surf, (70, 180, 240), pts)
+            pygame.draw.polygon(surf, (200, 240, 255), pts, 2)
+            pygame.draw.polygon(surf, (30, 130, 200), [(cx, cy - 8), (cx + 8, cy + 8), (cx - 8, cy + 8)])
+            pygame.draw.circle(surf, WHITE, (cx - 3, cy - 2), 3)
+
+        else:
+            # Gold Star Badge fallback
+            pygame.draw.circle(surf, (240, 200, 40), (cx, cy), size // 2 - 2)
+            pygame.draw.circle(surf, WHITE, (cx, cy), size // 2 - 2, 2)
+
+    def draw_status_badge(self, surf, status_name, x, y, width=44, height=18):
+        """Renders a colorful, modern Pokémon status condition pill badge."""
+        if not status_name:
+            return
+            
+        cfg = STATUS_COLORS.get(status_name, {
+            "abbr": status_name[:3].upper(),
+            "bg": (140, 140, 140),
+            "border": (80, 80, 80),
+            "text": WHITE,
+            "shadow": (30, 30, 30)
+        })
+        
+        # Pill Background & Outer Border
+        pygame.draw.rect(surf, cfg["border"], (x, y, width, height), border_radius=4)
+        pygame.draw.rect(surf, cfg["bg"], (x + 1, y + 1, width - 2, height - 2), border_radius=3)
+        
+        # Subtle glossy top highlight
+        gloss = pygame.Surface((width - 2, max(2, height // 2)), pygame.SRCALPHA)
+        gloss.fill((255, 255, 255, 60))
+        surf.blit(gloss, (x + 1, y + 1))
+        
+        # Status Abbreviation Text
+        abbr_text = cfg["abbr"]
+        txt_surf = self.fonts["small"].render(abbr_text, True, cfg["text"])
+        shd_surf = self.fonts["small"].render(abbr_text, True, cfg.get("shadow", BLACK))
+        
+        tx = x + (width - txt_surf.get_width()) // 2
+        ty = y + (height - txt_surf.get_height()) // 2
+        surf.blit(shd_surf, (tx + 1, ty + 1))
+        surf.blit(txt_surf, (tx, ty))
+
+    def draw_pokemon_with_status_effects(self, surf, pokemon, center_x, center_y, sprite_surf, anim_time, is_back=False):
+        """
+        Renders a Pokémon sprite with animated status visual effects and particle systems:
+        - Paralysis: Yellow electric sparks, crackling lightning bolts, jitter twitching, and golden aura.
+        - Burn: Rising fire embers, burning flame particles, and warm red-orange heat glow.
+        - Poison: Rising toxic purple bubbles, popping rings, and violet haze.
+        - Sleep: Drifting animated 'Z' letters, drowsy breathing motion, and night-blue tint.
+        - Freeze: Frost glints, ice crystal shards, and icy cyan tint.
+        """
+        status = getattr(pokemon, "status", None)
+        draw_x = center_x - sprite_surf.get_width() // 2
+        draw_y = center_y - sprite_surf.get_height() // 2
+        
+        # 1. Status Specific Positional / Pose Offsets
+        offset_x = 0
+        offset_y = 0
+        
+        if status == "Paralysis":
+            # Occasional quick muscle twitch / spasm
+            if math.sin(anim_time * 8.0) > 0.65:
+                offset_x = math.sin(anim_time * 45.0) * 2.5
+        elif status == "Sleep":
+            # Slow, drowsy breathing slump
+            offset_y = math.sin(anim_time * 2.5) * 3.0
+            
+        final_draw_x = int(draw_x + offset_x)
+        final_draw_y = int(draw_y + offset_y)
+        
+        # 2. Draw Base Sprite
+        surf.blit(sprite_surf, (final_draw_x, final_draw_y))
+        
+        # If no status active, we are done
+        if not status:
+            return
+
+        sw = sprite_surf.get_width()
+        sh = sprite_surf.get_height()
+        
+        # 3. Status Glow / Tint Overlay
+        tint_overlay = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        
+        if status == "Paralysis":
+            pulse = int(55 + 40 * math.sin(anim_time * 12.0))
+            tint_overlay.fill((255, 230, 40, pulse))
+            # Blit sprite alpha onto tint overlay so it only covers the Pokemon
+            tint_overlay.blit(sprite_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            surf.blit(tint_overlay, (final_draw_x, final_draw_y), special_flags=pygame.BLEND_RGB_ADD)
+            
+            # Draw Crackling Lightning Bolts & Electric Sparks
+            num_bolts = 5
+            for i in range(num_bolts):
+                bolt_seed = int(anim_time * 14.0) + i * 3
+                rnd = random.Random(bolt_seed)
+                
+                # Origin point near body
+                ang = rnd.uniform(0, 6.28)
+                rad = rnd.uniform(15, 38)
+                bx = center_x + math.cos(ang) * rad
+                by = center_y + math.sin(ang) * rad
+                
+                # Zig-zag segments
+                pts = [(bx, by)]
+                seg_count = rnd.randint(2, 4)
+                for _ in range(seg_count):
+                    bx += rnd.uniform(-16, 16)
+                    by += rnd.uniform(-16, 16)
+                    pts.append((bx, by))
+                    
+                if len(pts) >= 2:
+                    # Outer electric yellow bolt
+                    pygame.draw.lines(surf, (255, 240, 60), False, pts, 3)
+                    # Inner white-hot bolt core
+                    pygame.draw.lines(surf, (255, 255, 240), False, pts, 1)
+                    
+                # Electric diamond spark at end point
+                spk_x, spk_y = pts[-1]
+                spk_size = rnd.randint(3, 6)
+                pygame.draw.polygon(surf, (255, 255, 200), [
+                    (spk_x, spk_y - spk_size), (spk_x + spk_size, spk_y),
+                    (spk_x, spk_y + spk_size), (spk_x - spk_size, spk_y)
+                ])
+
+        elif status == "Burn":
+            pulse = int(50 + 35 * math.sin(anim_time * 6.0))
+            tint_overlay.fill((255, 75, 20, pulse))
+            tint_overlay.blit(sprite_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            surf.blit(tint_overlay, (final_draw_x, final_draw_y), special_flags=pygame.BLEND_RGB_ADD)
+            
+            # Draw Rising Flame & Ember Particles
+            num_flames = 8
+            for i in range(num_flames):
+                phase = (anim_time * 1.1 + i * (1.0 / num_flames)) % 1.0
+                fx = center_x + math.sin(anim_time * 3.5 + i * 2.3) * 26 + ((i % 5 - 2) * 12)
+                fy = (center_y + 35) - phase * 80
+                
+                # Size shrinks as it rises
+                size = max(1.5, (1.0 - phase) * 7.0)
+                
+                # Flame color transition: Red -> Orange -> Yellow
+                if phase < 0.35:
+                    col_outer = (255, 60, 20)
+                    col_inner = (255, 200, 40)
+                elif phase < 0.7:
+                    col_outer = (255, 120, 20)
+                    col_inner = (255, 240, 80)
+                else:
+                    col_outer = (240, 160, 40)
+                    col_inner = (255, 255, 200)
+                    
+                pygame.draw.circle(surf, col_outer, (int(fx), int(fy)), int(size))
+                if size > 2.5:
+                    pygame.draw.circle(surf, col_inner, (int(fx), int(fy - 1)), int(size * 0.5))
+
+        elif status == "Poison":
+            pulse = int(50 + 40 * math.sin(anim_time * 4.5))
+            tint_overlay.fill((180, 40, 220, pulse))
+            tint_overlay.blit(sprite_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            surf.blit(tint_overlay, (final_draw_x, final_draw_y), special_flags=pygame.BLEND_RGB_ADD)
+            
+            # Draw Rising Toxic Bubbles
+            num_bubbles = 7
+            for i in range(num_bubbles):
+                phase = (anim_time * 0.75 + i * (1.0 / num_bubbles)) % 1.0
+                bx = center_x + math.cos(anim_time * 2.8 + i * 1.9) * 28 + ((i % 4 - 1.5) * 14)
+                by = (center_y + 30) - phase * 75
+                
+                if phase < 0.85:
+                    r = int(3.5 + (i % 3) * 1.5)
+                    # Semi-transparent purple bubble
+                    bub_surf = pygame.Surface((r * 2 + 2, r * 2 + 2), pygame.SRCALPHA)
+                    pygame.draw.circle(bub_surf, (190, 50, 240, 200), (r + 1, r + 1), r)
+                    pygame.draw.circle(bub_surf, (120, 20, 160, 240), (r + 1, r + 1), r, 1)
+                    # Glint shine
+                    pygame.draw.circle(bub_surf, (255, 230, 255, 220), (r - 1, r - 1), max(1, r // 3))
+                    surf.blit(bub_surf, (int(bx - r - 1), int(by - r - 1)))
+                else:
+                    # Popping splash ring
+                    pop_r = int((phase - 0.85) / 0.15 * 10) + 3
+                    pop_alpha = max(0, int(255 * (1.0 - (phase - 0.85) / 0.15)))
+                    if pop_r > 0:
+                        pop_surf = pygame.Surface((pop_r * 2 + 4, pop_r * 2 + 4), pygame.SRCALPHA)
+                        pygame.draw.circle(pop_surf, (210, 80, 255, pop_alpha), (pop_r + 2, pop_r + 2), pop_r, 1)
+                        surf.blit(pop_surf, (int(bx - pop_r - 2), int(by - pop_r - 2)))
+
+        elif status == "Sleep":
+            # Night blue calming tint
+            tint_overlay.fill((50, 70, 140, 35))
+            tint_overlay.blit(sprite_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            surf.blit(tint_overlay, (final_draw_x, final_draw_y))
+            
+            # Floating Z's
+            for i in range(3):
+                phase = (anim_time * 0.6 + i * 0.33) % 1.0
+                dir_mult = 1 if is_back else -1
+                zx = center_x + (dir_mult * 30) + math.sin(phase * 4.0 + i) * 14 + (phase * 22 * dir_mult)
+                zy = (center_y - 35) - phase * 50
+                
+                alpha = max(0, min(255, int(255 * (1.0 - (phase ** 1.5)))))
+                z_font = self.fonts["medium"] if i == 0 else (self.fonts["regular"] if i == 1 else self.fonts["small"])
+                z_txt = "Z" if i == 0 else ("z" if i == 1 else "·")
+                
+                z_surf = z_font.render(z_txt, True, (180, 220, 255))
+                z_shd = z_font.render(z_txt, True, (40, 60, 100))
+                
+                z_alpha_surf = pygame.Surface((z_surf.get_width() + 4, z_surf.get_height() + 4), pygame.SRCALPHA)
+                z_alpha_surf.blit(z_shd, (2, 2))
+                z_alpha_surf.blit(z_surf, (1, 1))
+                z_alpha_surf.set_alpha(alpha)
+                surf.blit(z_alpha_surf, (int(zx), int(zy)))
+
+        elif status in ["Freeze", "Frozen"]:
+            pulse = int(50 + 25 * math.sin(anim_time * 5.0))
+            tint_overlay.fill((80, 210, 255, pulse))
+            tint_overlay.blit(sprite_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            surf.blit(tint_overlay, (final_draw_x, final_draw_y), special_flags=pygame.BLEND_RGB_ADD)
+            
+            # Ice crystal diamond sparkles
+            for i in range(6):
+                ang = anim_time * 0.8 + i * (6.28 / 6)
+                cx_ice = center_x + math.cos(ang) * (34 + (i % 2) * 8)
+                cy_ice = center_y + math.sin(ang) * (28 + (i % 2) * 8)
+                sz = 5 + (i % 3) * 2
+                pts = [
+                    (cx_ice, cy_ice - sz), (cx_ice + sz * 0.6, cy_ice),
+                    (cx_ice, cy_ice + sz), (cx_ice - sz * 0.6, cy_ice)
+                ]
+                pygame.draw.polygon(surf, (160, 235, 255), pts)
+                pygame.draw.polygon(surf, WHITE, pts, 1)
+                pygame.draw.circle(surf, WHITE, (int(cx_ice), int(cy_ice)), 1)
+
 # Global Graphics Singleton
 gfx = GraphicsManager()
+
+

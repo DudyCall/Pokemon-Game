@@ -825,7 +825,7 @@ StarterSelectScreen = TrainerCustomizationScreen
 
 class PauseMenu:
     def __init__(self):
-        self.options = ["POKÉDEX", "POKÉMON", "BAG", "PC BOX", "TRAINER", "SAVE", "EXIT"]
+        self.options = ["POKÉDEX", "POKÉMON", "BAG", "TOWN MAP", "PC BOX", "TRAINER", "SAVE", "EXIT"]
         self.selected_idx = 0
 
     def handle_input(self, event):
@@ -848,7 +848,7 @@ class PauseMenu:
 
     def draw(self, surf):
         # Draw on top-right of screen
-        mw, mh = 200, 300
+        mw, mh = 210, 340
         mx = SCREEN_WIDTH - mw - 20
         my = 20
         
@@ -856,15 +856,16 @@ class PauseMenu:
         pygame.draw.rect(surf, UI_BG, (mx, my, mw, mh), border_radius=8)
         
         for i, opt in enumerate(self.options):
-            iy = my + 18 + i * 38
+            iy = my + 14 + i * 40
             is_sel = (i == self.selected_idx)
             
             if is_sel:
-                pygame.draw.rect(surf, (255, 235, 180), (mx + 8, iy - 4, mw - 16, 32), border_radius=6)
-                pygame.draw.rect(surf, (240, 140, 40), (mx + 8, iy - 4, mw - 16, 32), 2, border_radius=6)
+                pygame.draw.rect(surf, (255, 235, 180), (mx + 8, iy - 4, mw - 16, 34), border_radius=6)
+                pygame.draw.rect(surf, (240, 140, 40), (mx + 8, iy - 4, mw - 16, 34), 2, border_radius=6)
                 
             txt = gfx.fonts["regular"].render(opt, True, (200, 80, 0) if is_sel else UI_TEXT)
-            surf.blit(txt, (mx + 25, iy))
+            surf.blit(txt, (mx + 20, iy))
+
 
 class PokedexScreen:
     def __init__(self, pokedex):
@@ -1047,9 +1048,14 @@ class PartySummaryScreen:
             hp_num = gfx.fonts["small"].render(f"{p.current_hp}/{p.max_hp}", True, UI_TEXT)
             surf.blit(hp_num, (row_x + rw - hp_num.get_width() - 15, row_y + 65))
             
-            # Types
+            # Types & Status Badge
             for t_idx, t_name in enumerate(p.types):
                 gfx.draw_type_badge(surf, t_name, row_x + 105 + t_idx * 60, row_y + 95, width=54, height=20)
+            
+            if p.is_fainted():
+                gfx.draw_status_badge(surf, "Fainted", row_x + 105 + len(p.types) * 60, row_y + 95, width=48, height=20)
+            elif p.status:
+                gfx.draw_status_badge(surf, p.status, row_x + 105 + len(p.types) * 60, row_y + 95, width=48, height=20)
 
 class ShopScreen:
     def __init__(self, inventory):
@@ -1425,10 +1431,14 @@ class PCBoxScreen:
                 hp_lbl = gfx.fonts["small"].render(f"{p.current_hp}/{p.max_hp}", True, UI_TEXT_MUTED)
                 surf.blit(hp_lbl, (cx + 56 + hp_w + 8, cy + 30))
 
-                # Types
+                # Types & Status
                 p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
                 for t_idx, t_name in enumerate(p_types):
                     gfx.draw_type_badge(surf, t_name, cx + cw - 70 + t_idx * 34, cy + 8, width=32, height=16)
+                if p.is_fainted():
+                    gfx.draw_status_badge(surf, "Fainted", cx + cw - 44, cy + 32, width=36, height=16)
+                elif p.status:
+                    gfx.draw_status_badge(surf, p.status, cx + cw - 44, cy + 32, width=36, height=16)
 
             else:
                 # Empty Party Slot
@@ -1492,10 +1502,14 @@ class PCBoxScreen:
                     hp_lbl = gfx.fonts["small"].render(f"{p.current_hp}/{p.max_hp}", True, UI_TEXT_MUTED)
                     surf.blit(hp_lbl, (cx + 56 + hp_w + 8, cy + 30))
 
-                    # Types
+                    # Types & Status
                     p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
                     for t_idx, t_name in enumerate(p_types):
                         gfx.draw_type_badge(surf, t_name, cx + cw - 70 + t_idx * 34, cy + 8, width=32, height=16)
+                    if p.is_fainted():
+                        gfx.draw_status_badge(surf, "Fainted", cx + cw - 44, cy + 32, width=36, height=16)
+                    elif p.status:
+                        gfx.draw_status_badge(surf, p.status, cx + cw - 44, cy + 32, width=36, height=16)
 
             # Scroll indicator
             if len(self.pc_box) > 6:
@@ -1532,7 +1546,7 @@ class PCBoxScreen:
                 atxt = gfx.fonts["regular"].render(act_name, True, (200, 80, 0) if is_sel else UI_TEXT)
                 surf.blit(atxt, (mx + (mw - atxt.get_width()) // 2, ay + 8))
 
-        # 4. Summary Card Modal Popup Overlay
+            # 4. Summary Card Modal Popup Overlay
         if self.menu_mode == "SUMMARY" and self.summary_pokemon:
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 130))
@@ -1557,6 +1571,10 @@ class PCBoxScreen:
             p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
             for t_idx, t_name in enumerate(p_types):
                 gfx.draw_type_badge(surf, t_name, sx + 24 + t_idx * 70, sy + 185, width=64, height=22)
+            if p.is_fainted():
+                gfx.draw_status_badge(surf, "Fainted", sx + 24 + len(p_types) * 70, sy + 185, width=54, height=22)
+            elif p.status:
+                gfx.draw_status_badge(surf, p.status, sx + 24 + len(p_types) * 70, sy + 185, width=54, height=22)
 
             # Stats Column
             stat_x = sx + 170
@@ -1604,3 +1622,243 @@ class PCBoxScreen:
         # 6. Bottom Navigation Hint Bar
         hint = gfx.fonts["small"].render("Left/Right: Switch Panel  |  Up/Down: Select Pokémon  |  [Enter]: Options  |  [X]: Exit PC", True, UI_TEXT_MUTED)
         surf.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, 565))
+
+class TrainerCardScreen:
+    """
+    Comprehensive Trainer Card and Interactive Region Map Screen.
+    Displays trainer identity, money, Pokédex count, official Gym Badges,
+    and a full graphical Kanto Region Map highlighting the player's current location.
+    """
+    def __init__(self, player, world, inventory, pokedex, initial_tab=0):
+        self.player = player
+        self.world = world
+        self.inventory = inventory
+        self.pokedex = pokedex
+        self.active_tab = initial_tab # 0: Trainer Card, 1: Region Map
+        self.timer = 0.0
+
+        self.kanto_badges = [
+            ("Boulder Badge", "Pewter Gym", "Leader Brock (Rock)"),
+            ("Cascade Badge", "Cerulean Gym", "Leader Misty (Water)"),
+            ("Thunder Badge", "Vermilion Gym", "Leader Surge (Electric)"),
+            ("Rainbow Badge", "Celadon Gym", "Leader Erika (Grass)"),
+            ("Soul Badge", "Fuchsia Gym", "Leader Koga (Poison)"),
+            ("Marsh Badge", "Saffron Gym", "Leader Sabrina (Psychic)"),
+            ("Volcano Badge", "Cinnabar Gym", "Leader Blaine (Fire)"),
+            ("Earth Badge", "Viridian Gym", "Leader Giovanni (Ground)")
+        ]
+
+        # Map Nodes for Region Map
+        self.map_nodes = [
+            {"name": "Pewter City", "x": 220, "y": 140, "desc": "A stone gray city. Home of Leader Brock's Gym & the Museum.", "type": "CITY"},
+            {"name": "Route 3", "x": 310, "y": 140, "desc": "Mountain canyon foothills leading east to Mt. Moon.", "type": "ROUTE"},
+            {"name": "Mt. Moon", "x": 400, "y": 140, "desc": "Subterranean cavern rich in ancient fossils and Moon Stones.", "type": "DUNGEON"},
+            {"name": "Route 4", "x": 490, "y": 140, "desc": "Scenic river canyon slopes leading to Cerulean City.", "type": "ROUTE"},
+            {"name": "Cerulean City", "x": 580, "y": 140, "desc": "A floral canal metropolis. Home of Leader Misty's Gym.", "type": "CITY"},
+            {"name": "Route 24", "x": 580, "y": 70, "desc": "Nugget Bridge gauntlet leading to Bill's Sea Cottage.", "type": "ROUTE"},
+            {"name": "Viridian Forest", "x": 220, "y": 210, "desc": "Deep woods labyrinth teeming with bug Pokémon and Pikachu.", "type": "DUNGEON"},
+            {"name": "Route 22", "x": 130, "y": 280, "desc": "Foothills leading west to the Indigo Plateau League Gate.", "type": "ROUTE"},
+            {"name": "Viridian City", "x": 220, "y": 280, "desc": "The gateway crossroads city with Pokémon Center and Mart.", "type": "CITY"},
+            {"name": "Route 1", "x": 220, "y": 350, "desc": "Lush grassy path connecting Pallet Town and Viridian City.", "type": "ROUTE"},
+            {"name": "Pallet Town", "x": 220, "y": 420, "desc": "A quiet hometown with fresh sea breezes and Prof. Oak's Lab.", "type": "TOWN"},
+            {"name": "Route 21", "x": 220, "y": 490, "desc": "Vast ocean sea route south of Pallet Town filled with water Pokémon.", "type": "ROUTE"},
+            {"name": "Cinnabar Island", "x": 220, "y": 550, "desc": "A fiery volcanic island with Pokémon research laboratories.", "type": "CITY"}
+        ]
+        self.selected_node_idx = 0
+        for idx, node in enumerate(self.map_nodes):
+            if node["name"] == player.current_map:
+                self.selected_node_idx = idx
+                break
+
+    def update(self, dt):
+        self.timer += dt
+
+    def handle_input(self, event):
+        if event.type != pygame.KEYDOWN:
+            return None
+
+        if any(event.key == k for k in KEY_LEFT + KEY_RIGHT):
+            self.active_tab = 1 - self.active_tab
+            sound_mgr.play_sfx("select")
+        elif self.active_tab == 1:
+            if any(event.key == k for k in KEY_UP):
+                self.selected_node_idx = (self.selected_node_idx - 1) % len(self.map_nodes)
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_DOWN):
+                self.selected_node_idx = (self.selected_node_idx + 1) % len(self.map_nodes)
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_CANCEL + KEY_CONFIRM):
+            sound_mgr.play_sfx("cancel")
+            return "BACK"
+
+        return None
+
+    def draw(self, surf):
+        surf.fill((232, 238, 248))
+
+        # 1. Top Header Tabs
+        tab_y = 18
+        for t_idx, t_name in enumerate(["TRAINER CARD & BADGES", "KANTO REGION MAP"]):
+            is_active = (self.active_tab == t_idx)
+            tx = 35 + t_idx * 270
+            tw = 250
+            th = 40
+            pygame.draw.rect(surf, (240, 140, 40) if is_active else UI_BORDER_LIGHT, (tx - 2, tab_y - 2, tw + 4, th + 4), border_radius=8)
+            pygame.draw.rect(surf, (255, 248, 230) if is_active else WHITE, (tx, tab_y, tw, th), border_radius=6)
+            ttxt = gfx.fonts["regular"].render(t_name, True, (220, 80, 0) if is_active else UI_TEXT)
+            surf.blit(ttxt, (tx + (tw - ttxt.get_width()) // 2, tab_y + 10))
+
+        # 2. Main Card Container
+        cx, cy, cw, ch = 35, 72, 730, 480
+        pygame.draw.rect(surf, UI_BORDER_DARK, (cx - 2, cy - 2, cw + 4, ch + 4), border_radius=12)
+        pygame.draw.rect(surf, WHITE, (cx, cy, cw, ch), border_radius=10)
+
+        # Tab 0: Trainer Card
+        if self.active_tab == 0:
+            # Left Sub-Panel: Trainer Info
+            lx, ly, lw, lh = cx + 18, cy + 18, 320, ch - 36
+            pygame.draw.rect(surf, (248, 250, 255), (lx, ly, lw, lh), border_radius=8)
+            pygame.draw.rect(surf, UI_BORDER_LIGHT, (lx, ly, lw, lh), 1, border_radius=8)
+
+            # Trainer Preview Portrait
+            preview = gfx.get_trainer_preview_sprite(
+                self.player.gender, self.player.outfit_theme, self.player.hat_style, self.player.hair_color, size=(130, 130)
+            )
+            surf.blit(preview, (lx + (lw - 130) // 2, ly + 14))
+
+            # Identity details
+            name_txt = gfx.fonts["large"].render(f"Trainer {self.player.name}", True, (20, 70, 160))
+            surf.blit(name_txt, (lx + (lw - name_txt.get_width()) // 2, ly + 155))
+
+            details = [
+                ("ID No.", "48291"),
+                ("Money", f"${self.inventory.money}"),
+                ("Pokédex Seen", f"{len(self.pokedex.seen)}"),
+                ("Pokédex Caught", f"{len(self.pokedex.caught)}"),
+                ("Current Region", f"{self.player.current_map}"),
+                ("Gym Badges", f"{len(self.world.badges)} / 8")
+            ]
+
+            for d_i, (lbl, val) in enumerate(details):
+                dy = ly + 195 + d_i * 38
+                lbl_t = gfx.fonts["regular"].render(lbl, True, UI_TEXT_MUTED)
+                val_t = gfx.fonts["regular"].render(val, True, UI_TEXT)
+                surf.blit(lbl_t, (lx + 20, dy))
+                surf.blit(val_t, (lx + lw - val_t.get_width() - 20, dy))
+                if d_i < len(details) - 1:
+                    pygame.draw.line(surf, (225, 230, 240), (lx + 20, dy + 28), (lx + lw - 20, dy + 28), 1)
+
+            # Right Sub-Panel: Official 8 Kanto Badges
+            rx, ry, rw, rh = cx + 356, cy + 18, 356, ch - 36
+            pygame.draw.rect(surf, (252, 252, 255), (rx, ry, rw, rh), border_radius=8)
+            pygame.draw.rect(surf, UI_BORDER_LIGHT, (rx, ry, rw, rh), 1, border_radius=8)
+
+            b_head = gfx.fonts["large"].render("KANTO GYM BADGES", True, (20, 70, 160))
+            surf.blit(b_head, (rx + (rw - b_head.get_width()) // 2, ry + 14))
+
+            # 4x2 Badge Grid
+            for b_idx, (b_name, b_gym, b_leader) in enumerate(self.kanto_badges):
+                col = b_idx % 2
+                row = b_idx // 2
+                bx = rx + 16 + col * 165
+                by = ry + 54 + row * 92
+                bw, bh = 155, 82
+
+                is_earned = b_name in self.world.badges
+                bdr_c = (240, 180, 40) if is_earned else (220, 225, 235)
+                bg_c = (255, 250, 235) if is_earned else (245, 246, 250)
+
+                pygame.draw.rect(surf, bdr_c, (bx, by, bw, bh), border_radius=6)
+                pygame.draw.rect(surf, bg_c, (bx + 1, by + 1, bw - 2, bh - 2), border_radius=5)
+
+                gfx.draw_gym_badge(surf, b_name, bx + 8, by + 20, size=40, is_earned=is_earned)
+
+                name_t = gfx.fonts["small"].render(b_name.replace(" Badge", ""), True, (200, 80, 0) if is_earned else UI_TEXT_MUTED)
+                gym_t = gfx.fonts["small"].render(b_gym.split()[0], True, UI_TEXT)
+                stat_t = gfx.fonts["small"].render("OBTAINED" if is_earned else "LOCKED", True, (40, 160, 60) if is_earned else (160, 165, 175))
+
+                surf.blit(name_t, (bx + 54, by + 12))
+                surf.blit(gym_t, (bx + 54, by + 30))
+                surf.blit(stat_t, (bx + 54, by + 50))
+
+        # Tab 1: Kanto Region Map
+        else:
+            # Draw Region Map Connection Routes
+            map_lines = [
+                # Pallet Town -> Route 1 -> Viridian City -> Route 22
+                ((220, 420), (220, 350)),
+                ((220, 350), (220, 280)),
+                ((220, 280), (130, 280)),
+                # Viridian City -> Viridian Forest -> Pewter City
+                ((220, 280), (220, 210)),
+                ((220, 210), (220, 140)),
+                # Pewter City -> Route 3 -> Mt Moon -> Route 4 -> Cerulean City
+                ((220, 140), (310, 140)),
+                ((310, 140), (400, 140)),
+                ((400, 140), (490, 140)),
+                ((490, 140), (580, 140)),
+                # Cerulean City -> Route 24
+                ((580, 140), (580, 70)),
+                # Pallet Town -> Route 21 -> Cinnabar Island
+                ((220, 420), (220, 490)),
+                ((220, 490), (220, 550))
+            ]
+
+            # Scale and offset for card area
+            map_ox, map_oy = cx + 20, cy + 10
+            for p1, p2 in map_lines:
+                x1 = map_ox + int(p1[0] * 0.95)
+                y1 = map_oy + int(p1[1] * 0.65)
+                x2 = map_ox + int(p2[0] * 0.95)
+                y2 = map_oy + int(p2[1] * 0.65)
+                pygame.draw.line(surf, (200, 160, 100), (x1, y1), (x2, y2), 8)
+                pygame.draw.line(surf, (245, 215, 150), (x1, y1), (x2, y2), 4)
+
+            # Draw Map Nodes
+            for n_idx, node in enumerate(self.map_nodes):
+                nx = map_ox + int(node["x"] * 0.95)
+                ny = map_oy + int(node["y"] * 0.65)
+                is_sel = (n_idx == self.selected_node_idx)
+                is_player_here = (node["name"] == self.player.current_map)
+
+                # Node appearance based on type
+                if node["type"] == "CITY":
+                    pygame.draw.circle(surf, (220, 40, 40), (nx, ny), 10)
+                    pygame.draw.circle(surf, WHITE, (nx, ny), 5)
+                elif node["type"] == "TOWN":
+                    pygame.draw.circle(surf, (40, 100, 220), (nx, ny), 8)
+                    pygame.draw.circle(surf, WHITE, (nx, ny), 4)
+                elif node["type"] == "DUNGEON":
+                    pygame.draw.polygon(surf, (120, 80, 50), [(nx, ny - 10), (nx + 9, ny + 7), (nx - 9, ny + 7)])
+                else:
+                    pygame.draw.circle(surf, (70, 160, 60), (nx, ny), 6)
+
+                # Selection Highlight
+                if is_sel:
+                    pygame.draw.circle(surf, (255, 140, 0), (nx, ny), 16, 2)
+
+                # Blinking Player Indicator
+                if is_player_here and int(self.timer * 3) % 2 == 0:
+                    pygame.draw.circle(surf, (255, 230, 40), (nx, ny - 16), 6)
+                    here_t = gfx.fonts["small"].render("YOU", True, (220, 40, 40))
+                    surf.blit(here_t, (nx - here_t.get_width() // 2, ny - 32))
+
+                # Node Label
+                nl = gfx.fonts["small"].render(node["name"], True, (200, 80, 0) if is_sel else UI_TEXT)
+                surf.blit(nl, (nx + 14, ny - 8))
+
+            # Bottom Info Box for Selected Location
+            sel_node = self.map_nodes[self.selected_node_idx]
+            ix, iy, iw, ih = cx + 20, cy + ch - 95, cw - 40, 80
+            pygame.draw.rect(surf, (245, 248, 255), (ix, iy, iw, ih), border_radius=8)
+            pygame.draw.rect(surf, (240, 140, 40), (ix, iy, iw, ih), 2, border_radius=8)
+
+            t_loc = gfx.fonts["medium"].render(f"Location: {sel_node['name']} ({sel_node['type']})", True, (20, 70, 160))
+            t_desc = gfx.fonts["regular"].render(sel_node["desc"], True, UI_TEXT)
+            surf.blit(t_loc, (ix + 16, iy + 10))
+            surf.blit(t_desc, (ix + 16, iy + 42))
+
+        # Bottom Controls Hint
+        hint = gfx.fonts["small"].render("Left/Right: Switch Tab  |  Up/Down: Browse Region Map  |  [X / Enter]: Return", True, UI_TEXT_MUTED)
+        surf.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, 565))
+

@@ -328,13 +328,48 @@ class TestPokemonEngine(unittest.TestCase):
                     else:
                         break
 
+    def test_status_effects_rendering_and_badges(self):
+        from graphics_manager import gfx
+        import pygame
+        surf = pygame.Surface((800, 600))
+        
+        statuses = ["Paralysis", "Burn", "Poison", "Sleep", "Freeze", "Fainted"]
+        for st in statuses:
+            p = Pokemon("Pikachu", level=10, status=st)
+            sprite = gfx.get_pokemon_sprite("Pikachu", is_back=False, size=(160, 160))
+            # Test status visual effects drawing on sprite
+            gfx.draw_pokemon_with_status_effects(surf, p, 400, 300, sprite, anim_time=1.5, is_back=False)
+            gfx.draw_pokemon_with_status_effects(surf, p, 400, 300, sprite, anim_time=2.0, is_back=True)
+            # Test status badge rendering
+            gfx.draw_status_badge(surf, st, 100, 100, width=44, height=18)
+
+    def test_end_of_turn_status_damage(self):
+        from battle_system import BattleSystem
+        char = Pokemon("Charmander", level=10, status="Poison")
+        pika = Pokemon("Pikachu", level=10, status="Burn")
+        battle = BattleSystem([char], pika, is_trainer=False)
+        
+        initial_pika_hp = pika.current_hp
+        initial_char_hp = char.current_hp
+        
+        battle._check_end_of_turn_status()
+        # Drain player status damage animation
+        battle.update(1.0)
+        self.assertLess(char.current_hp, initial_char_hp)
+        
+        # Complete player status animation & advance message queue to trigger enemy status tick
+        battle.update(0.1)
+        battle.advance_message_queue()
+        battle.update(1.0)
+        self.assertLess(pika.current_hp, initial_pika_hp)
+
     def test_defeated_trainers_save_and_reload_persistence(self):
         # 1. Create a world and mark trainers as defeated
         world = World()
         self.assertEqual(len(world.defeated_trainers), 0)
         
-        # Test line of sight before defeat: Joey is at (12, 8) facing DOWN
-        spotted = world.check_trainer_line_of_sight("Route 1", 12, 10)
+        # Test line of sight before defeat: Joey is at (12, 14) facing DOWN
+        spotted = world.check_trainer_line_of_sight("Route 1", 12, 16)
         self.assertIsNotNone(spotted)
         self.assertEqual(spotted["id"], "youngster_joey")
         
@@ -343,7 +378,7 @@ class TestPokemonEngine(unittest.TestCase):
         world.defeated_trainers.add("gym_leader_brock")
         
         # Test line of sight after defeat: Joey should NOT spot the player
-        spotted_after = world.check_trainer_line_of_sight("Route 1", 12, 10)
+        spotted_after = world.check_trainer_line_of_sight("Route 1", 12, 16)
         self.assertIsNone(spotted_after)
         
         # 2. Save game with defeated trainers to Slot 1
@@ -370,11 +405,138 @@ class TestPokemonEngine(unittest.TestCase):
         self.assertNotIn("bug_catcher_sammy", loaded_world.defeated_trainers)
         
         # 5. Verify line of sight on loaded world
-        self.assertIsNone(loaded_world.check_trainer_line_of_sight("Route 1", 12, 10))
-        # Sammy (6, 18 facing RIGHT) is undefeated, should spot player at (8, 18)
-        sammy_spotted = loaded_world.check_trainer_line_of_sight("Route 1", 8, 18)
+        self.assertIsNone(loaded_world.check_trainer_line_of_sight("Route 1", 12, 16))
+        # Sammy (6, 20 facing RIGHT) is undefeated, should spot player at (8, 20)
+        sammy_spotted = loaded_world.check_trainer_line_of_sight("Route 1", 8, 20)
         self.assertIsNotNone(sammy_spotted)
         self.assertEqual(sammy_spotted["id"], "bug_catcher_sammy")
 
+    def test_expanded_world_maps_and_warps(self):
+        world = World()
+        expected_maps = [
+            "Pallet Town", "Route 1", "Viridian City", "Route 22", "Viridian Forest",
+            "Pewter City", "Route 3", "Mt. Moon", "Route 4", "Cerulean City",
+            "Route 24", "Route 21", "Cinnabar Island",
+            "Pokecenter", "Mart", "Oak's Lab", "Player's House", "Pewter Gym", "Cerulean Gym",
+            "Bill's Cottage", "Museum"
+        ]
+        
+        for m_name in expected_maps:
+            self.assertIn(m_name, world.maps, f"Map '{m_name}' must exist in world.maps")
+            grid = world.maps[m_name]["grid"]
+            self.assertGreater(len(grid), 0, f"Map '{m_name}' has empty grid")
+            row_len = len(grid[0])
+            for r_idx, row in enumerate(grid):
+                self.assertEqual(len(row), row_len, f"Map '{m_name}' row {r_idx} length mismatch ({len(row)} vs {row_len})")
+                
+            # Verify warps
+            warps = world.maps[m_name].get("warps", {})
+            for (wx, wy), wdata in warps.items():
+                self.assertIn("target_map", wdata, f"Warp at ({wx}, {wy}) on {m_name} missing target_map")
+                target_map = wdata["target_map"]
+                self.assertIn(target_map, world.maps, f"Warp at ({wx}, {wy}) on {m_name} points to unknown map {target_map}")
+                # Ensure warp source tile is passable so player can trigger it
+                self.assertTrue(world.is_passable(m_name, wx, wy), f"Warp source ({wx}, {wy}) on map '{m_name}' is not passable! Tile: '{world.get_tile(m_name, wx, wy)}'")
+                # Ensure warp target destination tile is passable
+                tx, ty = wdata["target_x"], wdata["target_y"]
+                self.assertTrue(world.is_passable(target_map, tx, ty), f"Warp destination ({tx}, {ty}) on map '{target_map}' from '{m_name}' is not passable! Tile: '{world.get_tile(target_map, tx, ty)}'")
+
+    def test_route_22_viridian_city_transitions(self):
+        world = World()
+        # Test Viridian City -> Route 22 warps
+        v_warps = world.maps["Viridian City"]["warps"]
+        self.assertIn((0, 11), v_warps)
+        self.assertEqual(v_warps[(0, 11)]["target_map"], "Route 22")
+        self.assertEqual(v_warps[(0, 11)]["target_x"], 26)
+        self.assertEqual(v_warps[(0, 11)]["target_y"], 8)
+        
+        # Test Route 22 -> Viridian City warps and exits
+        r22_warps = world.maps["Route 22"]["warps"]
+        self.assertIn((27, 8), r22_warps)
+        self.assertIn((27, 9), r22_warps)
+        self.assertIn((27, 10), r22_warps)
+        self.assertEqual(r22_warps[(27, 8)]["target_map"], "Viridian City")
+        self.assertEqual(r22_warps[(27, 8)]["target_x"], 1)
+        self.assertEqual(r22_warps[(27, 8)]["target_y"], 11)
+        
+        # Ensure (27, 8), (27, 9), (27, 10) are walkable
+        self.assertTrue(world.is_passable("Route 22", 27, 8))
+        self.assertTrue(world.is_passable("Route 22", 27, 9))
+        self.assertTrue(world.is_passable("Route 22", 27, 10))
+
+    def test_ground_items_and_signs(self):
+        world = World()
+        # Test item lookup
+        item_data = world.get_ground_item_at("Pallet Town", 3, 7)
+        self.assertIsNotNone(item_data)
+        self.assertEqual(item_data["item"], "Potion")
+        
+        # Test item collection
+        world.collected_items.add(item_data["id"])
+        self.assertIsNone(world.get_ground_item_at("Pallet Town", 3, 7))
+        
+        # Test sign lookup
+        sign_txt = world.get_sign_at("Pallet Town", 3, 10)
+        self.assertIsNotNone(sign_txt)
+        self.assertIn("Pallet Town", sign_txt)
+
+    def test_gym_badges_and_trainers(self):
+        world = World()
+        # Leader Brock
+        brock = [t for t in TRAINERS if t["id"] == "gym_leader_brock"][0]
+        self.assertEqual(brock["reward_badge"], "Boulder Badge")
+        self.assertEqual(brock["map"], "Pewter Gym")
+        
+        # Leader Misty
+        misty = [t for t in TRAINERS if t["id"] == "gym_leader_misty"][0]
+        self.assertEqual(misty["reward_badge"], "Cascade Badge")
+        self.assertEqual(misty["map"], "Cerulean Gym")
+        
+        # Badge persistence
+        world.badges.add("Boulder Badge")
+        world.badges.add("Cascade Badge")
+        
+        player = Player(current_map="Pewter City")
+        party = [Pokemon("Charmander", level=18)]
+        inv = Inventory()
+        pdx = Pokedex()
+        
+        SaveSystem.save_game(player, party, inv, pdx, world, slot=1)
+        
+        loaded_world = World()
+        SaveSystem.load_game(Player(), loaded_world, slot=1)
+        self.assertIn("Boulder Badge", loaded_world.badges)
+        self.assertIn("Cascade Badge", loaded_world.badges)
+
+    def test_all_wild_encounter_zones(self):
+        for zone_name, encounters in WILD_ENCOUNTERS.items():
+            self.assertGreater(len(encounters), 0, f"Zone '{zone_name}' has no encounters")
+            for enc in encounters:
+                species = enc["species"]
+                self.assertIn(species, POKEMON_SPECIES, f"Unknown species '{species}' in encounter zone '{zone_name}'")
+                self.assertLessEqual(enc["min_lvl"], enc["max_lvl"], f"Min level > Max level for '{species}' in '{zone_name}'")
+                self.assertGreater(enc["weight"], 0, f"Weight must be > 0 for '{species}' in '{zone_name}'")
+
+    def test_trainer_card_and_region_map_screen(self):
+        from ui_manager import TrainerCardScreen
+        player = Player(x=8, y=6, current_map="Viridian City")
+        world = World()
+        world.badges.add("Boulder Badge")
+        inv = Inventory()
+        pdx = Pokedex()
+        
+        screen = TrainerCardScreen(player, world, inv, pdx, initial_tab=0)
+        self.assertEqual(screen.active_tab, 0)
+        
+        # Switch tab
+        event_right = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
+        screen.handle_input(event_right)
+        self.assertEqual(screen.active_tab, 1)
+        
+        # Test draw without crash
+        surf = pygame.Surface((800, 600))
+        screen.draw(surf)
+
 if __name__ == "__main__":
     unittest.main()
+

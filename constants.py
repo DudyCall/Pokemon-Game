@@ -29,6 +29,17 @@ HP_YELLOW = (240, 192, 48)
 HP_RED = (232, 64, 64)
 EXP_BLUE = (64, 160, 240)
 
+# Status Condition Badge Colors & Abbreviations
+STATUS_COLORS = {
+    "Paralysis": {"abbr": "PAR", "bg": (235, 180, 20), "border": (170, 120, 0), "text": (255, 255, 255), "shadow": (60, 40, 0)},
+    "Burn": {"abbr": "BRN", "bg": (235, 75, 30), "border": (160, 30, 10), "text": (255, 255, 255), "shadow": (60, 10, 0)},
+    "Poison": {"abbr": "PSN", "bg": (160, 60, 180), "border": (100, 20, 120), "text": (255, 255, 255), "shadow": (40, 10, 50)},
+    "Sleep": {"abbr": "SLP", "bg": (120, 135, 155), "border": (75, 85, 105), "text": (255, 255, 255), "shadow": (30, 35, 45)},
+    "Freeze": {"abbr": "FRZ", "bg": (50, 190, 220), "border": (20, 130, 160), "text": (255, 255, 255), "shadow": (10, 50, 70)},
+    "Frozen": {"abbr": "FRZ", "bg": (50, 190, 220), "border": (20, 130, 160), "text": (255, 255, 255), "shadow": (10, 50, 70)},
+    "Fainted": {"abbr": "FNT", "bg": (130, 40, 40), "border": (80, 20, 20), "text": (255, 255, 255), "shadow": (30, 10, 10)}
+}
+
 # Type Colors
 TYPE_COLORS = {
     "Normal": (168, 168, 120),

@@ -85,6 +85,8 @@ class SaveSystem:
         cls._active_slot = target_slot
 
         defeated = list(getattr(world, "defeated_trainers", [])) if world is not None else []
+        collected = list(getattr(world, "collected_items", [])) if world is not None else []
+        badges = list(getattr(world, "badges", [])) if world is not None else []
         data = {
             "slot": target_slot,
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -103,7 +105,9 @@ class SaveSystem:
             "pc_box": [p.to_dict() for p in (pc_box or [])],
             "inventory": inventory.to_dict(),
             "pokedex": pokedex.to_dict(),
-            "defeated_trainers": defeated
+            "defeated_trainers": defeated,
+            "collected_items": collected,
+            "badges": badges
         }
         try:
             slot_path = cls.get_slot_path(target_slot)
@@ -160,6 +164,8 @@ class SaveSystem:
             pokedex = Pokedex.from_dict(data.get("pokedex", {}))
             if world is not None:
                 world.defeated_trainers = set(data.get("defeated_trainers", []))
+                world.collected_items = set(data.get("collected_items", []))
+                world.badges = set(data.get("badges", []))
 
             # Auto-recovery: If Pikachu is in caught Pokédex but not in party or PC box, restore Pikachu to PC box!
             all_species = [p.species for p in party] + [p.species for p in pc_box]

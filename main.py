@@ -18,7 +18,8 @@ from battle_system import BattleSystem
 from save_system import SaveSystem, Pokedex
 from ui_manager import (
     TitleScreen, StarterSelectScreen, TrainerCustomizationScreen, PauseMenu, PokedexScreen,
-    PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen, PCBoxScreen
+    PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen, PCBoxScreen,
+    TrainerCardScreen
 )
 
 class Game:
@@ -53,6 +54,7 @@ class Game:
         self.save_dialog = None
         self.pokedex_screen = None
         self.party_screen = None
+        self.trainer_card_screen = None
         self.shop_screen = None
         self.current_dialogue = None
         self.battle_system = None
@@ -259,10 +261,19 @@ class Game:
                     self.state = GameState.POKEDEX
                 elif action == "POKÉMON":
                     self.party_screen = PartySummaryScreen(self.party, self.inventory)
+                    self.trainer_card_screen = None
                     self.state = GameState.TRAINER_CARD
                 elif action == "BAG":
                     self.shop_screen = ShopScreen(self.inventory)
                     self.state = GameState.SHOP
+                elif action == "TOWN MAP":
+                    self.party_screen = None
+                    self.trainer_card_screen = TrainerCardScreen(self.player, self.world, self.inventory, self.pokedex, initial_tab=1)
+                    self.state = GameState.TRAINER_CARD
+                elif action in ["TRAINER", "TRAINER CARD"]:
+                    self.party_screen = None
+                    self.trainer_card_screen = TrainerCardScreen(self.player, self.world, self.inventory, self.pokedex, initial_tab=0)
+                    self.state = GameState.TRAINER_CARD
                 elif action == "PC BOX":
                     self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
                     self.state = GameState.PC_BOX
@@ -308,11 +319,17 @@ class Game:
                         self.state = GameState.OVERWORLD
                 continue
 
-            # Party Summary View State
+            # Party / Trainer Card / Town Map View State
             if self.state == GameState.TRAINER_CARD:
-                if self.party_screen:
+                if self.trainer_card_screen:
+                    res = self.trainer_card_screen.handle_input(event)
+                    if res == "BACK":
+                        self.trainer_card_screen = None
+                        self.state = GameState.OVERWORLD
+                elif self.party_screen:
                     res = self.party_screen.handle_input(event)
                     if res == "BACK":
+                        self.party_screen = None
                         self.state = GameState.OVERWORLD
                 continue
 
@@ -350,15 +367,38 @@ class Game:
             fx -= 1
         elif self.player.facing == Direction.RIGHT:
             fx += 1
-            
-        # Check PC Terminal tile or interaction in Pokecenter
+
+        # 1. Check Ground Collectible Item (at player tile or facing tile)
+        g_item = self.world.get_ground_item_at(self.player.current_map, self.player.grid_x, self.player.grid_y) or self.world.get_ground_item_at(self.player.current_map, fx, fy)
+        if g_item:
+            item_id = g_item["id"]
+            item_name = g_item["item"]
+            item_cnt = g_item.get("count", 1)
+            self.world.collected_items.add(item_id)
+            self.inventory.add_item(item_name, item_cnt)
+            sound_mgr.play_sfx("confirm")
+            self.show_notification(f"Found {item_cnt}x {item_name}!")
+            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+            self.current_dialogue = DialogueBox("Item Found", f"{self.player.name} found {item_cnt}x {item_name} and put it in the Bag!", on_complete=None)
+            self.state = GameState.DIALOGUE
+            return
+
+        # 2. Check Sign at facing tile
+        sign_msg = self.world.get_sign_at(self.player.current_map, fx, fy)
+        if sign_msg:
+            sound_mgr.play_sfx("confirm")
+            self.current_dialogue = DialogueBox("Notice", sign_msg, on_complete=None)
+            self.state = GameState.DIALOGUE
+            return
+
+        # 3. Check PC Terminal tile or interaction in Pokecenter
         if self.player.current_map == "Pokecenter" and fx == 8 and fy in [4, 5]:
             sound_mgr.play_sfx("confirm")
             self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
             self.state = GameState.PC_BOX
             return
 
-        # Check NPC
+        # 4. Check NPC
         npc = self.world.get_npc_at(self.player.current_map, fx, fy)
         if npc:
             sound_mgr.play_sfx("confirm")
@@ -366,24 +406,54 @@ class Game:
                 self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
                 self.state = GameState.PC_BOX
             elif npc.get("is_healer"):
-                # Nurse Joy Healer
+                # Nurse Joy / Mom Healer
                 for p in self.party:
                     p.full_restore()
-                # Auto-save at Pokemon Center
+                # Auto-save
                 SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
                 sound_mgr.play_sfx("heal")
-                self.current_dialogue = DialogueBox("Nurse Joy", f"Your Pokémon are fully healed and your progress was saved to Slot {self.current_save_slot}!", on_complete=None)
+                healer_name = npc.get("name", "Nurse Joy")
+                self.current_dialogue = DialogueBox(healer_name, f"Your Pokémon are fully healed and your progress was saved to Slot {self.current_save_slot}!", on_complete=None)
                 self.state = GameState.DIALOGUE
             elif npc.get("is_shop"):
                 # Open Mart
                 self.shop_screen = ShopScreen(self.inventory)
                 self.state = GameState.SHOP
+            elif npc.get("is_oak"):
+                # Prof. Oak Pokédex Evaluation
+                seen_n = len(self.pokedex.seen)
+                caught_n = len(self.pokedex.caught)
+                if caught_n >= 20:
+                    eval_msg = f"Astounding, {self.player.name}! You have caught {caught_n} species! You are well on your way to becoming a Pokémon Master!"
+                elif caught_n >= 6:
+                    eval_msg = f"Great work, {self.player.name}! You have caught {caught_n} species and seen {seen_n}. Keep exploring new routes and caves!"
+                else:
+                    eval_msg = f"You have caught {caught_n} species and seen {seen_n}. Make sure to explore all routes, caves, and waters to find wild Pokémon!"
+                self.current_dialogue = DialogueBox("Prof. Oak", eval_msg, on_complete=None)
+                self.state = GameState.DIALOGUE
+            elif npc.get("is_bill"):
+                # Bill Gift (Eevee)
+                if "bill_eevee_gift" not in self.world.collected_items:
+                    self.world.collected_items.add("bill_eevee_gift")
+                    eevee = Pokemon("Eevee", level=15)
+                    if len(self.party) < 6:
+                        self.party.append(eevee)
+                        dest = "your party"
+                    else:
+                        self.pc_box.append(eevee)
+                        dest = "your PC Storage Box"
+                    self.pokedex.register_caught("Eevee")
+                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+                    self.current_dialogue = DialogueBox("Bill", f"Thanks for visiting my Sea Cottage! Take this rare Eevee! It was sent to {dest}!", on_complete=None)
+                else:
+                    self.current_dialogue = DialogueBox("Bill", "Eevee has many wonderful evolutions with elemental stones! Take good care of it!", on_complete=None)
+                self.state = GameState.DIALOGUE
             else:
                 self.current_dialogue = DialogueBox(npc.get("name", "NPC"), npc.get("dialog", "Hello!"), on_complete=None)
                 self.state = GameState.DIALOGUE
             return
 
-        # Check Trainer talk
+        # 5. Check Trainer talk
         trainer = self.world.get_any_trainer_at(self.player.current_map, fx, fy)
         if trainer:
             sound_mgr.play_sfx("confirm")
@@ -396,7 +466,7 @@ class Game:
                 self.start_trainer_battle(trainer)
             return
 
-        # Check Door / Warp interaction directly in front of player
+        # 6. Check Door / Warp interaction directly in front of player
         warp = self.world.get_warp_target(self.player.current_map, fx, fy)
         if warp:
             self.execute_warp(warp)
@@ -408,12 +478,13 @@ class Game:
         target_x = warp["target_x"]
         target_y = warp["target_y"]
         
+        interiors = ["Pokecenter", "Mart", "Oak's Lab", "Player's House", "Pewter Gym", "Cerulean Gym", "Bill's Cottage", "Museum"]
         # If entering interior, record origin
-        if target_map in ["Pokecenter", "Mart"] and self.player.current_map not in ["Pokecenter", "Mart"]:
+        if target_map in interiors and self.player.current_map not in interiors:
             self.world.interior_origin_map = self.player.current_map
             self.world.interior_origin_coords = (self.player.grid_x, self.player.grid_y)
         # If exiting interior, return to recorded origin or fallback
-        elif target_map in ["Route 1", "Viridian City", "Pallet Town", "Viridian Forest"] and self.player.current_map in ["Pokecenter", "Mart"]:
+        elif target_map not in interiors and self.player.current_map in interiors:
             target_map = getattr(self.world, "interior_origin_map", target_map)
             coords = getattr(self.world, "interior_origin_coords", (target_x, target_y))
             target_x, target_y = coords
@@ -426,6 +497,7 @@ class Game:
         self.player.pixel_y = target_y * 32
         self.player.is_moving = False
         self.player.move_progress = 0.0
+
 
     def update(self, dt):
         self.world.update(dt)
@@ -510,6 +582,11 @@ class Game:
             if self.current_dialogue:
                 self.current_dialogue.update(dt)
 
+        # Trainer Card / Region Map update
+        elif self.state == GameState.TRAINER_CARD:
+            if self.trainer_card_screen:
+                self.trainer_card_screen.update(dt)
+
         # Battle State update
         elif self.state == GameState.BATTLE:
             if self.battle_system:
@@ -518,10 +595,16 @@ class Game:
                 # Check Battle Completion
                 if self.battle_system.phase == "FINISHED":
                     if self.battle_system.is_trainer:
-                        t_id = self.battle_system.trainer_data.get("id") if self.battle_system.trainer_data else None
+                        t_data = self.battle_system.trainer_data or {}
+                        t_id = t_data.get("id")
                         if t_id:
                             self.world.defeated_trainers.add(t_id)
-                        # Save game progress immediately so defeated trainers stay defeated across reloads
+                        # Award Gym Badge if victorious against a gym leader
+                        badge_name = t_data.get("reward_badge")
+                        if badge_name:
+                            self.world.badges.add(badge_name)
+                            self.show_notification(f"Earned the {badge_name}!")
+                        # Save game progress immediately so defeated trainers and badges stay saved
                         SaveSystem.save_game(
                             self.player, self.party, self.inventory, self.pokedex, self.world,
                             slot=self.current_save_slot, pc_box=self.pc_box
@@ -591,9 +674,12 @@ class Game:
         elif self.state == GameState.POKEDEX and self.pokedex_screen:
             self.pokedex_screen.draw(self.screen)
 
-        # 8. Party Summary Screen
-        elif self.state == GameState.TRAINER_CARD and self.party_screen:
-            self.party_screen.draw(self.screen)
+        # 8. Party Summary / Trainer Card / Region Map Screen
+        elif self.state == GameState.TRAINER_CARD:
+            if self.trainer_card_screen:
+                self.trainer_card_screen.draw(self.screen)
+            elif self.party_screen:
+                self.party_screen.draw(self.screen)
 
         # 9. Shop Screen
         elif self.state == GameState.SHOP and self.shop_screen:
@@ -602,6 +688,7 @@ class Game:
         # 10. Battle Screen
         elif self.state == GameState.BATTLE and self.battle_system:
             self.battle_system.draw(self.screen)
+
 
         # On-screen Notification Banner
         if self.notification_timer > 0:

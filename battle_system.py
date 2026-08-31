@@ -572,30 +572,90 @@ class BattleSystem:
                     elif next_attack:
                         next_attack()
                     else:
-                        self.phase = BattlePhase.ACTION_MENU
+                        self._check_end_of_turn_status()
                         
                 self.on_hp_done = on_damage_applied
             else:
                 # Status only move (e.g. Growl, Tail Whip, Recover, Leech Seed)
+                on_next = next_attack if next_attack else self._check_end_of_turn_status
                 eff = move.get("effect") or {}
                 if "heal_percent" in eff:
                     healed = attacker.heal(int(attacker.max_hp * (eff["heal_percent"] / 100)))
-                    self.queue_message(f"{attacker.nickname} restored {healed} HP!", on_done=next_attack)
+                    self.queue_message(f"{attacker.nickname} restored {healed} HP!", on_done=on_next)
                 elif "status" in eff:
                     if defender.apply_status(eff["status"]):
-                        self.queue_message(f"{defender.nickname} became {eff['status']}ed!", on_done=next_attack)
+                        self.queue_message(f"{defender.nickname} became {eff['status']}ed!", on_done=on_next)
                     else:
-                        self.queue_message("But it failed!", on_done=next_attack)
+                        self.queue_message("But it failed!", on_done=on_next)
                 elif "stat" in eff and "stages" in eff:
                     stat_name = eff["stat"].upper()
                     stages = eff["stages"]
                     target = defender if stages < 0 else attacker
                     change_word = "harshly fell" if stages <= -2 else ("fell" if stages < 0 else ("sharply rose" if stages >= 2 else "rose"))
-                    self.queue_message(f"{target.nickname}'s {stat_name} {change_word}!", on_done=next_attack)
+                    self.queue_message(f"{target.nickname}'s {stat_name} {change_word}!", on_done=on_next)
                 else:
-                    self.queue_message(f"{attacker.nickname}'s {move['name']} was successful!", on_done=next_attack)
+                    self.queue_message(f"{attacker.nickname}'s {move['name']} was successful!", on_done=on_next)
 
         self.queue_message(f"{attacker.nickname} used {move['name']}!", on_done=perform_move)
+
+    def _check_end_of_turn_status(self):
+        """Processes end-of-turn residual status effects like Poison and Burn damage."""
+        if self.enemy_pokemon.is_fainted() or self.player_pokemon.is_fainted() or self.phase in [BattlePhase.FINISHED, BattlePhase.BLACKOUT]:
+            return
+
+        status_events = []
+        
+        # 1. Player Status Tick
+        if not self.player_pokemon.is_fainted():
+            if self.player_pokemon.status == "Poison":
+                p_dmg = max(1, self.player_pokemon.max_hp // 8)
+                status_events.append(("player", p_dmg, f"{self.player_pokemon.nickname} is hurt by poison!"))
+            elif self.player_pokemon.status == "Burn":
+                p_dmg = max(1, self.player_pokemon.max_hp // 16)
+                status_events.append(("player", p_dmg, f"{self.player_pokemon.nickname} is hurt by its burn!"))
+
+        # 2. Enemy Status Tick
+        if not self.enemy_pokemon.is_fainted():
+            if self.enemy_pokemon.status == "Poison":
+                e_dmg = max(1, self.enemy_pokemon.max_hp // 8)
+                status_events.append(("enemy", e_dmg, f"{self.enemy_pokemon.species.upper()} is hurt by poison!"))
+            elif self.enemy_pokemon.status == "Burn":
+                e_dmg = max(1, self.enemy_pokemon.max_hp // 16)
+                status_events.append(("enemy", e_dmg, f"{self.enemy_pokemon.species.upper()} is hurt by its burn!"))
+
+        def process_next_event():
+            if not status_events or self.enemy_pokemon.is_fainted() or self.player_pokemon.is_fainted():
+                self.phase = BattlePhase.ACTION_MENU
+                return
+                
+            side, dmg, msg = status_events.pop(0)
+            target = self.player_pokemon if side == "player" else self.enemy_pokemon
+            
+            if target.is_fainted():
+                process_next_event()
+                return
+                
+            sound_mgr.play_sfx("hit")
+            self.hp_target = max(0, target.current_hp - dmg)
+            self.hp_target_pokemon = target
+            self.hp_is_player = (side == "player")
+            self.screen_shake = 4
+            self.phase = BattlePhase.HP_ANIM
+            
+            def after_tick():
+                if target.is_fainted():
+                    sound_mgr.play_sfx("faint")
+                    is_player = (side == "player")
+                    self.queue_message(f"{target.nickname} fainted!", on_done=self._handle_faint(target, is_player))
+                else:
+                    self.queue_message(msg, on_done=process_next_event)
+                    
+            self.on_hp_done = after_tick
+
+        if status_events:
+            process_next_event()
+        else:
+            self.phase = BattlePhase.ACTION_MENU
 
     def _after_hp_animation(self):
         if hasattr(self, 'on_hp_done') and self.on_hp_done:
@@ -723,16 +783,18 @@ class BattleSystem:
         # Draw Enemy Pokemon
         if not self.enemy_pokemon.is_fainted() and self.catch_phase != 2:
             e_surf = gfx.get_pokemon_sprite(self.enemy_pokemon.species, is_back=False, size=(160, 160))
-            e_draw_x = int(self.enemy_pos_x - 80)
             e_draw_y = 70
-            surf.blit(e_surf, (e_draw_x, e_draw_y))
+            gfx.draw_pokemon_with_status_effects(
+                surf, self.enemy_pokemon, int(self.enemy_pos_x), e_draw_y + 80, e_surf, self.timer, is_back=False
+            )
 
         # Draw Player Pokemon
         if not self.player_pokemon.is_fainted():
             p_surf = gfx.get_pokemon_sprite(self.player_pokemon.species, is_back=True, size=(180, 180))
-            p_draw_x = int(self.player_pos_x - 90)
             p_draw_y = 200
-            surf.blit(p_surf, (p_draw_x, p_draw_y))
+            gfx.draw_pokemon_with_status_effects(
+                surf, self.player_pokemon, int(self.player_pos_x), p_draw_y + 90, p_surf, self.timer, is_back=True
+            )
 
         # Draw Catch Pokéball Animation
         if self.phase == BattlePhase.CATCH_ANIM:
@@ -773,9 +835,14 @@ class BattleSystem:
         surf.blit(lvl_txt, (x + w - lvl_txt.get_width() - 12, y + 12))
         
         # HP Bar
-        gfx.draw_hp_bar(surf, x + 50, y + 42, 180, 10, self.enemy_pokemon.current_hp, self.enemy_pokemon.max_hp)
+        bar_w = 180 if not self.enemy_pokemon.status else 136
+        gfx.draw_hp_bar(surf, x + 50, y + 42, bar_w, 10, self.enemy_pokemon.current_hp, self.enemy_pokemon.max_hp)
         hp_lbl = gfx.fonts["small"].render("HP", True, (240, 180, 40))
         surf.blit(hp_lbl, (x + 22, y + 38))
+        
+        # Enemy Status Badge
+        if self.enemy_pokemon.status:
+            gfx.draw_status_badge(surf, self.enemy_pokemon.status, x + 50 + bar_w + 6, y + 38, width=38, height=18)
 
     def _draw_player_hud(self, surf):
         x, y, w, h = 480, 260, 280, 95
@@ -792,6 +859,10 @@ class BattleSystem:
         gfx.draw_hp_bar(surf, x + 50, y + 42, 200, 10, self.player_pokemon.current_hp, self.player_pokemon.max_hp)
         hp_lbl = gfx.fonts["small"].render("HP", True, (240, 180, 40))
         surf.blit(hp_lbl, (x + 22, y + 38))
+        
+        # Player Status Badge
+        if self.player_pokemon.status:
+            gfx.draw_status_badge(surf, self.player_pokemon.status, x + 50, y + 56, width=38, height=18)
         
         # Numeric HP
         hp_num = gfx.fonts["small"].render(f"{self.player_pokemon.current_hp} / {self.player_pokemon.max_hp}", True, UI_TEXT)

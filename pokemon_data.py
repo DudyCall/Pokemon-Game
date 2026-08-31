@@ -2835,6 +2835,18 @@ ITEMS = {
     "Rare Candy": {
         "name": "Rare Candy", "category": "candy", "level_up": 1, "price": 4800,
         "desc": "A candy that raises the level of a single Pokémon by one."
+    },
+    "Moon Stone": {
+        "name": "Moon Stone", "category": "item", "price": 5000,
+        "desc": "A peculiar stone that makes certain species of Pokémon evolve."
+    },
+    "Nugget": {
+        "name": "Nugget", "category": "item", "price": 5000,
+        "desc": "A nugget of pure gold that can be sold for a high price at the PokéMart."
+    },
+    "Escape Rope": {
+        "name": "Escape Rope", "category": "item", "price": 550,
+        "desc": "A long, durable rope that lets the player escape from any cave or dungeon."
     }
 }
 
@@ -2848,42 +2860,85 @@ WILD_ENCOUNTERS = {
         {"species": "Pikachu", "min_lvl": 3, "max_lvl": 5, "weight": 10},
         {"species": "Mankey", "min_lvl": 3, "max_lvl": 5, "weight": 5}
     ],
-    "Route 2": [
-        {"species": "Pidgey", "min_lvl": 4, "max_lvl": 7, "weight": 20},
-        {"species": "Rattata", "min_lvl": 4, "max_lvl": 6, "weight": 15},
-        {"species": "Nidoran-F", "min_lvl": 4, "max_lvl": 6, "weight": 10},
-        {"species": "Nidoran-M", "min_lvl": 4, "max_lvl": 6, "weight": 10},
-        {"species": "Spearow", "min_lvl": 5, "max_lvl": 7, "weight": 10},
-        {"species": "Ekans", "min_lvl": 5, "max_lvl": 7, "weight": 8},
-        {"species": "Sandshrew", "min_lvl": 5, "max_lvl": 7, "weight": 8},
-        {"species": "Bulbasaur", "min_lvl": 5, "max_lvl": 7, "weight": 5},
-        {"species": "Charmander", "min_lvl": 5, "max_lvl": 7, "weight": 5},
-        {"species": "Squirtle", "min_lvl": 5, "max_lvl": 7, "weight": 5},
-        {"species": "Abra", "min_lvl": 6, "max_lvl": 8, "weight": 4}
+    "Route 22": [
+        {"species": "Rattata", "min_lvl": 3, "max_lvl": 5, "weight": 25},
+        {"species": "Spearow", "min_lvl": 3, "max_lvl": 6, "weight": 25},
+        {"species": "Nidoran-F", "min_lvl": 3, "max_lvl": 6, "weight": 15},
+        {"species": "Nidoran-M", "min_lvl": 3, "max_lvl": 6, "weight": 15},
+        {"species": "Mankey", "min_lvl": 3, "max_lvl": 6, "weight": 12},
+        {"species": "Poliwag", "min_lvl": 4, "max_lvl": 7, "weight": 8}
     ],
     "Viridian Forest": [
-        {"species": "Caterpie", "min_lvl": 4, "max_lvl": 7, "weight": 15},
-        {"species": "Weedle", "min_lvl": 4, "max_lvl": 7, "weight": 15},
+        {"species": "Caterpie", "min_lvl": 4, "max_lvl": 7, "weight": 18},
+        {"species": "Weedle", "min_lvl": 4, "max_lvl": 7, "weight": 18},
         {"species": "Pikachu", "min_lvl": 5, "max_lvl": 9, "weight": 15},
         {"species": "Oddish", "min_lvl": 5, "max_lvl": 8, "weight": 10},
         {"species": "Bellsprout", "min_lvl": 5, "max_lvl": 8, "weight": 10},
-        {"species": "Gastly", "min_lvl": 6, "max_lvl": 10, "weight": 10},
-        {"species": "Geodude", "min_lvl": 7, "max_lvl": 11, "weight": 10},
-        {"species": "Eevee", "min_lvl": 8, "max_lvl": 12, "weight": 8},
-        {"species": "Scyther", "min_lvl": 10, "max_lvl": 14, "weight": 4},
-        {"species": "Pinsir", "min_lvl": 10, "max_lvl": 14, "weight": 3},
-        {"species": "Snorlax", "min_lvl": 12, "max_lvl": 15, "weight": 5},
-        {"species": "Dratini", "min_lvl": 10, "max_lvl": 15, "weight": 3}
+        {"species": "Gastly", "min_lvl": 6, "max_lvl": 10, "weight": 8},
+        {"species": "Geodude", "min_lvl": 7, "max_lvl": 11, "weight": 7},
+        {"species": "Eevee", "min_lvl": 8, "max_lvl": 12, "weight": 6},
+        {"species": "Scyther", "min_lvl": 9, "max_lvl": 13, "weight": 4},
+        {"species": "Pinsir", "min_lvl": 9, "max_lvl": 13, "weight": 4}
+    ],
+    "Route 3": [
+        {"species": "Pidgey", "min_lvl": 7, "max_lvl": 11, "weight": 25},
+        {"species": "Spearow", "min_lvl": 8, "max_lvl": 12, "weight": 25},
+        {"species": "Ekans", "min_lvl": 8, "max_lvl": 11, "weight": 15},
+        {"species": "Sandshrew", "min_lvl": 8, "max_lvl": 11, "weight": 15},
+        {"species": "Jigglypuff", "min_lvl": 8, "max_lvl": 12, "weight": 12},
+        {"species": "Mankey", "min_lvl": 9, "max_lvl": 12, "weight": 8}
+    ],
+    "Mt. Moon": [
+        {"species": "Zubat", "min_lvl": 9, "max_lvl": 13, "weight": 35},
+        {"species": "Geodude", "min_lvl": 9, "max_lvl": 13, "weight": 25},
+        {"species": "Paras", "min_lvl": 9, "max_lvl": 12, "weight": 15},
+        {"species": "Clefairy", "min_lvl": 10, "max_lvl": 14, "weight": 12},
+        {"species": "Sandshrew", "min_lvl": 10, "max_lvl": 13, "weight": 8},
+        {"species": "Onix", "min_lvl": 11, "max_lvl": 15, "weight": 5}
+    ],
+    "Route 4": [
+        {"species": "Rattata", "min_lvl": 11, "max_lvl": 14, "weight": 25},
+        {"species": "Spearow", "min_lvl": 11, "max_lvl": 15, "weight": 25},
+        {"species": "Ekans", "min_lvl": 12, "max_lvl": 15, "weight": 20},
+        {"species": "Sandshrew", "min_lvl": 12, "max_lvl": 15, "weight": 15},
+        {"species": "Mankey", "min_lvl": 12, "max_lvl": 16, "weight": 10},
+        {"species": "Psyduck", "min_lvl": 12, "max_lvl": 16, "weight": 5}
+    ],
+    "Route 24": [
+        {"species": "Bellsprout", "min_lvl": 13, "max_lvl": 17, "weight": 25},
+        {"species": "Oddish", "min_lvl": 13, "max_lvl": 17, "weight": 25},
+        {"species": "Pidgey", "min_lvl": 14, "max_lvl": 17, "weight": 20},
+        {"species": "Abra", "min_lvl": 13, "max_lvl": 16, "weight": 15},
+        {"species": "Venonat", "min_lvl": 14, "max_lvl": 17, "weight": 10},
+        {"species": "Squirtle", "min_lvl": 12, "max_lvl": 16, "weight": 5}
+    ],
+    "Route 21": [
+        {"species": "Tentacool", "min_lvl": 16, "max_lvl": 22, "weight": 35},
+        {"species": "Magikarp", "min_lvl": 15, "max_lvl": 20, "weight": 30},
+        {"species": "Goldeen", "min_lvl": 16, "max_lvl": 21, "weight": 15},
+        {"species": "Shellder", "min_lvl": 17, "max_lvl": 22, "weight": 10},
+        {"species": "Staryu", "min_lvl": 17, "max_lvl": 22, "weight": 7},
+        {"species": "Lapras", "min_lvl": 18, "max_lvl": 23, "weight": 2},
+        {"species": "Dratini", "min_lvl": 16, "max_lvl": 21, "weight": 1}
+    ],
+    "Cinnabar Island": [
+        {"species": "Growlithe", "min_lvl": 20, "max_lvl": 26, "weight": 25},
+        {"species": "Vulpix", "min_lvl": 20, "max_lvl": 26, "weight": 25},
+        {"species": "Ponyta", "min_lvl": 21, "max_lvl": 26, "weight": 20},
+        {"species": "Koffing", "min_lvl": 20, "max_lvl": 25, "weight": 15},
+        {"species": "Grimer", "min_lvl": 20, "max_lvl": 25, "weight": 10},
+        {"species": "Magmar", "min_lvl": 22, "max_lvl": 27, "weight": 5}
     ]
 }
 
 # Overworld Trainers
 TRAINERS = [
+    # Route 1
     {
         "id": "youngster_joey",
         "name": "Youngster Joey",
         "map": "Route 1",
-        "x": 12, "y": 8,
+        "x": 12, "y": 14,
         "direction": "DOWN",
         "dialog_before": "Hi! I like shorts! They're comfy and easy to wear! Let's battle!",
         "dialog_after": "My Rattata is in the top percentage of Rattata!",
@@ -2897,7 +2952,7 @@ TRAINERS = [
         "id": "bug_catcher_sammy",
         "name": "Bug Catcher Sammy",
         "map": "Route 1",
-        "x": 6, "y": 18,
+        "x": 6, "y": 20,
         "direction": "RIGHT",
         "dialog_before": "Stop right there! You caught wild Pokémon too?",
         "dialog_after": "Aw man! My Pokémon weren't fast enough!",
@@ -2908,34 +2963,395 @@ TRAINERS = [
             {"species": "Butterfree", "level": 6}
         ]
     },
+    # Route 22
+    {
+        "id": "rival_blue",
+        "name": "Rival Blue",
+        "map": "Route 22",
+        "x": 18, "y": 8,
+        "direction": "LEFT",
+        "dialog_before": "Hey there! Heading to the Pokémon League? You're not ready yet! Let's test your team!",
+        "dialog_after": "Hmph! You got lucky. Smell ya later!",
+        "reward_money": 450,
+        "party": [
+            {"species": "Pidgey", "level": 8},
+            {"species": "Rattata", "level": 8},
+            {"species": "Squirtle", "level": 9}
+        ]
+    },
+    {
+        "id": "hiker_franklin",
+        "name": "Hiker Franklin",
+        "map": "Route 22",
+        "x": 8, "y": 11,
+        "direction": "DOWN",
+        "dialog_before": "Climbing mountains toughens up my Rock and Ground Pokémon!",
+        "dialog_after": "Your Pokémon have solid fundamentals!",
+        "reward_money": 320,
+        "party": [
+            {"species": "Geodude", "level": 8},
+            {"species": "Machop", "level": 8}
+        ]
+    },
+    # Viridian Forest
+    {
+        "id": "bug_catcher_colton",
+        "name": "Bug Catcher Colton",
+        "map": "Viridian Forest",
+        "x": 8, "y": 14,
+        "direction": "RIGHT",
+        "dialog_before": "I came to Viridian Forest with my friends to catch bug Pokémon!",
+        "dialog_after": "I ran out of Poké Balls, but that was fun!",
+        "reward_money": 200,
+        "party": [
+            {"species": "Caterpie", "level": 6},
+            {"species": "Metapod", "level": 7},
+            {"species": "Butterfree", "level": 8}
+        ]
+    },
+    {
+        "id": "bug_catcher_rick",
+        "name": "Bug Catcher Rick",
+        "map": "Viridian Forest",
+        "x": 22, "y": 20,
+        "direction": "LEFT",
+        "dialog_before": "Watch out for poison stings from Weedle and Beedrill!",
+        "dialog_after": "My Beedrill's poison sting failed!",
+        "reward_money": 220,
+        "party": [
+            {"species": "Weedle", "level": 6},
+            {"species": "Kakuna", "level": 7},
+            {"species": "Beedrill", "level": 8}
+        ]
+    },
     {
         "id": "lass_haley",
         "name": "Lass Haley",
-        "map": "Route 2",
-        "x": 14, "y": 10,
-        "direction": "LEFT",
-        "dialog_before": "You look like a tough trainer! Can you defeat my team?",
+        "map": "Viridian Forest",
+        "x": 18, "y": 7,
+        "direction": "DOWN",
+        "dialog_before": "You look like a tough trainer! Can you defeat my cute team?",
         "dialog_after": "You are indeed very strong!",
-        "reward_money": 240,
+        "reward_money": 280,
         "party": [
             {"species": "Pikachu", "level": 8},
             {"species": "Clefairy", "level": 8},
             {"species": "Eevee", "level": 9}
         ]
     },
+    # Pewter Gym
+    {
+        "id": "camper_liam",
+        "name": "Camper Liam",
+        "map": "Pewter Gym",
+        "x": 6, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "You're still light-years away from facing Brock!",
+        "dialog_after": "Light-years isn't time... it measures distance!",
+        "reward_money": 350,
+        "party": [
+            {"species": "Geodude", "level": 10},
+            {"species": "Sandshrew", "level": 11}
+        ]
+    },
     {
         "id": "gym_leader_brock",
         "name": "Leader Brock",
-        "map": "Viridian Forest",
-        "x": 10, "y": 4,
+        "map": "Pewter Gym",
+        "x": 6, "y": 3,
         "direction": "DOWN",
-        "dialog_before": "I am Brock! My rock-hard willpower is evident even in my Pokémon!",
-        "dialog_after": "I took you for granted! As proof of your victory, take this prize!",
-        "reward_money": 1000,
+        "dialog_before": "I am Brock! The Pewter City Gym Leader! My rock-hard willpower is evident in my Pokémon! Are you ready?",
+        "dialog_after": "I took you for granted! As proof of your victory, accept the Boulder Badge!",
+        "reward_badge": "Boulder Badge",
+        "reward_money": 1500,
         "party": [
             {"species": "Geodude", "level": 12},
             {"species": "Onix", "level": 14},
             {"species": "Graveler", "level": 15}
         ]
+    },
+    # Route 3
+    {
+        "id": "lass_janice",
+        "name": "Lass Janice",
+        "map": "Route 3",
+        "x": 10, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "I love cute Pokémon! Have you seen any Jigglypuff?",
+        "dialog_after": "Your Pokémon are cute and strong!",
+        "reward_money": 320,
+        "party": [
+            {"species": "Pidgey", "level": 9},
+            {"species": "Rattata", "level": 10},
+            {"species": "Jigglypuff", "level": 11}
+        ]
+    },
+    {
+        "id": "youngster_ben",
+        "name": "Youngster Ben",
+        "map": "Route 3",
+        "x": 18, "y": 8,
+        "direction": "LEFT",
+        "dialog_before": "I'm training hard to conquer Mt. Moon!",
+        "dialog_after": "I need to train more before heading into the cave.",
+        "reward_money": 300,
+        "party": [
+            {"species": "Spearow", "level": 11},
+            {"species": "Raticate", "level": 12}
+        ]
+    },
+    {
+        "id": "hiker_wayne",
+        "name": "Hiker Wayne",
+        "map": "Route 3",
+        "x": 25, "y": 5,
+        "direction": "DOWN",
+        "dialog_before": "Mt. Moon is just ahead! It's full of rocks and ancient fossils!",
+        "dialog_after": "Gwah! My rocks crumbled!",
+        "reward_money": 380,
+        "party": [
+            {"species": "Onix", "level": 11},
+            {"species": "Geodude", "level": 12}
+        ]
+    },
+    # Mt. Moon
+    {
+        "id": "rocket_grunt_1",
+        "name": "Team Rocket Grunt",
+        "map": "Mt. Moon",
+        "x": 14, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "Team Rocket is mining all the Moon Stones in this cave! Get lost, kid!",
+        "dialog_after": "Blast it! Don't mess with Team Rocket!",
+        "reward_money": 500,
+        "party": [
+            {"species": "Zubat", "level": 11},
+            {"species": "Koffing", "level": 12},
+            {"species": "Raticate", "level": 12}
+        ]
+    },
+    {
+        "id": "super_nerd_miguel",
+        "name": "Super Nerd Miguel",
+        "map": "Mt. Moon",
+        "x": 22, "y": 14,
+        "direction": "LEFT",
+        "dialog_before": "I found rare fossils and Moon Stones in this crater!",
+        "dialog_after": "We each get to keep our discoveries!",
+        "reward_money": 420,
+        "party": [
+            {"species": "Grimer", "level": 12},
+            {"species": "Voltorb", "level": 12},
+            {"species": "Koffing", "level": 13}
+        ]
+    },
+    {
+        "id": "hiker_marcos",
+        "name": "Hiker Marcos",
+        "map": "Mt. Moon",
+        "x": 8, "y": 20,
+        "direction": "RIGHT",
+        "dialog_before": "It's easy to get lost in these dark tunnels! Let's see your spirit!",
+        "dialog_after": "You navigated that battle like a pro!",
+        "reward_money": 460,
+        "party": [
+            {"species": "Geodude", "level": 13},
+            {"species": "Machop", "level": 13},
+            {"species": "Onix", "level": 14}
+        ]
+    },
+    # Route 4
+    {
+        "id": "lass_crissy",
+        "name": "Lass Crissy",
+        "map": "Route 4",
+        "x": 12, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "We just made it through Mt. Moon! Cerulean City is right over there!",
+        "dialog_after": "Time to visit the Cerulean Pokémon Center!",
+        "reward_money": 360,
+        "party": [
+            {"species": "Paras", "level": 13},
+            {"species": "Gloom", "level": 14}
+        ]
+    },
+    {
+        "id": "blackbelt_koji",
+        "name": "Black Belt Koji",
+        "map": "Route 4",
+        "x": 20, "y": 8,
+        "direction": "LEFT",
+        "dialog_before": "Karate and Pokémon training go hand in hand! Hii-yah!",
+        "dialog_after": "Your technique was flawless!",
+        "reward_money": 450,
+        "party": [
+            {"species": "Mankey", "level": 14},
+            {"species": "Primeape", "level": 15}
+        ]
+    },
+    # Cerulean Gym
+    {
+        "id": "swimmer_luis",
+        "name": "Swimmer Luis",
+        "map": "Cerulean Gym",
+        "x": 6, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Splash! Misty is a master of Water Pokémon! Can you swim past me?",
+        "dialog_after": "You made quite a splash!",
+        "reward_money": 450,
+        "party": [
+            {"species": "Horsea", "level": 14},
+            {"species": "Goldeen", "level": 15}
+        ]
+    },
+    {
+        "id": "gym_leader_misty",
+        "name": "Leader Misty",
+        "map": "Cerulean Gym",
+        "x": 6, "y": 3,
+        "direction": "DOWN",
+        "dialog_before": "Hi, I'm Misty! The Tomboyish Mermaid! My Water-type Pokémon are graceful and deadly!",
+        "dialog_after": "You are remarkably skilled! You've earned the Cascade Badge!",
+        "reward_badge": "Cascade Badge",
+        "reward_money": 2100,
+        "party": [
+            {"species": "Staryu", "level": 18},
+            {"species": "Golduck", "level": 19},
+            {"species": "Starmie", "level": 21}
+        ]
+    },
+    # Route 24 (Nugget Bridge)
+    {
+        "id": "bridge_challenger_1",
+        "name": "Bug Catcher Cale",
+        "map": "Route 24",
+        "x": 10, "y": 22,
+        "direction": "LEFT",
+        "dialog_before": "Welcome to the 5-Trainer Nugget Bridge! Defeat all 5 to win a fabulous prize!",
+        "dialog_after": "You beat Challenger No. 1!",
+        "reward_money": 300,
+        "party": [
+            {"species": "Caterpie", "level": 14},
+            {"species": "Butterfree", "level": 16}
+        ]
+    },
+    {
+        "id": "bridge_challenger_2",
+        "name": "Lass Ali",
+        "map": "Route 24",
+        "x": 10, "y": 18,
+        "direction": "RIGHT",
+        "dialog_before": "I'm Challenger No. 2! I won't go down easily!",
+        "dialog_after": "You beat Challenger No. 2!",
+        "reward_money": 340,
+        "party": [
+            {"species": "Pidgey", "level": 15},
+            {"species": "Oddish", "level": 16}
+        ]
+    },
+    {
+        "id": "bridge_challenger_3",
+        "name": "Youngster Timmy",
+        "map": "Route 24",
+        "x": 10, "y": 14,
+        "direction": "LEFT",
+        "dialog_before": "Challenger No. 3 here! My Pokémon are quick on their feet!",
+        "dialog_after": "You beat Challenger No. 3!",
+        "reward_money": 360,
+        "party": [
+            {"species": "Sandshrew", "level": 15},
+            {"species": "Ekans", "level": 16}
+        ]
+    },
+    {
+        "id": "bridge_challenger_4",
+        "name": "Camper Ethan",
+        "map": "Route 24",
+        "x": 10, "y": 10,
+        "direction": "RIGHT",
+        "dialog_before": "I'm Challenger No. 4! You're almost at the end of the bridge!",
+        "dialog_after": "You beat Challenger No. 4!",
+        "reward_money": 400,
+        "party": [
+            {"species": "Mankey", "level": 16},
+            {"species": "Growlithe", "level": 16}
+        ]
+    },
+    {
+        "id": "bridge_challenger_5",
+        "name": "Rocket Recruiter",
+        "map": "Route 24",
+        "x": 10, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Congratulations on beating the 5 trainers! How about joining Team Rocket? No? Then taste defeat!",
+        "dialog_after": "Blast! You're too tough. Take this Nugget and move along to Bill's Sea Cottage!",
+        "reward_money": 1200,
+        "party": [
+            {"species": "Ekans", "level": 17},
+            {"species": "Zubat", "level": 17}
+        ]
+    },
+    # Route 21 (Ocean Route)
+    {
+        "id": "swimmer_douglas",
+        "name": "Swimmer Douglas",
+        "map": "Route 21",
+        "x": 10, "y": 12,
+        "direction": "RIGHT",
+        "dialog_before": "The open sea south of Pallet Town is so refreshing! Let's battle in the water!",
+        "dialog_after": "You swam circles around me!",
+        "reward_money": 520,
+        "party": [
+            {"species": "Tentacool", "level": 18},
+            {"species": "Shellder", "level": 19},
+            {"species": "Seadra", "level": 20}
+        ]
+    },
+    {
+        "id": "fisherman_barny",
+        "name": "Fisherman Barny",
+        "map": "Route 21",
+        "x": 16, "y": 24,
+        "direction": "LEFT",
+        "dialog_before": "I've been reeling in some giant sea Pokémon! Check out my catch!",
+        "dialog_after": "The one that got away!",
+        "reward_money": 580,
+        "party": [
+            {"species": "Magikarp", "level": 20},
+            {"species": "Gyarados", "level": 22},
+            {"species": "Seaking", "level": 21}
+        ]
+    },
+    # Cinnabar Island
+    {
+        "id": "scientist_ted",
+        "name": "Scientist Ted",
+        "map": "Cinnabar Island",
+        "x": 8, "y": 12,
+        "direction": "RIGHT",
+        "dialog_before": "Cinnabar Island is home to cutting-edge Pokémon research and fossil resurrection!",
+        "dialog_after": "Astounding! Your Pokémon demonstrate remarkable evolutionary power!",
+        "reward_money": 750,
+        "party": [
+            {"species": "Magneton", "level": 22},
+            {"species": "Electrode", "level": 23},
+            {"species": "Porygon", "level": 24}
+        ]
+    },
+    {
+        "id": "firebreather_dick",
+        "name": "Firebreather Dick",
+        "map": "Cinnabar Island",
+        "x": 18, "y": 14,
+        "direction": "LEFT",
+        "dialog_before": "The volcanic heat of Cinnabar fuels my fiery passion!",
+        "dialog_after": "You put out my flames!",
+        "reward_money": 800,
+        "party": [
+            {"species": "Magmar", "level": 24},
+            {"species": "Ninetales", "level": 25},
+            {"species": "Rapidash", "level": 26}
+        ]
     }
 ]
+

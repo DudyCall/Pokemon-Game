@@ -1,43 +1,43 @@
 {
   "slot": 3,
-  "timestamp": "2026-08-17 21:32",
+  "timestamp": "2026-08-31 07:35",
   "player": {
-    "name": "Red",
+    "name": "H\u00e1kun",
     "gender": "Boy",
-    "outfit_theme": "Emerald Green",
+    "outfit_theme": "Shadow Black",
     "hat_style": "Trainer Cap",
     "hair_color": "Dark Brown",
     "grid_x": 6,
-    "grid_y": 6,
-    "map": "Pokecenter",
-    "facing": 0
+    "grid_y": 10,
+    "map": "Route 3",
+    "facing": 1
   },
   "party": [
     {
-      "species": "Bulbasaur",
-      "nickname": "Bulbasaur",
-      "level": 11,
-      "current_hp": 34,
-      "exp": 1331,
+      "species": "Charmeleon",
+      "nickname": "Charmeleon",
+      "level": 18,
+      "current_hp": 44,
+      "exp": 5882,
       "status": null,
       "ivs": {
-        "hp": 26,
-        "atk": 24,
-        "def": 25,
-        "spatk": 28,
-        "spdef": 27,
-        "spd": 22
+        "hp": 29,
+        "atk": 31,
+        "def": 21,
+        "spatk": 30,
+        "spdef": 22,
+        "spd": 27
       },
       "moves": [
         {
-          "name": "Tackle",
+          "name": "Scratch",
           "type": "Normal",
           "power": 40,
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 35,
           "pp": 35,
-          "desc": "A physical charge attack.",
+          "desc": "Hard, pointed claws rake the foe.",
           "effect": null,
           "crit_bonus": false
         },
@@ -57,74 +57,17 @@
           "crit_bonus": false
         },
         {
-          "name": "Leech Seed",
-          "type": "Grass",
-          "power": 0,
-          "accuracy": 90,
-          "category": "Status",
-          "max_pp": 10,
-          "pp": 10,
-          "desc": "Plants a seed on the target to steal HP every turn.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Vine Whip",
-          "type": "Grass",
-          "power": 45,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Strikes the foe with slender vines.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Pikachu",
-      "nickname": "Pikachu",
-      "level": 10,
-      "current_hp": 28,
-      "exp": 1000,
-      "status": null,
-      "ivs": {
-        "hp": 20,
-        "atk": 22,
-        "def": 18,
-        "spatk": 25,
-        "spdef": 20,
-        "spd": 30
-      },
-      "moves": [
-        {
-          "name": "Thunder Shock",
-          "type": "Electric",
+          "name": "Ember",
+          "type": "Fire",
           "power": 40,
           "accuracy": 100,
           "category": "Special",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "An electric shock that may paralyze.",
+          "max_pp": 25,
+          "pp": 17,
+          "desc": "Small flames hit the target.",
           "effect": {
-            "chance": 10,
-            "status": "Paralysis"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Growl",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 40,
-          "pp": 40,
-          "desc": "Lowers the foe's Attack.",
-          "effect": {
-            "stages": -1,
-            "stat": "atk"
+            "chance": 15,
+            "status": "Burn"
           },
           "crit_bonus": false
         },
@@ -139,6 +82,228 @@
           "desc": "An extremely fast physical strike.",
           "effect": null,
           "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Scyther",
+      "nickname": "Scyther",
+      "level": 15,
+      "current_hp": 50,
+      "exp": 3505,
+      "status": null,
+      "ivs": {
+        "hp": 31,
+        "atk": 25,
+        "def": 13,
+        "spatk": 24,
+        "spdef": 19,
+        "spd": 16
+      },
+      "moves": [
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Leer",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Glares to reduce Defense.",
+          "effect": {
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Wing Attack",
+          "type": "Flying",
+          "power": 60,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Strikes the target with wide wings.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pinsir",
+      "nickname": "Pinsir",
+      "level": 11,
+      "current_hp": 36,
+      "exp": 1681,
+      "status": null,
+      "ivs": {
+        "hp": 10,
+        "atk": 23,
+        "def": 29,
+        "spatk": 19,
+        "spdef": 12,
+        "spd": 28
+      },
+      "moves": [
+        {
+          "name": "Vice Grip",
+          "type": "Normal",
+          "power": 55,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Grips foe with huge pincers.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Focus Energy",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Focuses to increase critical hit ratio.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Sandshrew",
+      "nickname": "Sandshrew",
+      "level": 10,
+      "current_hp": 33,
+      "exp": 1000,
+      "status": null,
+      "ivs": {
+        "hp": 30,
+        "atk": 13,
+        "def": 25,
+        "spatk": 21,
+        "spdef": 22,
+        "spd": 14
+      },
+      "moves": [
+        {
+          "name": "Scratch",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Hard, pointed claws rake the foe.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Defense Curl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Curls up to boost Defense.",
+          "effect": {
+            "stages": 1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Poison Sting",
+          "type": "Poison",
+          "power": 15,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Stabs with a poisonous barb.",
+          "effect": {
+            "chance": 30,
+            "status": "Poison"
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Pikachu",
+      "nickname": "Pikachu",
+      "level": 10,
+      "current_hp": 28,
+      "exp": 1115,
+      "status": null,
+      "ivs": {
+        "hp": 18,
+        "atk": 24,
+        "def": 20,
+        "spatk": 24,
+        "spdef": 10,
+        "spd": 10
+      },
+      "moves": [
+        {
+          "name": "Thunder Shock",
+          "type": "Electric",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An electric jolt that may paralyze.",
+          "effect": {
+            "chance": 15,
+            "status": "Paralysis"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
         },
         {
           "name": "Thunder Wave",
@@ -148,7 +313,7 @@
           "category": "Status",
           "max_pp": 20,
           "pp": 20,
-          "desc": "Paralyzes the target.",
+          "desc": "A weak shock that paralyzes.",
           "effect": {
             "chance": 100,
             "status": "Paralysis"
@@ -158,61 +323,84 @@
       ]
     },
     {
-      "species": "Pidgey",
-      "nickname": "Pidgey",
-      "level": 6,
-      "current_hp": 22,
-      "exp": 216,
+      "species": "Gastly",
+      "nickname": "Gastly",
+      "level": 9,
+      "current_hp": 27,
+      "exp": 837,
       "status": null,
       "ivs": {
-        "hp": 24,
+        "hp": 31,
         "atk": 22,
-        "def": 24,
-        "spatk": 28,
-        "spdef": 21,
-        "spd": 21
+        "def": 22,
+        "spatk": 13,
+        "spdef": 28,
+        "spd": 31
       },
       "moves": [
         {
-          "name": "Tackle",
-          "type": "Normal",
-          "power": 40,
+          "name": "Lick",
+          "type": "Ghost",
+          "power": 30,
           "accuracy": 100,
           "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "A physical charge attack.",
-          "effect": null,
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Licks with a long tongue.",
+          "effect": {
+            "chance": 30,
+            "status": "Paralysis"
+          },
           "crit_bonus": false
         },
         {
-          "name": "Gust",
-          "type": "Flying",
-          "power": 40,
+          "name": "Hypnosis",
+          "type": "Psychic",
+          "power": 0,
+          "accuracy": 60,
+          "category": "Status",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Puts the foe into deep sleep.",
+          "effect": {
+            "chance": 100,
+            "status": "Sleep"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Poison Sting",
+          "type": "Poison",
+          "power": 15,
           "accuracy": 100,
-          "category": "Special",
+          "category": "Physical",
           "max_pp": 35,
           "pp": 35,
-          "desc": "Strikes the foe with wing gusts.",
-          "effect": null,
+          "desc": "Stabs with a poisonous barb.",
+          "effect": {
+            "chance": 30,
+            "status": "Poison"
+          },
           "crit_bonus": false
         }
       ]
-    },
+    }
+  ],
+  "pc_box": [
     {
       "species": "Rattata",
       "nickname": "Rattata",
-      "level": 8,
-      "current_hp": 25,
-      "exp": 512,
+      "level": 4,
+      "current_hp": 0,
+      "exp": 64,
       "status": null,
       "ivs": {
-        "hp": 22,
-        "atk": 28,
-        "def": 20,
-        "spatk": 18,
-        "spdef": 20,
-        "spd": 29
+        "hp": 23,
+        "atk": 12,
+        "def": 19,
+        "spatk": 28,
+        "spdef": 26,
+        "spd": 26
       },
       "moves": [
         {
@@ -222,7 +410,7 @@
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 35,
-          "pp": 35,
+          "pp": 34,
           "desc": "A physical charge attack.",
           "effect": null,
           "crit_bonus": false
@@ -257,96 +445,60 @@
       ]
     },
     {
-      "species": "Bellsprout",
-      "nickname": "Bellsprout",
-      "level": 8,
-      "current_hp": 27,
-      "exp": 512,
+      "species": "Pikachu",
+      "nickname": "Pikachu",
+      "level": 7,
+      "current_hp": 23,
+      "exp": 352,
       "status": null,
       "ivs": {
-        "hp": 27,
-        "atk": 29,
-        "def": 20,
-        "spatk": 28,
-        "spdef": 19,
-        "spd": 22
-      },
-      "moves": [
-        {
-          "name": "Vine Whip",
-          "type": "Grass",
-          "power": 45,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Strikes the foe with slender vines.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Growth",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Raises Attack and Sp. Atk.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Wrap",
-          "type": "Normal",
-          "power": 15,
-          "accuracy": 90,
-          "category": "Physical",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Traps and squeezes the foe.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Oddish",
-      "nickname": "Oddish",
-      "level": 5,
-      "current_hp": 21,
-      "exp": 125,
-      "status": null,
-      "ivs": {
-        "hp": 25,
-        "atk": 24,
-        "def": 26,
+        "hp": 28,
+        "atk": 12,
+        "def": 24,
         "spatk": 29,
-        "spdef": 27,
-        "spd": 18
+        "spdef": 31,
+        "spd": 29
       },
       "moves": [
         {
-          "name": "Absorb",
-          "type": "Grass",
-          "power": 20,
+          "name": "Thunder Shock",
+          "type": "Electric",
+          "power": 40,
           "accuracy": 100,
           "category": "Special",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "An attack that absorbs half the damage inflicted.",
-          "effect": null,
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An electric jolt that may paralyze.",
+          "effect": {
+            "chance": 15,
+            "status": "Paralysis"
+          },
           "crit_bonus": false
         },
         {
-          "name": "Sweet Scent",
+          "name": "Growl",
           "type": "Normal",
           "power": 0,
           "accuracy": 100,
           "category": "Status",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Lowers the foe's evasiveness.",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
           "effect": {
             "stages": -1,
             "stat": "def"
@@ -356,84 +508,76 @@
       ]
     }
   ],
-  "pc_box": [
-    {
-      "species": "Weedle",
-      "nickname": "Weedle",
-      "level": 3,
-      "current_hp": 16,
-      "exp": 27,
-      "status": null,
-      "ivs": {
-        "hp": 29,
-        "atk": 24,
-        "def": 16,
-        "spatk": 29,
-        "spdef": 17,
-        "spd": 27
-      },
-      "moves": [
-        {
-          "name": "Poison Sting",
-          "type": "Poison",
-          "power": 15,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "Stabs with a poisonous barb.",
-          "effect": {
-            "chance": 30,
-            "status": "Poison"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "String Shot",
-          "type": "Bug",
-          "power": 0,
-          "accuracy": 95,
-          "category": "Status",
-          "max_pp": 40,
-          "pp": 40,
-          "desc": "Binds foe with silk string.",
-          "effect": {
-            "stages": -1,
-            "stat": "spd"
-          },
-          "crit_bonus": false
-        }
-      ]
-    }
-  ],
   "inventory": {
-    "money": 5500,
+    "money": 6210,
     "items": {
-      "Poke Ball": 10,
-      "Potion": 5,
-      "Antidote": 2,
-      "Revive": 1
+      "Poke Ball": 7,
+      "Potion": 6,
+      "Antidote": 4,
+      "Revive": 1,
+      "Rare Candy": 1,
+      "Super Potion": 2,
+      "Moon Stone": 1,
+      "Escape Rope": 1
     }
   },
   "pokedex": {
     "seen": [
-      "Bulbasaur",
-      "Pikachu",
-      "Pidgey",
-      "Rattata",
-      "Bellsprout",
       "Oddish",
-      "Weedle"
+      "Pidgey",
+      "Pikachu",
+      "Scyther",
+      "Onix",
+      "Pinsir",
+      "Rattata",
+      "Gastly",
+      "Jigglypuff",
+      "Weedle",
+      "Sandshrew",
+      "Caterpie",
+      "Geodude",
+      "Ekans",
+      "Mankey",
+      "Zubat",
+      "Eevee",
+      "Charmander",
+      "Bellsprout",
+      "Spearow"
     ],
     "caught": [
-      "Bulbasaur",
       "Pikachu",
-      "Pidgey",
+      "Gastly",
+      "Charmander",
+      "Scyther",
+      "Pinsir",
       "Rattata",
-      "Bellsprout",
-      "Oddish",
-      "Weedle"
+      "Sandshrew"
     ]
   },
-  "defeated_trainers": []
+  "defeated_trainers": [
+    "lass_janice",
+    "bug_catcher_rick",
+    "lass_haley",
+    "youngster_ben",
+    "bug_catcher_sammy",
+    "youngster_joey",
+    "rival_blue",
+    "hiker_wayne",
+    "hiker_franklin",
+    "bug_catcher_colton",
+    "hiker_marcos"
+  ],
+  "collected_items": [
+    "pallet_potion",
+    "forest_candy",
+    "route22_potion",
+    "route1_potion",
+    "mtmoon_moonstone",
+    "forest_pokeball",
+    "route3_superpotion",
+    "route22_greatball",
+    "forest_antidote",
+    "mtmoon_escaperope"
+  ],
+  "badges": []
 }
