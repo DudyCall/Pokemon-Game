@@ -536,7 +536,7 @@ class TestPokemonEngine(unittest.TestCase):
         # Test draw without crash
         surf = pygame.Surface((800, 600))
         screen.draw(surf)
-=======
+
     def test_gpad_button_to_key(self):
         from input_manager import button_to_key, GPAD_CONFIRM, GPAD_CANCEL, GPAD_START, GPAD_SELECT
         self.assertEqual(button_to_key(GPAD_CONFIRM), KEY_CONFIRM[0])

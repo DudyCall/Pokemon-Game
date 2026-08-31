@@ -1,10 +1,6 @@
 {
   "slot": 1,
-<<<<<<< HEAD
-  "timestamp": "2026-08-31 07:41",
-=======
-  "timestamp": "2026-08-30 17:44",
->>>>>>> 6cce7fa9a5247546d8dd33ece669bb0800500131
+  "timestamp": "2026-08-31 17:39",
   "player": {
     "name": "Red",
     "gender": "Boy",
@@ -25,21 +21,12 @@
       "exp": 512,
       "status": null,
       "ivs": {
-<<<<<<< HEAD
-        "hp": 17,
-        "atk": 24,
-        "def": 22,
-        "spatk": 19,
-        "spdef": 25,
-        "spd": 22
-=======
-        "hp": 29,
-        "atk": 22,
-        "def": 28,
-        "spatk": 10,
-        "spdef": 12,
-        "spd": 17
->>>>>>> 6cce7fa9a5247546d8dd33ece669bb0800500131
+        "hp": 19,
+        "atk": 16,
+        "def": 19,
+        "spatk": 21,
+        "spdef": 24,
+        "spd": 24
       },
       "moves": [
         {
@@ -51,7 +38,6 @@
           "max_pp": 35,
           "pp": 35,
           "desc": "A physical charge attack.",
-<<<<<<< HEAD
           "effect": null,
           "crit_bonus": false
         },
@@ -97,53 +83,6 @@
           "desc": "Squirts water to attack the target.",
           "effect": null,
           "crit_bonus": false
-=======
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Tail Whip",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "Lowers the foe's Defense.",
-          "effect": {
-            "stages": -1,
-            "stat": "def"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Bubble",
-          "type": "Water",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "Fires bubbles that may slow the foe.",
-          "effect": {
-            "chance": 20,
-            "stages": -1,
-            "stat": "spd"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Water Gun",
-          "type": "Water",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Squirts water to attack the target.",
-          "effect": null,
-          "crit_bonus": false
->>>>>>> 6cce7fa9a5247546d8dd33ece669bb0800500131
         }
       ]
     }
@@ -166,11 +105,7 @@
       "Squirtle"
     ]
   },
-<<<<<<< HEAD
   "defeated_trainers": [],
   "collected_items": [],
   "badges": []
-=======
-  "defeated_trainers": []
->>>>>>> 6cce7fa9a5247546d8dd33ece669bb0800500131
 }
