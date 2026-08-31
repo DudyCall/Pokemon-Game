@@ -87,6 +87,7 @@ class SaveSystem:
         defeated = list(getattr(world, "defeated_trainers", [])) if world is not None else []
         collected = list(getattr(world, "collected_items", [])) if world is not None else []
         badges = list(getattr(world, "badges", [])) if world is not None else []
+        explored = {k: [list(pt) for pt in v] for k, v in getattr(world, "explored_tiles", {}).items()} if world is not None else {}
         data = {
             "slot": target_slot,
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -99,7 +100,9 @@ class SaveSystem:
                 "grid_x": player.grid_x,
                 "grid_y": player.grid_y,
                 "map": player.current_map,
-                "facing": player.facing
+                "facing": player.facing,
+                "has_boat": getattr(player, "has_boat", True),
+                "is_sailing": getattr(player, "is_sailing", False)
             },
             "party": [p.to_dict() for p in party],
             "pc_box": [p.to_dict() for p in (pc_box or [])],
@@ -107,7 +110,8 @@ class SaveSystem:
             "pokedex": pokedex.to_dict(),
             "defeated_trainers": defeated,
             "collected_items": collected,
-            "badges": badges
+            "badges": badges,
+            "explored_tiles": explored
         }
         try:
             slot_path = cls.get_slot_path(target_slot)
@@ -154,6 +158,12 @@ class SaveSystem:
             player.facing = p_data.get("facing", 0)
             player.pixel_x = player.grid_x * 32
             player.pixel_y = player.grid_y * 32
+            player.has_boat = p_data.get("has_boat", True)
+            if world is not None:
+                tile = world.get_tile(player.current_map, player.grid_x, player.grid_y)
+                player.is_sailing = (tile == '~')
+            else:
+                player.is_sailing = p_data.get("is_sailing", False)
 
             from graphics_manager import gfx
             gfx.set_custom_player_appearance(player.gender, player.outfit_theme, player.hat_style, player.hair_color)
@@ -166,6 +176,9 @@ class SaveSystem:
                 world.defeated_trainers = set(data.get("defeated_trainers", []))
                 world.collected_items = set(data.get("collected_items", []))
                 world.badges = set(data.get("badges", []))
+                raw_exp = data.get("explored_tiles", {})
+                world.explored_tiles = {k: set(tuple(pt) for pt in v) for k, v in raw_exp.items()}
+                world.reveal_area(player.current_map, player.grid_x, player.grid_y)
 
             # Auto-recovery: If Pikachu is in caught Pokédex but not in party or PC box, restore Pikachu to PC box!
             all_species = [p.species for p in party] + [p.species for p in pc_box]

@@ -2,6 +2,7 @@
 world.py - Overworld map management, player movement, collision detection,
 tall grass encounters, NPC dialogues, ground collectible items, signposts, and building interiors.
 """
+import math
 import random
 import pygame
 from constants import (
@@ -279,9 +280,9 @@ MAP_CERULEAN_CITY = [
     "#..p........pppp........p......#",
     "#..p..WWWW..pppp..WWWW..p......#",
     "#..p..WWWW..pppp..WWWW..p......#",
-    "...p..WWWD..pppp..WWWD..p......#",
-    "...pppppppppppppppppppppp......#",
-    "...p..S.....pppp..S.....p......#",
+    "...p..WWWD..pppp..WWWD..pppppppp",
+    "...ppppppppppppppppppppppppppppp",
+    "...p..S.....pppp..S.....pppppppp",
     "#..p........pppp........p......#",
     "#..p..~~~~..pppp..~~~~..p......#",
     "#..p..~~~~..pppp..~~~~..p......#",
@@ -291,6 +292,170 @@ MAP_CERULEAN_CITY = [
     "#..pppppppppppppppppppppp......#",
     "#............pp................#",
     "#............pp................#",
+    "################################",
+]
+
+MAP_ROUTE_9 = [
+    "##################O#############",
+    "#.................p............#",
+    "#..^^^^^^^^^^^^^..p..^^^^^^^^..#",
+    "#..^...........^..p..^......^..#",
+    "#..^..GGGG..^..^..p..^..GG..^..#",
+    "#..^..GGGG..^..^..p..^..GG..^..#",
+    "#..^........^..^..p..^......^..#",
+    "#..^^^^^^^^^^..^..p..^^^^^^^^..#",
+    "...pppppppppppppppppppppppppppp.",
+    "...p...........p...........p....",
+    "...p..GGGG.....p..GGGG.....p....",
+    "#..p..GGGG..^..p..GGGG..^..p...#",
+    "#..p........^..p........^..p...#",
+    "#..ppppppppppppppppppppppppp...#",
+    "#..S........^..o........^..S...#",
+    "#..GGGG..GGGG..GGGG..GGGG......#",
+    "#..GGGG..GGGG..GGGG..GGGG......#",
+    "################################",
+]
+
+MAP_LAVENDER_TOWN = [
+    "############################",
+    "#............pp............#",
+    "#..RRRR......pp......BBBB..#",
+    "#..RRRR......pp......BBBB..#",
+    "#..WWWD......pp......WWWD..#",
+    "#............pp............#",
+    "#..S.........pp.........S..#",
+    "#..pppppppppppppppppppppp..#",
+    "#..p........pppp........p..#",
+    "#..p..WWWW..pppp..YYYY..p..#",
+    "#..p..WWWD..pppp..YYYY..p..#",
+    "...p........pppp........p..#",
+    "...pppppppppppppppppppppp..#",
+    "...p........pppp........p..#",
+    "#..p..YYYY..pppp..YYYY..p..#",
+    "#..p..YYYY..pppp..YYYY..p..#",
+    "#..p........pppp........p..#",
+    "#..pppppppppppppppppppppp..#",
+    "#..p..GGGG..pppp..GGGG..p..#",
+    "#..p..GGGG..pppp..GGGG..p..#",
+    "#..p..o.....pppp...o....p..#",
+    "#..pppppppppppppppppppppp..#",
+    "#............pp............#",
+    "############....############",
+]
+
+MAP_POKEMON_TOWER = [
+    "############################",
+    "#^^^^^^^^^^^^^^^^^^^^^^^^^^#",
+    "#^_.......YYYYYYYY........_#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_.._o__.YYYYYYYY._o__..._#",
+    "#^_..____..........____..._#",
+    "#^_......................._#",
+    "#^_________________________#",
+    "#^_.......YYYYYYYY........_#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_________________________#",
+    "#^_......................._#",
+    "#^_.......YYYYYYYY........_#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..____.YYYYYYYY.____..._#",
+    "#^_________________________#",
+    "#^_.......YYYYYYYY..o....._#",
+    "#^_S......YY..YYYY........_#",
+    "#^___________D____________^#",
+    "#^^^^^^^^^^^^^^^^^^^^^^^^^^#",
+    "############################",
+]
+
+MAP_POWER_PLANT = [
+    "################################",
+    "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
+    "#W_.......HHHHHHHH........____W#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_.._o__.HHHHHHHH._o__..._WWWW#",
+    "#W_..____..........____..._WWWW#",
+    "#W_......................._WWWW#",
+    "#W_____________________________#",
+    "#W_.......HHHHHHHH........_WWWW#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_____________________________#",
+    "#W_......................._WWWW#",
+    "#W_.......HHHHHHHH........_WWWW#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_____________________________#",
+    "#W_.......HHHHHHHH..o....._WWWW#",
+    "#W_S......HH..HHHH........_WWWW#",
+    "#W_..........D............_WWWW#",
+    "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
+    "################################",
+]
+
+MAP_SAFARI_ZONE = [
+    "##############....##############",
+    "#..............pp..............#",
+    "#..GGGG..####..pp..####..GGGG..#",
+    "#..GGGG..####..pp..####..GGGG..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........p..~~..p........p..#",
+    "#..p..GGGG..p..~~..p..GGGG..p..#",
+    "#..p..GGGG..p..~~..p..GGGG..p..#",
+    "#..p........pppppppp........p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........p..bb..p........p..#",
+    "#..p..####..p..bb..p..####..p..#",
+    "#..p..####..p..~~..p..####..p..#",
+    "#..p........p..~~..p........p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........p......p........p..#",
+    "#..p..GGGG..p..o...p..GGGG..p..#",
+    "#..p..GGGG..p......p..GGGG..p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........p..~~..p........p..#",
+    "#..p..####..p..~~..p..####..p..#",
+    "#..p..####..p..bb..p..####..p..#",
+    "#..p........p..bb..p........p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........p......p........p..#",
+    "#..p..GGGG..p..o...p..GGGG..p..#",
+    "#..p..GGGG..p......p..GGGG..p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..S...........pp..........S...#",
+    "#..GGGG..GGGG..pp..GGGG..GGGG..#",
+    "#..GGGG..GGGG..pp..GGGG..GGGG..#",
+    "################################",
+]
+
+MAP_SEAFOAM_ISLANDS = [
+    "################################",
+    "#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#",
+    "#^_.......^^^^^^^^........____O#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_.._o__.^^^^^^^^._o__..._^^^^#",
+    "#^_..____..........____..._^^^^#",
+    "#^_......................._^^^^#",
+    "#^_____________________________#",
+    "#^_.......^^^^^^^^........_^^^^#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_____________________________#",
+    "#^_......................._^^^^#",
+    "#^_.......^^^^^^^^........_^^^^#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_____________________________#",
+    "#^_.......^^^^^^^^..o....._^^^^#",
+    "#^_S......^^^^^^^^........_^^^^#",
+    "#O__.....................^^^^^^#",
+    "#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#",
     "################################",
 ]
 
@@ -341,9 +506,9 @@ MAP_ROUTE_21 = [
     "#..~~~~~~~~~~~~~~~~~~..#",
     "#..~~ssss~~~~~~~~~~~~..#",
     "#..~~sso~~~~~~~~~~~~~..#",
-    "#..~~~~~~~~~~~~~~~~~~..#",
-    "#..~~~~~~~~~~~~~~~~~~..#",
-    "#..~~~~~~~~~~~~~~~~~~..#",
+    "#..~~~~~~ssss~~~~~~~~..#",
+    "#..~~~~~~ssOss~~~~~~~..#",
+    "#..~~~~~~ssss~~~~~~~~..#",
     "#..~~~~~~~~~~~~~~~~~~..#",
     "#..~~~~~~~~~~~~ssss~~..#",
     "#..~~~~~~~~~~~~ssss~~..#",
@@ -695,16 +860,145 @@ MAP_DEFINITIONS = {
             (12, 0): {"target_map": "Route 24", "target_x": 9, "target_y": 26},
             (13, 0): {"target_map": "Route 24", "target_x": 9, "target_y": 26},
             (14, 0): {"target_map": "Route 24", "target_x": 10, "target_y": 26},
-            (15, 0): {"target_map": "Route 24", "target_x": 10, "target_y": 26}
+            (15, 0): {"target_map": "Route 24", "target_x": 10, "target_y": 26},
+            (31, 11): {"target_map": "Route 9", "target_x": 1, "target_y": 8},
+            (31, 12): {"target_map": "Route 9", "target_x": 1, "target_y": 9},
+            (31, 13): {"target_map": "Route 9", "target_x": 1, "target_y": 10}
         },
         "npcs": [
-            {"name": "Officer Jenny", "x": 18, "y": 9, "dir": Direction.DOWN, "dialog": "Keep an eye out for suspicious Team Rocket grunts! North of here is the famous Nugget Bridge!"}
+            {"name": "Officer Jenny", "x": 18, "y": 9, "dir": Direction.DOWN, "dialog": "Keep an eye out for suspicious Team Rocket grunts! North is Nugget Bridge, and East leads to Route 9 Rock Canyon!"}
         ],
         "signs": {
             (3, 6): "Cerulean City - A Mysterious Blue Aura",
             (24, 6): "Cerulean PokéMart",
-            (6, 13): "Cerulean Gym - Leader: Misty (The Tomboyish Mermaid!)"
+            (6, 13): "Cerulean Gym - Leader: Misty (The Tomboyish Mermaid!)",
+            (24, 13): "Route 9 Rock Canyon & Lavender Town Ahead!"
         }
+    },
+    "Route 9": {
+        "grid": MAP_ROUTE_9,
+        "bgm": "town",
+        "encounter_zone": "Route 9",
+        "warps": {
+            (0, 8): {"target_map": "Cerulean City", "target_x": 30, "target_y": 11},
+            (0, 9): {"target_map": "Cerulean City", "target_x": 30, "target_y": 12},
+            (0, 10): {"target_map": "Cerulean City", "target_x": 30, "target_y": 13},
+            (31, 8): {"target_map": "Lavender Town", "target_x": 1, "target_y": 11},
+            (31, 9): {"target_map": "Lavender Town", "target_x": 1, "target_y": 12},
+            (31, 10): {"target_map": "Lavender Town", "target_x": 1, "target_y": 13},
+            (18, 0): {"target_map": "Power Plant", "target_x": 13, "target_y": 20}
+        },
+        "trainers": ["camper_drew", "picnicker_alicia", "hiker_alan"],
+        "signs": {
+            (3, 14): "Route 9 - Rocky Canyon Pass to Lavender Town",
+            (27, 14): "Notice: High voltage Power Plant to the North"
+        },
+        "ground_items": [
+            {"id": "route9_tm", "x": 15, "y": 14, "item": "Super Potion", "count": 2}
+        ]
+    },
+    "Lavender Town": {
+        "grid": MAP_LAVENDER_TOWN,
+        "bgm": "town",
+        "encounter_zone": "Lavender Town",
+        "warps": {
+            (0, 11): {"target_map": "Route 9", "target_x": 30, "target_y": 8},
+            (0, 12): {"target_map": "Route 9", "target_x": 30, "target_y": 9},
+            (0, 13): {"target_map": "Route 9", "target_x": 30, "target_y": 10},
+            (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
+            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (9, 10): {"target_map": "Pokémon Tower", "target_x": 13, "target_y": 20},
+            (12, 23): {"target_map": "Safari Zone", "target_x": 14, "target_y": 1},
+            (13, 23): {"target_map": "Safari Zone", "target_x": 15, "target_y": 1},
+            (14, 23): {"target_map": "Safari Zone", "target_x": 16, "target_y": 1},
+            (15, 23): {"target_map": "Safari Zone", "target_x": 17, "target_y": 1}
+        },
+        "npcs": [
+            {"name": "Town Elder", "x": 16, "y": 8, "dir": Direction.DOWN, "dialog": "This is Lavender Town. Many trainers come here to pay their respects at Pokémon Tower."}
+        ],
+        "signs": {
+            (3, 6): "Lavender Town - The Noble Purple Town",
+            (22, 6): "Lavender PokéMart",
+            (18, 6): "Pokémon Tower - Resting Place for Beloved Pokémon"
+        },
+        "ground_items": [
+            {"id": "lavender_superball", "x": 5, "y": 20, "item": "Great Ball", "count": 3},
+            {"id": "lavender_elixir", "x": 19, "y": 20, "item": "Max Potion", "count": 1}
+        ]
+    },
+    "Pokémon Tower": {
+        "grid": MAP_POKEMON_TOWER,
+        "bgm": "town",
+        "encounter_zone": "Pokémon Tower",
+        "warps": {
+            (13, 21): {"target_map": "Lavender Town", "target_x": 9, "target_y": 11}
+        },
+        "trainers": ["channeler_patricia", "channeler_carly", "channeler_hope"],
+        "signs": {
+            (3, 20): "Pokémon Tower - May the spirits of all Pokémon rest in peace."
+        },
+        "ground_items": [
+            {"id": "tower_revive", "x": 6, "y": 4, "item": "Revive", "count": 1},
+            {"id": "tower_candy", "x": 20, "y": 4, "item": "Rare Candy", "count": 1},
+            {"id": "tower_escape", "x": 20, "y": 19, "item": "Escape Rope", "count": 1}
+        ]
+    },
+    "Power Plant": {
+        "grid": MAP_POWER_PLANT,
+        "bgm": "town",
+        "encounter_zone": "Power Plant",
+        "warps": {
+            (13, 21): {"target_map": "Route 9", "target_x": 18, "target_y": 1}
+        },
+        "trainers": ["scientist_bray", "pokemaniac_mark", "engineer_bucky"],
+        "signs": {
+            (3, 20): "Abandoned Power Plant - Danger! High Electric Current!"
+        },
+        "ground_items": [
+            {"id": "powerplant_thunderstone", "x": 6, "y": 4, "item": "Thunder Stone", "count": 1},
+            {"id": "powerplant_magnet", "x": 20, "y": 4, "item": "Magnet", "count": 1},
+            {"id": "powerplant_ultraball", "x": 20, "y": 19, "item": "Ultra Ball", "count": 3}
+        ]
+    },
+    "Safari Zone": {
+        "grid": MAP_SAFARI_ZONE,
+        "bgm": "town",
+        "encounter_zone": "Safari Zone",
+        "warps": {
+            (14, 0): {"target_map": "Lavender Town", "target_x": 12, "target_y": 22},
+            (15, 0): {"target_map": "Lavender Town", "target_x": 13, "target_y": 22},
+            (16, 0): {"target_map": "Lavender Town", "target_x": 14, "target_y": 22},
+            (17, 0): {"target_map": "Lavender Town", "target_x": 15, "target_y": 22}
+        },
+        "npcs": [
+            {"name": "Safari Ranger", "x": 18, "y": 1, "dir": Direction.LEFT, "dialog": "Welcome to the Safari Wildlife Sanctuary! Catch rare wild Pokémon roaming the golden savanna!"}
+        ],
+        "signs": {
+            (3, 28): "Safari Zone - Savanna Wildlife Sanctuary",
+            (27, 28): "Rare Pokémon habitats: Waterhole, Amber Grass, and Acacia Groves."
+        },
+        "ground_items": [
+            {"id": "safari_ball1", "x": 15, "y": 16, "item": "Ultra Ball", "count": 5},
+            {"id": "safari_ball2", "x": 15, "y": 25, "item": "Rare Candy", "count": 2}
+        ]
+    },
+    "Seafoam Islands": {
+        "grid": MAP_SEAFOAM_ISLANDS,
+        "bgm": "town",
+        "encounter_zone": "Seafoam Islands",
+        "warps": {
+            (1, 21): {"target_map": "Route 21", "target_x": 11, "target_y": 17},
+            (30, 2): {"target_map": "Route 21", "target_x": 11, "target_y": 15}
+        },
+        "trainers": ["skier_dianne", "boarder_felix"],
+        "signs": {
+            (3, 20): "Seafoam Islands - Sub-Zero Ice Cavern"
+        },
+        "ground_items": [
+            {"id": "seafoam_waterstone", "x": 6, "y": 4, "item": "Water Stone", "count": 1},
+            {"id": "seafoam_iceheal", "x": 20, "y": 4, "item": "Ice Heal", "count": 3},
+            {"id": "seafoam_candy", "x": 20, "y": 19, "item": "Rare Candy", "count": 1}
+        ]
     },
     "Route 24": {
         "grid": MAP_ROUTE_24,
@@ -734,6 +1028,7 @@ MAP_DEFINITIONS = {
         "warps": {
             (9, 0): {"target_map": "Pallet Town", "target_x": 9, "target_y": 16},
             (10, 0): {"target_map": "Pallet Town", "target_x": 10, "target_y": 16},
+            (11, 16): {"target_map": "Seafoam Islands", "target_x": 1, "target_y": 21},
             (9, 31): {"target_map": "Cinnabar Island", "target_x": 10, "target_y": 1},
             (10, 31): {"target_map": "Cinnabar Island", "target_x": 11, "target_y": 1}
         },
@@ -858,6 +1153,9 @@ class Player:
         self.step_counter = 0
         self.current_map = current_map
         self.in_tall_grass = False
+        self.has_boat = True
+        self.is_sailing = False
+        self.sail_timer = 0.0
         self.last_overworld_map = "Pallet Town"
         self.last_overworld_pos = (8, 6)
         
@@ -872,6 +1170,7 @@ class Player:
         gfx.set_custom_player_appearance(self.gender, self.outfit_theme, self.hat_style, self.hair_color)
 
     def update(self, dt, world):
+        self.sail_timer += dt
         if self.is_moving:
             self.move_progress += self.move_speed * dt
             if self.move_progress >= 1.0:
@@ -882,13 +1181,20 @@ class Player:
                 self.pixel_x = self.grid_x * TILE_SIZE
                 self.pixel_y = self.grid_y * TILE_SIZE
                 
+                # Reveal newly reached area on minimap
+                world.reveal_area(self.current_map, self.grid_x, self.grid_y)
+                
                 # Check tile stepped on
                 tile = world.get_tile(self.current_map, self.grid_x, self.grid_y)
+                was_sailing = self.is_sailing
+                self.is_sailing = (tile == '~')
                 self.in_tall_grass = (tile == 'G')
                 
                 # Step sound in tall grass
                 if self.in_tall_grass:
                     sound_mgr.play_sfx("rustle")
+                elif not was_sailing and self.is_sailing:
+                    sound_mgr.play_sfx("select")
             else:
                 self.pixel_x = (self.grid_x + (self.target_x - self.grid_x) * self.move_progress) * TILE_SIZE
                 self.pixel_y = (self.grid_y + (self.target_y - self.grid_y) * self.move_progress) * TILE_SIZE
@@ -919,8 +1225,9 @@ class Player:
         new_x = self.grid_x + dx
         new_y = self.grid_y + dy
         
-        # Check collision
-        if world.is_passable(self.current_map, new_x, new_y):
+        # Check collision (allow sailing if player has boat or is currently sailing)
+        can_sail = self.has_boat or self.is_sailing
+        if world.is_passable(self.current_map, new_x, new_y, can_sail=can_sail):
             self.target_x = new_x
             self.target_y = new_y
             self.is_moving = True
@@ -929,16 +1236,27 @@ class Player:
         return False
 
     def draw(self, surf, camera_x, camera_y):
-        sprite = gfx.player_sprites[self.facing][self.walk_frame]
         draw_x = int(self.pixel_x - camera_x)
         draw_y = int(self.pixel_y - camera_y)
         
-        surf.blit(sprite, (draw_x, draw_y))
-        
-        # If in tall grass, draw grass covering lower feet
-        if self.in_tall_grass and not self.is_moving:
-            grass_cover = gfx.cached_tiles["tall_grass"].subsurface((0, 16, TILE_SIZE, 16))
-            surf.blit(grass_cover, (draw_x, draw_y + 16))
+        if self.is_sailing:
+            # Water bobbing oscillation
+            bob_y = int(math.sin(self.sail_timer * 5.0) * 1.5)
+            boat_sprite = gfx.boat_sprites.get(self.facing)
+            if boat_sprite:
+                surf.blit(boat_sprite, (draw_x - 5, draw_y - 5 + bob_y))
+            # Draw player upper torso seated/standing inside boat
+            player_sprite = gfx.player_sprites[self.facing][self.walk_frame]
+            player_upper = player_sprite.subsurface((0, 0, TILE_SIZE, 20))
+            surf.blit(player_upper, (draw_x, draw_y - 4 + bob_y))
+        else:
+            sprite = gfx.player_sprites[self.facing][self.walk_frame]
+            surf.blit(sprite, (draw_x, draw_y))
+            
+            # If in tall grass, draw grass covering lower feet
+            if self.in_tall_grass and not self.is_moving:
+                grass_cover = gfx.cached_tiles["tall_grass"].subsurface((0, 16, TILE_SIZE, 16))
+                surf.blit(grass_cover, (draw_x, draw_y + 16))
 
 class World:
     def __init__(self):
@@ -946,16 +1264,36 @@ class World:
         self.defeated_trainers = set()
         self.collected_items = set()
         self.badges = set()
+        self.explored_tiles = {} # map_name -> set of (x, y) tuples
+        self.timer = 0.0
         self.water_anim_timer = 0.0
         self.water_frame = 0
         self.interior_origin_map = "Pallet Town"
         self.interior_origin_coords = (4, 4)
 
     def update(self, dt):
+        self.timer += dt
         self.water_anim_timer += dt
         if self.water_anim_timer >= 0.25:
             self.water_anim_timer = 0.0
             self.water_frame = (self.water_frame + 1) % 4
+
+    def reveal_area(self, map_name, center_x, center_y, radius=3):
+        """Reveals tiles around (center_x, center_y) for the minimap fog-of-war."""
+        if map_name not in self.explored_tiles:
+            self.explored_tiles[map_name] = set()
+        grid = self.maps.get(map_name, {}).get("grid", [])
+        if not grid:
+            return
+        rows = len(grid)
+        cols = len(grid[0])
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                nx = center_x + dx
+                ny = center_y + dy
+                if 0 <= ny < rows and 0 <= nx < cols:
+                    if dx * dx + dy * dy <= (radius + 0.5) ** 2:
+                        self.explored_tiles[map_name].add((nx, ny))
 
     def get_tile(self, map_name, x, y):
         grid = self.maps.get(map_name, {}).get("grid", [])
@@ -963,10 +1301,12 @@ class World:
             return grid[y][x]
         return "#"
 
-    def is_passable(self, map_name, x, y):
+    def is_passable(self, map_name, x, y, can_sail=False):
         tile = self.get_tile(map_name, x, y)
-        # Solid obstacle tiles
-        if tile in ["#", "~", "f", "R", "B", "W", "C", "N", "M", "^", "Y", "H", "K"]:
+        if tile == "~":
+            if not can_sail:
+                return False
+        elif tile in ["#", "f", "R", "B", "W", "C", "N", "M", "^", "Y", "H", "K"]:
             return False
             
         # Check NPC collisions
@@ -978,8 +1318,9 @@ class World:
         # Check Trainer collisions
         trainer_ids = self.maps[map_name].get("trainers", [])
         for t_data in TRAINERS:
-            if t_data["id"] in trainer_ids and t_data["x"] == x and t_data["y"] == y:
-                return False
+            if t_data["id"] in trainer_ids and t_data["id"] not in self.defeated_trainers:
+                if t_data["x"] == x and t_data["y"] == y:
+                    return False
                 
         return True
 
@@ -1043,7 +1384,13 @@ class World:
         grid = self.maps[map_name]["grid"]
         rows = len(grid)
         cols = len(grid[0])
-        is_cave = (map_name == "Mt. Moon")
+        is_cave = (map_name in ["Mt. Moon", "Seafoam Islands"])
+        is_ice = (map_name == "Seafoam Islands")
+        is_lavender = (map_name in ["Lavender Town", "Pokémon Tower"])
+        is_tower = (map_name == "Pokémon Tower")
+        is_power_plant = (map_name == "Power Plant")
+        is_safari = (map_name == "Safari Zone")
+        is_canyon = (map_name == "Route 9")
         
         # Calculate visible tile range
         start_col = max(0, int(camera_x // TILE_SIZE))
@@ -1058,8 +1405,20 @@ class World:
                 draw_y = y * TILE_SIZE - camera_y
                 
                 # Base ground tile
-                if is_cave:
+                if is_ice:
+                    surf.blit(gfx.cached_tiles["ice_floor"], (draw_x, draw_y))
+                elif is_cave:
                     surf.blit(gfx.cached_tiles["cave_floor"], (draw_x, draw_y))
+                elif is_power_plant:
+                    surf.blit(gfx.cached_tiles["metal_floor"], (draw_x, draw_y))
+                elif is_tower:
+                    surf.blit(gfx.cached_tiles["spooky_floor"], (draw_x, draw_y))
+                elif is_lavender:
+                    surf.blit(gfx.cached_tiles["lavender_ground"], (draw_x, draw_y))
+                elif is_safari:
+                    surf.blit(gfx.cached_tiles["savanna_grass"], (draw_x, draw_y))
+                elif is_canyon:
+                    surf.blit(gfx.cached_tiles["canyon_dirt"], (draw_x, draw_y))
                 elif char in ["_", "C", "N", "M", "P", "H", "K"]:
                     surf.blit(gfx.cached_tiles["floor"], (draw_x, draw_y))
                 elif char in ["J", "Y"]:
@@ -1073,9 +1432,9 @@ class World:
                 
                 # Specialized tile drawing
                 if char == "G":
-                    surf.blit(gfx.cached_tiles["tall_grass"], (draw_x, draw_y))
+                    surf.blit(gfx.cached_tiles["savanna_tall_grass"] if is_safari else gfx.cached_tiles["tall_grass"], (draw_x, draw_y))
                 elif char == "p":
-                    surf.blit(gfx.cached_tiles["path"], (draw_x, draw_y))
+                    surf.blit(gfx.cached_tiles["canyon_dirt"] if is_canyon else gfx.cached_tiles["path"], (draw_x, draw_y))
                 elif char == "~":
                     surf.blit(gfx.cached_tiles["water"][self.water_frame], (draw_x, draw_y))
                 elif char == "b":
@@ -1083,17 +1442,33 @@ class World:
                 elif char == "s":
                     surf.blit(gfx.cached_tiles["sand"], (draw_x, draw_y))
                 elif char == "#":
-                    surf.blit(gfx.cached_tiles["tree_tl"], (draw_x, draw_y))
+                    if is_lavender or is_tower:
+                        surf.blit(gfx.cached_tiles["spooky_tree"], (draw_x, draw_y))
+                    elif is_safari:
+                        surf.blit(gfx.cached_tiles["acacia_tree"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["tree_tl"], (draw_x, draw_y))
                 elif char == "^":
-                    surf.blit(gfx.cached_tiles["cave_wall"], (draw_x, draw_y))
+                    if is_ice:
+                        surf.blit(gfx.cached_tiles["ice_wall"], (draw_x, draw_y))
+                    elif is_canyon:
+                        surf.blit(gfx.cached_tiles["canyon_rock"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["cave_wall"], (draw_x, draw_y))
                 elif char == "O":
-                    surf.blit(gfx.cached_tiles["cave_door"], (draw_x, draw_y))
+                    surf.blit(gfx.cached_tiles["ice_door"] if is_ice else gfx.cached_tiles["cave_door"], (draw_x, draw_y))
                 elif char == "J":
                     surf.blit(gfx.cached_tiles["gym_mat"], (draw_x, draw_y))
                 elif char == "Y":
-                    surf.blit(gfx.cached_tiles["gym_statue"], (draw_x, draw_y))
+                    if is_lavender or is_tower:
+                        surf.blit(gfx.cached_tiles["tombstone"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["gym_statue"], (draw_x, draw_y))
                 elif char == "H":
-                    surf.blit(gfx.cached_tiles["lab_table"], (draw_x, draw_y))
+                    if is_power_plant:
+                        surf.blit(gfx.cached_tiles["generator_coil"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["lab_table"], (draw_x, draw_y))
                 elif char == "K":
                     surf.blit(gfx.cached_tiles["bookshelf"], (draw_x, draw_y))
                 elif char == "f":
@@ -1105,7 +1480,10 @@ class World:
                 elif char == "B":
                     surf.blit(gfx.cached_tiles["roof_blue"], (draw_x, draw_y))
                 elif char == "W":
-                    surf.blit(gfx.cached_tiles["wall_white"], (draw_x, draw_y))
+                    if is_power_plant:
+                        surf.blit(gfx.cached_tiles["warning_tile"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["wall_white"], (draw_x, draw_y))
                 elif char == "D":
                     surf.blit(gfx.cached_tiles["door"], (draw_x, draw_y))
                 elif char == "S":
@@ -1164,3 +1542,152 @@ class World:
     def get_map_dimensions(self, map_name):
         grid = self.maps[map_name]["grid"]
         return len(grid[0]) * TILE_SIZE, len(grid) * TILE_SIZE
+
+    def draw_minimap(self, surf, map_name, player_x, player_y):
+        """Renders a minimap in the upper-left corner showing explored paths, fog-of-war, and player location."""
+        grid = self.maps.get(map_name, {}).get("grid", [])
+        if not grid:
+            return
+            
+        rows = len(grid)
+        cols = len(grid[0])
+        
+        # Ensure player area is revealed
+        self.reveal_area(map_name, player_x, player_y, radius=3)
+        explored = self.explored_tiles.get(map_name, set())
+        
+        # Dynamic cell scale based on map size
+        max_canvas_w = 140
+        max_canvas_h = 110
+        cell_size = max(3, min(max_canvas_w // cols, max_canvas_h // rows))
+        map_w = cols * cell_size
+        map_h = rows * cell_size
+        
+        # Card bounds (upper-left)
+        mx, my = 16, 16
+        card_pad = 7
+        header_h = 24
+        card_w = max(140, map_w + card_pad * 2)
+        card_h = header_h + map_h + card_pad * 2
+        
+        # Outer border & background card
+        pygame.draw.rect(surf, (40, 48, 72), (mx - 2, my - 2, card_w + 4, card_h + 4), border_radius=8)
+        pygame.draw.rect(surf, (22, 26, 38), (mx, my, card_w, card_h), border_radius=6)
+        
+        # Exploration percentage calculation
+        walkable = sum(1 for r in range(rows) for c in range(cols) if grid[r][c] not in ["#", "^", "W", "~"])
+        exp_walkable = sum(1 for (cx, cy) in explored if 0 <= cy < rows and 0 <= cx < cols and grid[cy][cx] not in ["#", "^", "W", "~"])
+        pct = min(100, int(100 * exp_walkable / max(1, walkable)))
+        
+        # Header: Map name on left, % on right
+        name_txt = gfx.fonts["small"].render(map_name, True, (240, 244, 252))
+        pct_col = (70, 220, 110) if pct >= 100 else ((255, 200, 50) if pct > 50 else (200, 210, 230))
+        pct_txt = gfx.fonts["small"].render(f"{pct}%", True, pct_col)
+        
+        surf.blit(name_txt, (mx + 8, my + 5))
+        surf.blit(pct_txt, (mx + card_w - pct_txt.get_width() - 8, my + 5))
+        
+        # Minimap Canvas
+        cx_start = mx + (card_w - map_w) // 2
+        cy_start = my + header_h + card_pad
+        pygame.draw.rect(surf, (14, 16, 24), (cx_start - 1, cy_start - 1, map_w + 2, map_h + 2), border_radius=3)
+        
+        is_cave = (map_name in ["Mt. Moon", "Seafoam Islands"])
+        is_ice = (map_name == "Seafoam Islands")
+        is_lavender = (map_name in ["Lavender Town", "Pokémon Tower"])
+        is_power_plant = (map_name == "Power Plant")
+        is_safari = (map_name == "Safari Zone")
+        is_canyon = (map_name == "Route 9")
+        ground_items = self.maps[map_name].get("ground_items", [])
+        
+        for r in range(rows):
+            for c in range(cols):
+                tx = cx_start + c * cell_size
+                ty = cy_start + r * cell_size
+                char = grid[r][c]
+                is_exp = (c, r) in explored
+                
+                if not is_exp:
+                    pygame.draw.rect(surf, (20, 24, 34), (tx, ty, cell_size, cell_size))
+                    continue
+                    
+                # Explored tile colors
+                if char == "^":
+                    if is_ice:
+                        col = (40, 95, 145) # Glacial Ice Wall
+                    elif is_canyon:
+                        col = (140, 65, 40) # Canyon Rock
+                    else:
+                        col = (75, 68, 62) # Cave Wall
+                elif char == "#":
+                    if is_lavender:
+                        col = (55, 40, 65) # Spooky tree
+                    elif is_safari:
+                        col = (60, 110, 50) # Acacia tree
+                    else:
+                        col = (35, 75, 40) # Forest tree
+                elif char in ["W", "R", "B"]:
+                    if is_power_plant:
+                        col = (235, 195, 30) # Power plant warning
+                    else:
+                        col = (110, 60, 60) # Building Wall/Roof
+                elif char == "~":
+                    col = (60, 130, 220) # Water
+                elif char == "p":
+                    col = (190, 125, 80) if is_canyon else (205, 180, 130) # Path
+                elif char == "s":
+                    col = (225, 205, 140) # Sand
+                elif char == "b":
+                    col = (175, 125, 75) # Bridge
+                elif char == "G":
+                    col = (165, 135, 55) if is_safari else (45, 135, 40) # Tall Grass
+                elif char == "O":
+                    col = (120, 220, 255) if is_ice else (255, 215, 40) # Cave Entrance
+                elif char == "D":
+                    col = (255, 180, 40) # Door
+                elif char == "S":
+                    col = (185, 145, 85) # Signpost
+                elif char in ["_", "C", "N", "M", "P", "H", "K"]:
+                    if is_ice:
+                        col = (150, 220, 245)
+                    elif is_cave:
+                        col = (135, 125, 120)
+                    elif is_power_plant:
+                        col = (90, 100, 115)
+                    elif is_lavender:
+                        col = (85, 75, 105)
+                    else:
+                        col = (195, 175, 140)
+                elif char in ["J", "Y"]:
+                    col = (145, 140, 155) if is_lavender else (175, 145, 120)
+                elif char == "*":
+                    col = (220, 70, 70)
+                else: # "."
+                    if is_ice:
+                        col = (150, 220, 245)
+                    elif is_cave:
+                        col = (125, 115, 110)
+                    elif is_lavender:
+                        col = (110, 90, 135)
+                    elif is_safari:
+                        col = (215, 190, 115)
+                    elif is_canyon:
+                        col = (190, 125, 80)
+                    else:
+                        col = (85, 160, 75)
+                    
+                pygame.draw.rect(surf, col, (tx, ty, cell_size, cell_size))
+                
+                # Draw collectible item indicator on explored tiles
+                for g_item in ground_items:
+                    if g_item["x"] == c and g_item["y"] == r and g_item["id"] not in self.collected_items:
+                        pygame.draw.circle(surf, (240, 50, 50), (tx + cell_size // 2, ty + cell_size // 2), max(1, cell_size // 2))
+                        
+        # Player Locator Blip (with pulsing halo)
+        px = cx_start + player_x * cell_size + cell_size // 2
+        py = cy_start + player_y * cell_size + cell_size // 2
+        
+        pulse_r = max(2, cell_size // 2 + 1 + int((math.sin(self.timer * 6.0) + 1.0) * 1.2))
+        pygame.draw.circle(surf, (255, 230, 60), (px, py), pulse_r, 1)
+        pygame.draw.circle(surf, (240, 40, 40), (px, py), max(2, cell_size // 2 + 1))
+        pygame.draw.circle(surf, WHITE, (px, py), max(1, cell_size // 2 - 1))

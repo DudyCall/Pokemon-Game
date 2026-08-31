@@ -25,11 +25,13 @@ class GraphicsManager:
         self.cached_pokemon_sprites = {}
         self.cached_tiles = {}
         self.player_sprites = {}
+        self.boat_sprites = {}
         self.item_sprites = {}
         self.fonts = {}
         self.init_fonts()
         self.init_tiles()
         self.init_player_sprites()
+        self.init_boat_sprites()
         self.init_item_sprites()
         # Start background preload of top Pokemon sprites
         threading.Thread(target=self._preload_pokemon_sprites, daemon=True).start()
@@ -388,6 +390,101 @@ class GraphicsManager:
         """Updates active player sprites to match the trainer customization."""
         self.player_sprites = self.generate_player_sprites(gender, outfit_theme, hat_style, hair_color_name)
 
+    def init_boat_sprites(self):
+        """Generates 4-directional procedural boat sprites with wooden hull, deck, windshield, and water wake."""
+        self.boat_sprites = {}
+        for dir_code in [Direction.DOWN, Direction.UP, Direction.LEFT, Direction.RIGHT]:
+            surf = pygame.Surface((TILE_SIZE + 10, TILE_SIZE + 10), pygame.SRCALPHA)
+            bx, by = (TILE_SIZE + 10) // 2, (TILE_SIZE + 10) // 2
+            
+            # Water wake froth
+            pygame.draw.ellipse(surf, (200, 235, 255, 130), (bx - 15, by - 6, 30, 22))
+            pygame.draw.ellipse(surf, (255, 255, 255, 180), (bx - 12, by - 4, 24, 18))
+            
+            if dir_code == Direction.DOWN:
+                # Bow pointing DOWN
+                pygame.draw.polygon(surf, (130, 75, 30), [
+                    (bx - 12, by - 12), (bx + 12, by - 12),
+                    (bx + 12, by + 4), (bx + 7, by + 13),
+                    (bx, by + 16), (bx - 7, by + 13),
+                    (bx - 12, by + 4)
+                ])
+                pygame.draw.polygon(surf, (230, 205, 155), [
+                    (bx - 9, by - 9), (bx + 9, by - 9),
+                    (bx + 9, by + 3), (bx + 5, by + 10),
+                    (bx, by + 12), (bx - 5, by + 10),
+                    (bx - 9, by + 3)
+                ])
+                # Windshield
+                pygame.draw.polygon(surf, (90, 190, 255, 220), [
+                    (bx - 7, by + 1), (bx + 7, by + 1),
+                    (bx + 5, by + 6), (bx - 5, by + 6)
+                ])
+                # Outboard motor at stern
+                pygame.draw.rect(surf, (50, 55, 65), (bx - 4, by - 14, 8, 4), border_radius=1)
+                
+            elif dir_code == Direction.UP:
+                # Bow pointing UP
+                pygame.draw.polygon(surf, (130, 75, 30), [
+                    (bx - 12, by + 12), (bx + 12, by + 12),
+                    (bx + 12, by - 4), (bx + 7, by - 13),
+                    (bx, by - 16), (bx - 7, by - 13),
+                    (bx - 12, by - 4)
+                ])
+                pygame.draw.polygon(surf, (230, 205, 155), [
+                    (bx - 9, by + 9), (bx + 9, by + 9),
+                    (bx + 9, by - 3), (bx + 5, by - 10),
+                    (bx, by - 12), (bx - 5, by - 10),
+                    (bx - 9, by - 3)
+                ])
+                # Windshield
+                pygame.draw.polygon(surf, (90, 190, 255, 220), [
+                    (bx - 7, by - 1), (bx + 7, by - 1),
+                    (bx + 5, by - 6), (bx - 5, by - 6)
+                ])
+                # Outboard motor at stern
+                pygame.draw.rect(surf, (50, 55, 65), (bx - 4, by + 10, 8, 4), border_radius=1)
+                
+            elif dir_code == Direction.LEFT:
+                # Bow pointing LEFT
+                pygame.draw.polygon(surf, (130, 75, 30), [
+                    (bx + 12, by - 11), (bx + 12, by + 11),
+                    (bx - 4, by + 11), (bx - 13, by + 7),
+                    (bx - 16, by), (bx - 13, by - 7),
+                    (bx - 4, by - 11)
+                ])
+                pygame.draw.polygon(surf, (230, 205, 155), [
+                    (bx + 9, by - 8), (bx + 9, by + 8),
+                    (bx - 3, by + 8), (bx - 10, by + 5),
+                    (bx - 12, by), (bx - 10, by - 5),
+                    (bx - 3, by - 8)
+                ])
+                # Windshield
+                pygame.draw.rect(surf, (90, 190, 255, 220), (bx - 6, by - 6, 4, 12), border_radius=1)
+                # Outboard motor
+                pygame.draw.rect(surf, (50, 55, 65), (bx + 10, by - 4, 4, 8), border_radius=1)
+                
+            else: # Direction.RIGHT
+                # Bow pointing RIGHT
+                pygame.draw.polygon(surf, (130, 75, 30), [
+                    (bx - 12, by - 11), (bx - 12, by + 11),
+                    (bx + 4, by + 11), (bx + 13, by + 7),
+                    (bx + 16, by), (bx + 13, by - 7),
+                    (bx + 4, by - 11)
+                ])
+                pygame.draw.polygon(surf, (230, 205, 155), [
+                    (bx - 9, by - 8), (bx - 9, by + 8),
+                    (bx + 3, by + 8), (bx + 10, by + 5),
+                    (bx + 12, by), (bx + 10, by - 5),
+                    (bx + 3, by - 8)
+                ])
+                # Windshield
+                pygame.draw.rect(surf, (90, 190, 255, 220), (bx + 2, by - 6, 4, 12), border_radius=1)
+                # Outboard motor
+                pygame.draw.rect(surf, (50, 55, 65), (bx - 14, by - 4, 4, 8), border_radius=1)
+                
+            self.boat_sprites[dir_code] = surf
+
     def init_item_sprites(self):
         """Generates icons for Pokeballs, Potions, Badges, etc."""
         # Pokeball
@@ -650,6 +747,130 @@ class GraphicsManager:
         pygame.draw.circle(item_ball, BLACK, (cx, cy), 2)
         pygame.draw.circle(item_ball, WHITE, (cx, cy), 1)
         self.cached_tiles["item_ball"] = item_ball
+
+        # ==========================================
+        # 18. BIOME: Glacial Ice Cavern (Seafoam Islands)
+        # ==========================================
+        ice_floor = pygame.Surface((T, T))
+        ice_floor.fill((150, 220, 245)) # Glistening frozen ice
+        pygame.draw.line(ice_floor, (210, 245, 255), (2, 4), (18, 4), 2)
+        pygame.draw.line(ice_floor, (210, 245, 255), (14, 18), (28, 18), 2)
+        pygame.draw.line(ice_floor, (110, 180, 215), (0, T - 1), (T, T - 1), 1)
+        for _ in range(6):
+            rx, ry = random.randint(2, T - 4), random.randint(2, T - 4)
+            ice_floor.set_at((rx, ry), (240, 252, 255))
+        self.cached_tiles["ice_floor"] = ice_floor
+
+        ice_wall = pygame.Surface((T, T))
+        ice_wall.fill((40, 95, 145))
+        pygame.draw.rect(ice_wall, (70, 145, 200), (2, 2, T - 4, T - 4), border_radius=4)
+        pygame.draw.polygon(ice_wall, (25, 65, 105), [(4, 4), (16, 2), (28, 8), (20, 28), (6, 24)])
+        pygame.draw.polygon(ice_wall, (120, 205, 245), [(8, 8), (18, 6), (24, 12), (18, 22), (10, 18)])
+        pygame.draw.line(ice_wall, (220, 245, 255), (10, 8), (16, 6), 2)
+        self.cached_tiles["ice_wall"] = ice_wall
+
+        ice_door = ice_wall.copy()
+        pygame.draw.arc(ice_door, (15, 35, 60), (6, 4, 20, 26), 0, 3.14, 10)
+        pygame.draw.rect(ice_door, (15, 35, 60), (6, 12, 20, 20))
+        self.cached_tiles["ice_door"] = ice_door
+
+        # ==========================================
+        # 19. BIOME: Spooky Lavender Mist & Ghost Tower
+        # ==========================================
+        lavender_ground = pygame.Surface((T, T))
+        lavender_ground.fill((110, 90, 135)) # Eerie purple soil
+        for _ in range(8):
+            rx, ry = random.randint(2, T - 3), random.randint(2, T - 3)
+            lavender_ground.set_at((rx, ry), (135, 115, 165))
+            lavender_ground.set_at((rx + 1, ry), (85, 65, 110))
+        self.cached_tiles["lavender_ground"] = lavender_ground
+
+        spooky_floor = pygame.Surface((T, T))
+        spooky_floor.fill((85, 75, 105)) # Haunted purple-grey floorboards
+        pygame.draw.line(spooky_floor, (60, 50, 75), (0, 0), (T, 0), 1)
+        pygame.draw.line(spooky_floor, (60, 50, 75), (0, T - 1), (T, T - 1), 1)
+        self.cached_tiles["spooky_floor"] = spooky_floor
+
+        tombstone = spooky_floor.copy()
+        pygame.draw.rect(tombstone, (145, 140, 155), (8, 8, 16, 20), border_radius=4)
+        pygame.draw.rect(tombstone, (110, 105, 120), (6, 24, 20, 6), border_radius=2)
+        pygame.draw.line(tombstone, (75, 70, 85), (16, 11), (16, 21), 2) # Cross vertical
+        pygame.draw.line(tombstone, (75, 70, 85), (12, 14), (20, 14), 2) # Cross horizontal
+        self.cached_tiles["tombstone"] = tombstone
+
+        spooky_tree = lavender_ground.copy()
+        pygame.draw.rect(spooky_tree, (45, 30, 55), (13, 10, 6, 18), border_radius=2)
+        pygame.draw.circle(spooky_tree, (55, 40, 65), (16, 10), 10)
+        pygame.draw.circle(spooky_tree, (75, 55, 90), (14, 8), 6)
+        self.cached_tiles["spooky_tree"] = spooky_tree
+
+        # ==========================================
+        # 20. BIOME: Industrial Electric Power Plant
+        # ==========================================
+        metal_floor = pygame.Surface((T, T))
+        metal_floor.fill((90, 100, 115)) # Steel diamond plate
+        pygame.draw.rect(metal_floor, (120, 130, 145), (0, 0, T, T), 1)
+        for dx in [6, 22]:
+            for dy in [6, 22]:
+                pygame.draw.rect(metal_floor, (60, 65, 75), (dx, dy, 4, 4))
+                pygame.draw.rect(metal_floor, (140, 150, 165), (dx, dy, 2, 2))
+        self.cached_tiles["metal_floor"] = metal_floor
+
+        generator_coil = metal_floor.copy()
+        pygame.draw.rect(generator_coil, (40, 45, 55), (4, 4, T - 8, T - 8), border_radius=3)
+        pygame.draw.circle(generator_coil, (220, 140, 40), (16, 16), 9) # Copper core
+        pygame.draw.circle(generator_coil, (255, 220, 60), (16, 16), 5) # Glowing electrical spark
+        pygame.draw.circle(generator_coil, WHITE, (16, 16), 2)
+        self.cached_tiles["generator_coil"] = generator_coil
+
+        warning_tile = pygame.Surface((T, T))
+        warning_tile.fill((235, 195, 30)) # Caution yellow
+        for offset in range(-T, T * 2, 8):
+            pygame.draw.polygon(warning_tile, (35, 35, 40), [(offset, 0), (offset + 4, 0), (offset + 4 + T, T), (offset + T, T)])
+        self.cached_tiles["warning_tile"] = warning_tile
+
+        # ==========================================
+        # 21. BIOME: Golden Savanna Safari Zone
+        # ==========================================
+        savanna_grass = pygame.Surface((T, T))
+        savanna_grass.fill((215, 190, 115)) # Warm amber savanna soil
+        for _ in range(8):
+            rx, ry = random.randint(2, T - 3), random.randint(2, T - 3)
+            savanna_grass.set_at((rx, ry), (235, 210, 135))
+            savanna_grass.set_at((rx + 1, ry), (185, 160, 90))
+        self.cached_tiles["savanna_grass"] = savanna_grass
+
+        savanna_tall_grass = savanna_grass.copy()
+        for x in [4, 12, 20, 28]:
+            for y in [6, 18]:
+                pygame.draw.polygon(savanna_tall_grass, (165, 135, 55), [(x - 3, y + 10), (x, y), (x + 3, y + 10)])
+                pygame.draw.polygon(savanna_tall_grass, (200, 170, 75), [(x - 2, y + 10), (x, y + 2), (x + 2, y + 10)])
+        self.cached_tiles["savanna_tall_grass"] = savanna_tall_grass
+
+        acacia_tree = savanna_grass.copy()
+        pygame.draw.rect(acacia_tree, (110, 70, 40), (14, 12, 4, 18))
+        pygame.draw.ellipse(acacia_tree, (60, 110, 50), (4, 4, 24, 10))
+        pygame.draw.ellipse(acacia_tree, (80, 140, 65), (6, 2, 20, 8))
+        self.cached_tiles["acacia_tree"] = acacia_tree
+
+        # ==========================================
+        # 22. BIOME: Canyon / Badlands
+        # ==========================================
+        canyon_dirt = pygame.Surface((T, T))
+        canyon_dirt.fill((190, 125, 80)) # Reddish desert trail
+        for _ in range(10):
+            rx, ry = random.randint(1, T - 2), random.randint(1, T - 2)
+            canyon_dirt.set_at((rx, ry), (170, 105, 65))
+            if random.random() < 0.3:
+                canyon_dirt.set_at((rx, ry), (215, 150, 105))
+        self.cached_tiles["canyon_dirt"] = canyon_dirt
+
+        canyon_rock = pygame.Surface((T, T))
+        canyon_rock.fill((140, 65, 40)) # Terraced sedimentary canyon rock
+        pygame.draw.rect(canyon_rock, (170, 85, 55), (2, 2, T - 4, T - 4), border_radius=3)
+        pygame.draw.line(canyon_rock, (110, 45, 25), (0, 10), (T, 10), 2)
+        pygame.draw.line(canyon_rock, (200, 105, 70), (0, 18), (T, 18), 2)
+        self.cached_tiles["canyon_rock"] = canyon_rock
 
 
     def draw_hp_bar(self, surf, x, y, width, height, current_hp, max_hp, label="HP"):

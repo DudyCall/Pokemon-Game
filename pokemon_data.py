@@ -2928,6 +2928,103 @@ WILD_ENCOUNTERS = {
         {"species": "Koffing", "min_lvl": 20, "max_lvl": 25, "weight": 15},
         {"species": "Grimer", "min_lvl": 20, "max_lvl": 25, "weight": 10},
         {"species": "Magmar", "min_lvl": 22, "max_lvl": 27, "weight": 5}
+    ],
+    "Route 9": [
+        {"species": "Rattata", "min_lvl": 14, "max_lvl": 17, "weight": 25},
+        {"species": "Spearow", "min_lvl": 14, "max_lvl": 18, "weight": 25},
+        {"species": "Ekans", "min_lvl": 15, "max_lvl": 18, "weight": 20},
+        {"species": "Sandshrew", "min_lvl": 15, "max_lvl": 18, "weight": 15},
+        {"species": "Machop", "min_lvl": 15, "max_lvl": 19, "weight": 10},
+        {"species": "Geodude", "min_lvl": 15, "max_lvl": 19, "weight": 5}
+    ],
+    "Lavender Town": [
+        {"species": "Pidgeotto", "min_lvl": 18, "max_lvl": 22, "weight": 30},
+        {"species": "Rattata", "min_lvl": 17, "max_lvl": 21, "weight": 30},
+        {"species": "Vulpix", "min_lvl": 18, "max_lvl": 22, "weight": 20},
+        {"species": "Gastly", "min_lvl": 18, "max_lvl": 22, "weight": 20}
+    ],
+    "Pokémon Tower": [
+        {"species": "Gastly", "min_lvl": 18, "max_lvl": 24, "weight": 45},
+        {"species": "Haunter", "min_lvl": 22, "max_lvl": 26, "weight": 20},
+        {"species": "Cubone", "min_lvl": 19, "max_lvl": 24, "weight": 20},
+        {"species": "Drowzee", "min_lvl": 19, "max_lvl": 23, "weight": 10},
+        {"species": "Hypno", "min_lvl": 23, "max_lvl": 27, "weight": 5}
+    ],
+    "Power Plant": [
+        {"species": "Voltorb", "min_lvl": 21, "max_lvl": 26, "weight": 30},
+        {"species": "Magnemite", "min_lvl": 21, "max_lvl": 26, "weight": 30},
+        {"species": "Pikachu", "min_lvl": 22, "max_lvl": 26, "weight": 15},
+        {"species": "Electrode", "min_lvl": 25, "max_lvl": 30, "weight": 10},
+        {"species": "Magneton", "min_lvl": 25, "max_lvl": 30, "weight": 10},
+        {"species": "Electabuzz", "min_lvl": 26, "max_lvl": 32, "weight": 5}
+    ],
+    "Safari Zone": [
+        {"species": "Nidorino", "min_lvl": 22, "max_lvl": 27, "weight": 15},
+        {"species": "Nidorina", "min_lvl": 22, "max_lvl": 27, "weight": 15},
+        {"species": "Rhyhorn", "min_lvl": 24, "max_lvl": 28, "weight": 15},
+        {"species": "Exeggcute", "min_lvl": 23, "max_lvl": 27, "weight": 12},
+        {"species": "Doduo", "min_lvl": 23, "max_lvl": 27, "weight": 12},
+        {"species": "Kangaskhan", "min_lvl": 25, "max_lvl": 30, "weight": 8},
+        {"species": "Tauros", "min_lvl": 25, "max_lvl": 30, "weight": 8},
+        {"species": "Scyther", "min_lvl": 25, "max_lvl": 30, "weight": 6},
+        {"species": "Pinsir", "min_lvl": 25, "max_lvl": 30, "weight": 6},
+        {"species": "Chansey", "min_lvl": 26, "max_lvl": 30, "weight": 2},
+        {"species": "Dratini", "min_lvl": 20, "max_lvl": 25, "weight": 1}
+    ],
+    "Seafoam Islands": [
+        {"species": "Zubat", "min_lvl": 20, "max_lvl": 26, "weight": 25},
+        {"species": "Golbat", "min_lvl": 24, "max_lvl": 28, "weight": 15},
+        {"species": "Psyduck", "min_lvl": 22, "max_lvl": 27, "weight": 20},
+        {"species": "Slowpoke", "min_lvl": 22, "max_lvl": 27, "weight": 15},
+        {"species": "Seel", "min_lvl": 23, "max_lvl": 28, "weight": 15},
+        {"species": "Shellder", "min_lvl": 23, "max_lvl": 28, "weight": 5},
+        {"species": "Dewgong", "min_lvl": 28, "max_lvl": 32, "weight": 3},
+        {"species": "Jynx", "min_lvl": 26, "max_lvl": 30, "weight": 2}
+    ]
+}
+
+# Wild Water / Sailing Encounters by Zone
+WILD_WATER_ENCOUNTERS = {
+    "Route 21": [
+        {"species": "Tentacool", "min_lvl": 16, "max_lvl": 22, "weight": 35},
+        {"species": "Magikarp", "min_lvl": 15, "max_lvl": 20, "weight": 30},
+        {"species": "Goldeen", "min_lvl": 16, "max_lvl": 21, "weight": 15},
+        {"species": "Shellder", "min_lvl": 17, "max_lvl": 22, "weight": 10},
+        {"species": "Staryu", "min_lvl": 17, "max_lvl": 22, "weight": 7},
+        {"species": "Lapras", "min_lvl": 18, "max_lvl": 23, "weight": 2},
+        {"species": "Dratini", "min_lvl": 16, "max_lvl": 21, "weight": 1}
+    ],
+    "Pallet Town": [
+        {"species": "Tentacool", "min_lvl": 5, "max_lvl": 10, "weight": 40},
+        {"species": "Magikarp", "min_lvl": 5, "max_lvl": 10, "weight": 40},
+        {"species": "Poliwag", "min_lvl": 6, "max_lvl": 10, "weight": 20}
+    ],
+    "Cerulean City": [
+        {"species": "Psyduck", "min_lvl": 14, "max_lvl": 18, "weight": 35},
+        {"species": "Goldeen", "min_lvl": 14, "max_lvl": 18, "weight": 35},
+        {"species": "Poliwhirl", "min_lvl": 15, "max_lvl": 19, "weight": 20},
+        {"species": "Staryu", "min_lvl": 15, "max_lvl": 19, "weight": 10}
+    ],
+    "Route 24": [
+        {"species": "Psyduck", "min_lvl": 14, "max_lvl": 18, "weight": 30},
+        {"species": "Goldeen", "min_lvl": 14, "max_lvl": 18, "weight": 30},
+        {"species": "Slowpoke", "min_lvl": 14, "max_lvl": 18, "weight": 25},
+        {"species": "Magikarp", "min_lvl": 12, "max_lvl": 16, "weight": 15}
+    ],
+    "Safari Zone": [
+        {"species": "Psyduck", "min_lvl": 22, "max_lvl": 26, "weight": 25},
+        {"species": "Slowpoke", "min_lvl": 22, "max_lvl": 26, "weight": 25},
+        {"species": "Goldeen", "min_lvl": 23, "max_lvl": 27, "weight": 20},
+        {"species": "Seaking", "min_lvl": 25, "max_lvl": 30, "weight": 15},
+        {"species": "Dratini", "min_lvl": 22, "max_lvl": 26, "weight": 10},
+        {"species": "Dragonair", "min_lvl": 28, "max_lvl": 33, "weight": 5}
+    ],
+    "Cinnabar Island": [
+        {"species": "Tentacool", "min_lvl": 20, "max_lvl": 26, "weight": 35},
+        {"species": "Tentacruel", "min_lvl": 26, "max_lvl": 32, "weight": 20},
+        {"species": "Shellder", "min_lvl": 22, "max_lvl": 27, "weight": 20},
+        {"species": "Horsea", "min_lvl": 22, "max_lvl": 27, "weight": 15},
+        {"species": "Gyarados", "min_lvl": 28, "max_lvl": 34, "weight": 10}
     ]
 }
 
@@ -3351,6 +3448,166 @@ TRAINERS = [
             {"species": "Magmar", "level": 24},
             {"species": "Ninetales", "level": 25},
             {"species": "Rapidash", "level": 26}
+        ]
+    },
+    # Route 9 (Rock Canyon)
+    {
+        "id": "camper_drew",
+        "name": "Camper Drew",
+        "map": "Route 9",
+        "x": 8, "y": 9,
+        "direction": "DOWN",
+        "dialog_before": "I'm hiking through the rugged canyon to Lavender Town!",
+        "dialog_after": "My hiking gear couldn't save me!",
+        "reward_money": 420,
+        "party": [
+            {"species": "Mankey", "level": 17},
+            {"species": "Sandslash", "level": 18}
+        ]
+    },
+    {
+        "id": "picnicker_alicia",
+        "name": "Picnicker Alicia",
+        "map": "Route 9",
+        "x": 18, "y": 9,
+        "direction": "UP",
+        "dialog_before": "Don't disturb my canyon picnic with my cute Pokémon!",
+        "dialog_after": "You have quite an appetite for victory!",
+        "reward_money": 400,
+        "party": [
+            {"species": "Nidorina", "level": 17},
+            {"species": "Clefairy", "level": 18}
+        ]
+    },
+    {
+        "id": "hiker_alan",
+        "name": "Hiker Alan",
+        "map": "Route 9",
+        "x": 26, "y": 9,
+        "direction": "LEFT",
+        "dialog_before": "These red canyon rocks are as tough as my Pokémon!",
+        "dialog_after": "Grounded!",
+        "reward_money": 460,
+        "party": [
+            {"species": "Geodude", "level": 18},
+            {"species": "Graveler", "level": 19},
+            {"species": "Machop", "level": 18}
+        ]
+    },
+    # Pokémon Tower
+    {
+        "id": "channeler_patricia",
+        "name": "Channeler Patricia",
+        "map": "Pokémon Tower",
+        "x": 6, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "Give... me... your... soul...! Kekeke!",
+        "dialog_after": "The spirits have been cleansed!",
+        "reward_money": 520,
+        "party": [
+            {"species": "Gastly", "level": 20},
+            {"species": "Haunter", "level": 22}
+        ]
+    },
+    {
+        "id": "channeler_carly",
+        "name": "Channeler Carly",
+        "map": "Pokémon Tower",
+        "x": 20, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "Do you feel the supernatural chill in the air?",
+        "dialog_after": "The eerie fog lifts...",
+        "reward_money": 500,
+        "party": [
+            {"species": "Gastly", "level": 21},
+            {"species": "Drowzee", "level": 21}
+        ]
+    },
+    {
+        "id": "channeler_hope",
+        "name": "Channeler Hope",
+        "map": "Pokémon Tower",
+        "x": 13, "y": 13,
+        "direction": "DOWN",
+        "dialog_before": "Begone, living intruder! The spirits demand silence!",
+        "dialog_after": "Hah! I am finally released from the trance!",
+        "reward_money": 540,
+        "party": [
+            {"species": "Haunter", "level": 23},
+            {"species": "Hypno", "level": 24}
+        ]
+    },
+    # Power Plant
+    {
+        "id": "scientist_bray",
+        "name": "Scientist Bray",
+        "map": "Power Plant",
+        "x": 6, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "We are conducting high-voltage energy experiments! Watch out!",
+        "dialog_after": "Short circuit!",
+        "reward_money": 650,
+        "party": [
+            {"species": "Magnemite", "level": 24},
+            {"species": "Magneton", "level": 26}
+        ]
+    },
+    {
+        "id": "pokemaniac_mark",
+        "name": "PokéManiac Mark",
+        "map": "Power Plant",
+        "x": 20, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "I came to this abandoned plant to catch rare Electric Pokémon!",
+        "dialog_after": "Electrifying battle!",
+        "reward_money": 600,
+        "party": [
+            {"species": "Voltorb", "level": 23},
+            {"species": "Electrode", "level": 25}
+        ]
+    },
+    {
+        "id": "engineer_bucky",
+        "name": "Engineer Bucky",
+        "map": "Power Plant",
+        "x": 13, "y": 13,
+        "direction": "RIGHT",
+        "dialog_before": "I'm rewiring the backup generator! Don't shock me!",
+        "dialog_after": "The power surged right back at me!",
+        "reward_money": 620,
+        "party": [
+            {"species": "Electabuzz", "level": 26},
+            {"species": "Raichu", "level": 27}
+        ]
+    },
+    # Seafoam Islands
+    {
+        "id": "skier_dianne",
+        "name": "Skier Dianne",
+        "map": "Seafoam Islands",
+        "x": 6, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "Sliding across the ice is so exhilarating! Let's battle on the ice!",
+        "dialog_after": "Wiped out on the ice!",
+        "reward_money": 680,
+        "party": [
+            {"species": "Seel", "level": 25},
+            {"species": "Dewgong", "level": 27}
+        ]
+    },
+    {
+        "id": "boarder_felix",
+        "name": "Boarder Felix",
+        "map": "Seafoam Islands",
+        "x": 20, "y": 8,
+        "direction": "LEFT",
+        "dialog_before": "These sub-zero ice caves freeze unprepared trainers in their tracks!",
+        "dialog_after": "My ice was melted!",
+        "reward_money": 700,
+        "party": [
+            {"species": "Shellder", "level": 26},
+            {"species": "Cloyster", "level": 28},
+            {"species": "Jynx", "level": 28}
         ]
     }
 ]

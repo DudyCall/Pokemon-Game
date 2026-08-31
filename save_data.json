@@ -1,6 +1,6 @@
 {
   "slot": 1,
-  "timestamp": "2026-08-31 17:48",
+  "timestamp": "2026-08-31 18:58",
   "player": {
     "name": "Red",
     "gender": "Boy",
@@ -10,23 +10,25 @@
     "grid_x": 5,
     "grid_y": 5,
     "map": "Pallet Town",
-    "facing": 0
+    "facing": 0,
+    "has_boat": true,
+    "is_sailing": false
   },
   "party": [
     {
       "species": "Squirtle",
       "nickname": "Squirtle",
       "level": 8,
-      "current_hp": 27,
+      "current_hp": 26,
       "exp": 512,
       "status": null,
       "ivs": {
-        "hp": 31,
-        "atk": 31,
-        "def": 25,
-        "spatk": 12,
-        "spdef": 31,
-        "spd": 31
+        "hp": 24,
+        "atk": 19,
+        "def": 28,
+        "spatk": 22,
+        "spdef": 16,
+        "spd": 19
       },
       "moves": [
         {
@@ -107,5 +109,6 @@
   },
   "defeated_trainers": [],
   "collected_items": [],
-  "badges": []
+  "badges": [],
+  "explored_tiles": {}
 }

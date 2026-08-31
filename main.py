@@ -10,7 +10,7 @@ from constants import (
 )
 from graphics_manager import gfx
 from sound_manager import sound_mgr
-from pokemon_data import WILD_ENCOUNTERS
+from pokemon_data import WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS
 from pokemon import Pokemon
 from inventory import Inventory
 from world import World, Player
@@ -105,14 +105,22 @@ class Game:
             name=t_name, gender=t_gender, outfit_theme=t_outfit, hat_style=t_hat, hair_color=t_hair
         )
         self.inventory = Inventory()
+        self.world.reveal_area(self.player.current_map, self.player.grid_x, self.player.grid_y)
         self.state = GameState.OVERWORLD
         sound_mgr.play_bgm("town")
         # Save initial game state to selected slot
         SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
         self.show_notification(f"Welcome, {self.player.name}! Received {starter_species}!")
 
-    def start_wild_battle(self, encounter_zone):
-        table = WILD_ENCOUNTERS.get(encounter_zone, WILD_ENCOUNTERS["Route 1"])
+    def start_wild_battle(self, encounter_zone, is_water=False):
+        if is_water and encounter_zone in WILD_WATER_ENCOUNTERS:
+            table = WILD_WATER_ENCOUNTERS[encounter_zone]
+        else:
+            table = WILD_ENCOUNTERS.get(encounter_zone, WILD_ENCOUNTERS.get("Route 1", []))
+            
+        if not table:
+            return
+            
         total_weight = sum(item["weight"] for item in table)
         r = random.randint(1, total_weight)
         cum = 0
@@ -291,7 +299,7 @@ class Game:
                 elif action == "BAG":
                     self.shop_screen = ShopScreen(self.inventory)
                     self.state = GameState.SHOP
-                elif action == "TOWN MAP":
+                elif action in ["MAP", "TOWN MAP"]:
                     self.party_screen = None
                     self.trainer_card_screen = TrainerCardScreen(self.player, self.world, self.inventory, self.pokedex, initial_tab=1)
                     self.state = GameState.TRAINER_CARD
@@ -522,6 +530,7 @@ class Game:
         self.player.pixel_y = target_y * 32
         self.player.is_moving = False
         self.player.move_progress = 0.0
+        self.world.reveal_area(self.player.current_map, self.player.grid_x, self.player.grid_y)
 
 
     def update(self, dt):
@@ -569,11 +578,19 @@ class Game:
                     self.execute_warp(warp)
                     return
                     
-                # 2. Check Tall Grass Wild Encounter (14% chance per step)
+                # 2. Check Wild Encounter
+                # A: Tall Grass Wild Encounter (14% chance per step)
                 if self.player.in_tall_grass:
                     zone = self.world.maps[self.player.current_map].get("encounter_zone")
                     if zone and random.random() < 0.14:
-                        self.start_wild_battle(zone)
+                        self.start_wild_battle(zone, is_water=False)
+                        return
+                        
+                # B: Water Sailing Wild Encounter (14% chance per step on water)
+                if self.player.is_sailing:
+                    zone = self.world.maps[self.player.current_map].get("encounter_zone")
+                    if zone and random.random() < 0.14:
+                        self.start_wild_battle(zone, is_water=True)
                         return
                         
                 # 3. Check Trainer Line of Sight
@@ -678,11 +695,8 @@ class Game:
             self.world.draw(self.screen, self.player.current_map, self.camera_x, self.camera_y)
             self.player.draw(self.screen, self.camera_x, self.camera_y)
             
-            # Map location badge (top-left)
-            loc_name = self.player.current_map
-            pygame.draw.rect(self.screen, (20, 24, 36, 180), (16, 16, gfx.fonts["regular"].size(loc_name)[0] + 24, 30), border_radius=6)
-            ltxt = gfx.fonts["regular"].render(loc_name, True, (240, 244, 250))
-            self.screen.blit(ltxt, (28, 20))
+            # Interactive Fog-of-War Minimap in the upper-left corner
+            self.world.draw_minimap(self.screen, self.player.current_map, self.player.grid_x, self.player.grid_y)
 
             # Dialogue Box Overlay
             if self.state == GameState.DIALOGUE and self.current_dialogue:

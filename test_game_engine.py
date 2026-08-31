@@ -10,13 +10,13 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
 
 from constants import TYPE_CHART, TYPE_COLORS, Direction, KEY_CONFIRM, KEY_CANCEL, KEY_MENU, KEY_QUICKSAVE, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
-from pokemon_data import POKEMON_SPECIES, MOVES, ITEMS, WILD_ENCOUNTERS, TRAINERS
+from pokemon_data import POKEMON_SPECIES, MOVES, ITEMS, WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS, TRAINERS
 from pokemon import Pokemon
 from inventory import Inventory
 from world import World, Player
 from save_system import SaveSystem, Pokedex
 from sound_manager import SoundManager
-from graphics_manager import GraphicsManager
+from graphics_manager import GraphicsManager, gfx
 
 class TestPokemonEngine(unittest.TestCase):
     @classmethod
@@ -416,7 +416,8 @@ class TestPokemonEngine(unittest.TestCase):
         expected_maps = [
             "Pallet Town", "Route 1", "Viridian City", "Route 22", "Viridian Forest",
             "Pewter City", "Route 3", "Mt. Moon", "Route 4", "Cerulean City",
-            "Route 24", "Route 21", "Cinnabar Island",
+            "Route 9", "Lavender Town", "Pokémon Tower", "Power Plant", "Safari Zone",
+            "Route 24", "Route 21", "Seafoam Islands", "Cinnabar Island",
             "Pokecenter", "Mart", "Oak's Lab", "Player's House", "Pewter Gym", "Cerulean Gym",
             "Bill's Cottage", "Museum"
         ]
@@ -518,24 +519,31 @@ class TestPokemonEngine(unittest.TestCase):
                 self.assertGreater(enc["weight"], 0, f"Weight must be > 0 for '{species}' in '{zone_name}'")
 
     def test_trainer_card_and_region_map_screen(self):
-        from ui_manager import TrainerCardScreen
+        from ui_manager import TrainerCardScreen, PauseMenu
         player = Player(x=8, y=6, current_map="Viridian City")
         world = World()
         world.badges.add("Boulder Badge")
+        world.explored_tiles["Pallet Town"] = {(8, 6), (9, 6), (10, 6)}
         inv = Inventory()
         pdx = Pokedex()
+        
+        # Test PauseMenu option
+        pause_menu = PauseMenu()
+        self.assertIn("MAP", pause_menu.options)
         
         screen = TrainerCardScreen(player, world, inv, pdx, initial_tab=0)
         self.assertEqual(screen.active_tab, 0)
         
-        # Switch tab
+        # Switch tab to Exploration Map
         event_right = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
         screen.handle_input(event_right)
         self.assertEqual(screen.active_tab, 1)
         
-        # Test draw without crash
         surf = pygame.Surface((800, 600))
-        screen.draw(surf)
+        # Test draw all nodes (visited and unvisited) without crash
+        for node_idx in range(len(screen.map_nodes)):
+            screen.selected_node_idx = node_idx
+            screen.draw(surf)
 
     def test_gpad_button_to_key(self):
         from input_manager import button_to_key, GPAD_CONFIRM, GPAD_CANCEL, GPAD_START, GPAD_SELECT
@@ -703,6 +711,147 @@ class TestPokemonEngine(unittest.TestCase):
                     f"Ground item '{item['id']}' in '{map_name}' is on an impassable tile ({item['x']}, {item['y']})"
                 )
 
+    def test_fog_of_war_minimap(self):
+        world = World()
+        player = Player(x=8, y=6, current_map="Pallet Town")
+        
+        # Initial reveal
+        world.reveal_area("Pallet Town", 8, 6, radius=3)
+        self.assertIn("Pallet Town", world.explored_tiles)
+        self.assertIn((8, 6), world.explored_tiles["Pallet Town"])
+        self.assertIn((7, 6), world.explored_tiles["Pallet Town"])
+        self.assertIn((9, 6), world.explored_tiles["Pallet Town"])
+        
+        # Test minimap rendering on multiple map types
+        surf = pygame.Surface((800, 600))
+        world.draw_minimap(surf, "Pallet Town", player.grid_x, player.grid_y)
+        world.draw_minimap(surf, "Mt. Moon", 1, 21)
+        world.draw_minimap(surf, "Viridian Forest", 16, 30)
+        world.draw_minimap(surf, "Pokecenter", 6, 6)
+
+        # Test save & load of explored_tiles
+        party = [Pokemon("Pikachu", level=10)]
+        inv = Inventory()
+        pdx = Pokedex()
+        world.explored_tiles["Mt. Moon"] = {(1, 21), (2, 21), (3, 21)}
+        SaveSystem.save_game(player, party, inv, pdx, world, slot=1)
+
+        loaded_world = World()
+        SaveSystem.load_game(Player(), loaded_world, slot=1)
+        self.assertIn("Mt. Moon", loaded_world.explored_tiles)
+        self.assertIn((1, 21), loaded_world.explored_tiles["Mt. Moon"])
+        self.assertIn((2, 21), loaded_world.explored_tiles["Mt. Moon"])
+
+    def test_new_biomes_and_maps(self):
+        world = World()
+        new_maps = ["Route 9", "Lavender Town", "Pokémon Tower", "Power Plant", "Safari Zone", "Seafoam Islands"]
+        
+        # Test all new maps exist and render properly
+        surf = pygame.Surface((800, 600))
+        for m_name in new_maps:
+            self.assertIn(m_name, world.maps)
+            grid = world.maps[m_name]["grid"]
+            self.assertGreater(len(grid), 0)
+            
+            # Test draw and minimap for each new map
+            world.draw(surf, m_name, 0, 0)
+            world.draw_minimap(surf, m_name, 5, 5)
+            
+            # Test encounter table
+            enc_zone = world.maps[m_name].get("encounter_zone")
+            self.assertIn(enc_zone, WILD_ENCOUNTERS)
+            self.assertGreater(len(WILD_ENCOUNTERS[enc_zone]), 0)
+
+        # Test new trainers exist and are valid
+        new_trainer_ids = [
+            "camper_drew", "picnicker_alicia", "hiker_alan",
+            "channeler_patricia", "channeler_carly", "channeler_hope",
+            "scientist_bray", "pokemaniac_mark", "engineer_bucky",
+            "skier_dianne", "boarder_felix"
+        ]
+        registered_trainer_ids = {t["id"] for t in TRAINERS}
+        for tid in new_trainer_ids:
+            self.assertIn(tid, registered_trainer_ids, f"Trainer '{tid}' not found in TRAINERS list")
+            t_data = [t for t in TRAINERS if t["id"] == tid][0]
+            self.assertGreater(len(t_data["party"]), 0)
+            for p_member in t_data["party"]:
+                self.assertIn(p_member["species"], POKEMON_SPECIES)
+                self.assertGreater(p_member["level"], 0)
+
+        # Test custom procedural biome textures exist in gfx.cached_tiles
+        expected_tiles = [
+            "ice_floor", "ice_wall", "ice_door",
+            "lavender_ground", "spooky_floor", "tombstone", "spooky_tree",
+            "metal_floor", "generator_coil", "warning_tile",
+            "savanna_grass", "savanna_tall_grass", "acacia_tree",
+            "canyon_dirt", "canyon_rock"
+        ]
+        for t_name in expected_tiles:
+            self.assertIn(t_name, gfx.cached_tiles, f"Tile '{t_name}' missing from gfx.cached_tiles")
+
+    def test_boat_sailing_and_water_mechanics(self):
+        world = World()
+        player = Player(x=9, y=3, current_map="Route 21") # Bridge tile
+        
+        # Test water collision with can_sail flag
+        # (8, 3) is water (~)
+        tile_water = world.get_tile("Route 21", 8, 3)
+        self.assertEqual(tile_water, "~")
+        self.assertFalse(world.is_passable("Route 21", 8, 3, can_sail=False))
+        self.assertTrue(world.is_passable("Route 21", 8, 3, can_sail=True))
+        
+        # Test player boarding boat by moving onto water
+        self.assertFalse(player.is_sailing)
+        self.assertTrue(player.has_boat)
+        player.move(Direction.LEFT, world)
+        self.assertTrue(player.is_moving)
+        self.assertEqual(player.target_x, 8)
+        
+        # Finish step
+        player.update(0.5, world)
+        self.assertFalse(player.is_moving)
+        self.assertTrue(player.is_sailing, "Player should be sailing after stepping onto water")
+        
+        # Test drawing player on boat without error
+        surf = pygame.Surface((800, 600))
+        for d in [Direction.DOWN, Direction.UP, Direction.LEFT, Direction.RIGHT]:
+            player.facing = d
+            player.draw(surf, 0, 0)
+            self.assertIn(d, gfx.boat_sprites)
+            self.assertIsInstance(gfx.boat_sprites[d], pygame.Surface)
+
+        # Test disembarking boat onto land
+        # Move from water (8, 3) back right to bridge (9, 3)
+        player.move(Direction.RIGHT, world)
+        player.update(0.5, world)
+        self.assertFalse(player.is_sailing, "Player should disembark when moving onto land")
+
+        # Test water wild encounters
+        self.assertGreater(len(WILD_WATER_ENCOUNTERS), 0)
+        for zone_name, encounters in WILD_WATER_ENCOUNTERS.items():
+            self.assertGreater(len(encounters), 0, f"Water zone '{zone_name}' has empty encounter table")
+            for enc in encounters:
+                species = enc["species"]
+                self.assertIn(species, POKEMON_SPECIES, f"Unknown species '{species}' in water zone '{zone_name}'")
+                self.assertLessEqual(enc["min_lvl"], enc["max_lvl"])
+                self.assertGreater(enc["weight"], 0)
+
+        # Test Save & Load of boat status
+        party = [Pokemon("Lapras", level=20)]
+        inv = Inventory()
+        pdx = Pokedex()
+        player.is_sailing = True
+        player.grid_x, player.grid_y = 8, 3
+        SaveSystem.save_game(player, party, inv, pdx, world, slot=1)
+        
+        loaded_player = Player()
+        loaded_world = World()
+        SaveSystem.load_game(loaded_player, loaded_world, slot=1)
+        self.assertTrue(loaded_player.has_boat)
+        self.assertTrue(loaded_player.is_sailing)
+
 if __name__ == "__main__":
     unittest.main()
+
+
 
