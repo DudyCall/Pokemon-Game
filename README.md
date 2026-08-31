@@ -32,12 +32,15 @@ An authentic, rich, turn-based Pokémon RPG built with Pygame-CE.
 
 ## Controls
 
-| Action | Primary Key | Alternate Key |
+| Action | Keyboard | 8BitDo SN30 Pro |
 |---|---|---|
-| **Move / Navigate** | Arrow Keys | `W`, `A`, `S`, `D` |
-| **Confirm / Talk / Attack** | `Z` | `Enter` / `Space` |
-| **Cancel / Back / Run** | `X` | `Escape` / `Backspace` |
-| **Open Menu (Pause / Bag / Pokédex)** | `C` | `Tab` / `M` |
+| **Move / Navigate** | Arrow Keys / `W` `A` `S` `D` | D-Pad or Left Stick |
+| **Confirm / Talk / Attack** | `Z` / `Enter` / `Space` | `B` (south) |
+| **Cancel / Back** | `X` / `Escape` | `A` (east) |
+| **Open Menu (Pause / Bag / Pokédex)** | `C` / `Tab` / `M` | `Start` (`+`) |
+| **Quick Save** | `F5` / `K` | `Select` (`-`) |
+
+Power the SN30 Pro on in **Windows X-Input mode** (`X + Start`) before pairing or plugging in USB. Trainer name typing still uses the keyboard.
 
 ## How to Play
 
@@ -47,3 +50,16 @@ An authentic, rich, turn-based Pokémon RPG built with Pygame-CE.
    ```
 2. Press `Enter` or `Z` at the title screen to begin your adventure.
 3. Choose your starter Pokémon and explore Pallet Town, Route 1, and Viridian City!
+
+## Batocera
+
+Copy the whole project folder to `/userdata/roms/pygame/` and name it with a `.pygame` suffix, for example:
+
+```
+/userdata/roms/pygame/Pokemon-Game.pygame/
+    __main__.py
+    main.py
+    ...
+```
+
+Batocera runs `pygame <that-folder>`, which needs `__main__.py`. Then refresh the gamelist and launch from the Pygame system.

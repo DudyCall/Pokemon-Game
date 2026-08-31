@@ -186,7 +186,7 @@ class TitleScreen:
                 start_txt = gfx.fonts["medium"].render("PRESS [ENTER] OR [Z] TO START", True, WHITE)
                 surf.blit(start_txt, (SCREEN_WIDTH // 2 - start_txt.get_width() // 2, 460))
                 
-            ctrl_hint = gfx.fonts["small"].render("Arrow Keys: Move  |  Z: Confirm  |  X: Back  |  C: Menu  |  F5: Quick Save", True, LIGHT_GRAY)
+            ctrl_hint = gfx.fonts["small"].render("Arrows/D-Pad: Move  |  Z/B: Confirm  |  X/A: Back  |  C/Start: Menu  |  F5/Select: Save", True, LIGHT_GRAY)
             surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 545))
 
 class SaveSlotSelectScreen:
