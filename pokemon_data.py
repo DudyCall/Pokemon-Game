@@ -3119,7 +3119,7 @@ TRAINERS = [
         "id": "rocket_grunt_1",
         "name": "Team Rocket Grunt",
         "map": "Mt. Moon",
-        "x": 14, "y": 8,
+        "x": 14, "y": 6,
         "direction": "DOWN",
         "dialog_before": "Team Rocket is mining all the Moon Stones in this cave! Get lost, kid!",
         "dialog_after": "Blast it! Don't mess with Team Rocket!",

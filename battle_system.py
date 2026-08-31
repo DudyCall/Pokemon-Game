@@ -72,7 +72,9 @@ class BattleSystem:
         self.action_index = 0 # 0: FIGHT, 1: BAG, 2: POKEMON, 3: RUN
         self.move_index = 0
         self.bag_index = 0
+        self.bag_scroll = 0
         self.party_menu_index = 0
+        self.party_scroll = 0
         
         # Animations & Transitions
         self.timer = 0.0
@@ -269,9 +271,11 @@ class BattleSystem:
                 elif self.action_index == 1: # BAG
                     self.phase = BattlePhase.BAG_SELECT
                     self.bag_index = 0
+                    self.bag_scroll = 0
                 elif self.action_index == 2: # POKEMON
                     self.phase = BattlePhase.PARTY_SELECT
                     self.party_menu_index = 0
+                    self.party_scroll = 0
                 elif self.action_index == 3: # RUN
                     self._attempt_run()
 
@@ -312,9 +316,11 @@ class BattleSystem:
                 
             if any(event.key == k for k in KEY_UP):
                 self.bag_index = (self.bag_index - 1) % len(items_list)
+                self._adjust_bag_scroll()
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_DOWN):
                 self.bag_index = (self.bag_index + 1) % len(items_list)
+                self._adjust_bag_scroll()
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_CANCEL):
                 sound_mgr.play_sfx("cancel")
@@ -339,9 +345,11 @@ class BattleSystem:
         elif self.phase == BattlePhase.PARTY_SELECT:
             if any(event.key == k for k in KEY_UP):
                 self.party_menu_index = (self.party_menu_index - 1) % len(self.player_party)
+                self._adjust_party_scroll()
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_DOWN):
                 self.party_menu_index = (self.party_menu_index + 1) % len(self.player_party)
+                self._adjust_party_scroll()
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_CANCEL):
                 sound_mgr.play_sfx("cancel")
@@ -361,9 +369,11 @@ class BattleSystem:
         elif self.phase == BattlePhase.FAINT_SWITCH:
             if any(event.key == k for k in KEY_UP):
                 self.party_menu_index = (self.party_menu_index - 1) % len(self.player_party)
+                self._adjust_party_scroll()
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_DOWN):
                 self.party_menu_index = (self.party_menu_index + 1) % len(self.player_party)
+                self._adjust_party_scroll()
                 sound_mgr.play_sfx("select")
             elif any(event.key == k for k in KEY_CONFIRM):
                 selected = self.player_party[self.party_menu_index]
@@ -676,6 +686,7 @@ class BattleSystem:
                 if alive_pkmn:
                     self.phase = BattlePhase.FAINT_SWITCH
                     self.party_menu_index = 0
+                    self.party_scroll = 0
                 else:
                     # Blackout
                     sound_mgr.play_sfx("faint")
@@ -765,6 +776,27 @@ class BattleSystem:
         self.phase = BattlePhase.FINISHED
         self.result = "VICTORY"
 
+    def _adjust_bag_scroll(self):
+        items_list = self.inventory.get_items_list() if self.inventory else []
+        total = len(items_list)
+        if total <= 4:
+            self.bag_scroll = 0
+            return
+        if self.bag_index < self.bag_scroll:
+            self.bag_scroll = self.bag_index
+        elif self.bag_index >= self.bag_scroll + 4:
+            self.bag_scroll = self.bag_index - 3
+
+    def _adjust_party_scroll(self):
+        total = len(self.player_party)
+        if total <= 4:
+            self.party_scroll = 0
+            return
+        if self.party_menu_index < self.party_scroll:
+            self.party_scroll = self.party_menu_index
+        elif self.party_menu_index >= self.party_scroll + 4:
+            self.party_scroll = self.party_menu_index - 3
+
     def draw(self, surf):
         # Battle Background (Sky & Grass Platform)
         surf.fill((216, 240, 248)) # Soft sky blue
@@ -845,7 +877,7 @@ class BattleSystem:
             gfx.draw_status_badge(surf, self.enemy_pokemon.status, x + 50 + bar_w + 6, y + 38, width=38, height=18)
 
     def _draw_player_hud(self, surf):
-        x, y, w, h = 480, 260, 280, 95
+        x, y, w, h = 480, 250, 280, 110
         pygame.draw.rect(surf, UI_BORDER_DARK, (x - 2, y - 2, w + 4, h + 4), border_radius=8)
         pygame.draw.rect(surf, UI_BG, (x, y, w, h), border_radius=6)
         
@@ -856,23 +888,37 @@ class BattleSystem:
         surf.blit(lvl_txt, (x + w - lvl_txt.get_width() - 12, y + 12))
         
         # HP Bar
-        gfx.draw_hp_bar(surf, x + 50, y + 42, 200, 10, self.player_pokemon.current_hp, self.player_pokemon.max_hp)
+        gfx.draw_hp_bar(surf, x + 50, y + 38, 200, 10, self.player_pokemon.current_hp, self.player_pokemon.max_hp)
         hp_lbl = gfx.fonts["small"].render("HP", True, (240, 180, 40))
-        surf.blit(hp_lbl, (x + 22, y + 38))
+        surf.blit(hp_lbl, (x + 22, y + 34))
         
         # Player Status Badge
         if self.player_pokemon.status:
-            gfx.draw_status_badge(surf, self.player_pokemon.status, x + 50, y + 56, width=38, height=18)
+            gfx.draw_status_badge(surf, self.player_pokemon.status, x + 50, y + 52, width=38, height=18)
         
         # Numeric HP
         hp_num = gfx.fonts["small"].render(f"{self.player_pokemon.current_hp} / {self.player_pokemon.max_hp}", True, UI_TEXT)
-        surf.blit(hp_num, (x + w - hp_num.get_width() - 14, y + 56))
+        surf.blit(hp_num, (x + w - hp_num.get_width() - 14, y + 52))
         
         # EXP Bar
         ratio = self.exp_curr_ratio if self.phase == BattlePhase.EXP_ANIM else self.player_pokemon.exp_progress_ratio()
-        gfx.draw_exp_bar(surf, x + 50, y + 78, 200, 6, ratio)
+        gfx.draw_exp_bar(surf, x + 50, y + 74, 200, 6, ratio)
         exp_lbl = gfx.fonts["small"].render("EXP", True, EXP_BLUE)
-        surf.blit(exp_lbl, (x + 16, y + 72))
+        surf.blit(exp_lbl, (x + 16, y + 68))
+
+        # Numeric EXP
+        if self.player_pokemon.level >= 100:
+            exp_str = f"{self.player_pokemon.exp} / MAX"
+        elif self.phase == BattlePhase.EXP_ANIM:
+            curr_lvl_exp = self.player_pokemon.calc_exp_for_level(self.player_pokemon.level)
+            next_lvl_exp = self.player_pokemon.exp_for_next_level()
+            anim_exp = int(curr_lvl_exp + self.exp_curr_ratio * max(1, next_lvl_exp - curr_lvl_exp))
+            exp_str = f"{anim_exp} / {next_lvl_exp}"
+        else:
+            exp_str = f"{self.player_pokemon.exp} / {self.player_pokemon.exp_for_next_level()}"
+
+        exp_num = gfx.fonts["small"].render(exp_str, True, UI_TEXT)
+        surf.blit(exp_num, (x + w - exp_num.get_width() - 14, y + 84))
 
     def _draw_bottom_panel(self, surf):
         bx, by, bw, bh = 20, 400, SCREEN_WIDTH - 40, 180
@@ -945,26 +991,40 @@ class BattleSystem:
                 empty_txt = gfx.fonts["regular"].render("Your bag is empty!", True, UI_TEXT_MUTED)
                 surf.blit(empty_txt, (bx + 20, by + 60))
             else:
-                for idx, (name, count, data) in enumerate(items_list[:4]):
-                    iy = by + 50 + idx * 28
-                    is_sel = (self.bag_index == idx)
+                self._adjust_bag_scroll()
+                visible_items = items_list[self.bag_scroll : self.bag_scroll + 4]
+                for rel_idx, (name, count, data) in enumerate(visible_items):
+                    actual_idx = self.bag_scroll + rel_idx
+                    iy = by + 50 + rel_idx * 28
+                    is_sel = (self.bag_index == actual_idx)
                     marker = "> " if is_sel else "  "
                     itxt = gfx.fonts["regular"].render(f"{marker}{name} x{count}", True, (200, 80, 0) if is_sel else UI_TEXT)
                     surf.blit(itxt, (bx + 20, iy))
+
+                if len(items_list) > 4:
+                    scroll_info = gfx.fonts["small"].render(f"▲ ▼ ({self.bag_index + 1}/{len(items_list)})", True, (200, 80, 0))
+                    surf.blit(scroll_info, (bx + bw - scroll_info.get_width() - 25, by + 18))
 
         # Party Selection Sub-Menu
         elif self.phase in [BattlePhase.PARTY_SELECT, BattlePhase.FAINT_SWITCH]:
             title = gfx.fonts["medium"].render("Choose a Pokémon to switch:", True, UI_TEXT)
             surf.blit(title, (bx + 20, by + 15))
             
-            for idx, p in enumerate(self.player_party[:4]):
-                iy = by + 50 + idx * 28
-                is_sel = (self.party_menu_index == idx)
+            self._adjust_party_scroll()
+            visible_party = self.player_party[self.party_scroll : self.party_scroll + 4]
+            for rel_idx, p in enumerate(visible_party):
+                actual_idx = self.party_scroll + rel_idx
+                iy = by + 50 + rel_idx * 28
+                is_sel = (self.party_menu_index == actual_idx)
                 marker = "> " if is_sel else "  "
                 status_str = f"({p.status})" if p.status else ""
                 col = (200, 80, 0) if is_sel else ((160, 160, 160) if p.is_fainted() else UI_TEXT)
                 ptxt = gfx.fonts["regular"].render(f"{marker}{p.nickname} Lv.{p.level} - HP {p.current_hp}/{p.max_hp} {status_str}", True, col)
                 surf.blit(ptxt, (bx + 20, iy))
+
+            if len(self.player_party) > 4:
+                scroll_info = gfx.fonts["small"].render(f"▲ ▼ ({self.party_menu_index + 1}/{len(self.player_party)})", True, (200, 80, 0))
+                surf.blit(scroll_info, (bx + bw - scroll_info.get_width() - 25, by + 18))
 
     def _draw_level_up_modal(self, surf):
         mx, my, mw, mh = 250, 120, 300, 320

@@ -602,6 +602,107 @@ class TestPokemonEngine(unittest.TestCase):
         self.assertEqual(direction_to_key(Direction.DOWN), KEY_DOWN[0])
         self.assertEqual(direction_to_key(Direction.RIGHT), KEY_RIGHT[0])
 
+    def test_battle_party_and_bag_scrolling(self):
+        from battle_system import BattleSystem, BattlePhase
+        # Setup party with 6 Pokemon
+        party = [
+            Pokemon("Pikachu", level=10),
+            Pokemon("Charmander", level=10),
+            Pokemon("Squirtle", level=10),
+            Pokemon("Bulbasaur", level=10),
+            Pokemon("Pidgey", level=10),
+            Pokemon("Rattata", level=10),
+        ]
+        inv = Inventory()
+        # Ensure inventory has 6 items
+        inv.items = {
+            "Poke Ball": 5,
+            "Great Ball": 3,
+            "Ultra Ball": 2,
+            "Potion": 4,
+            "Super Potion": 2,
+            "Revive": 1,
+            "Antidote": 3,
+        }
+        enemy = Pokemon("Caterpie", level=3)
+        battle = BattleSystem(player_party=party, opponent_pokemon_or_trainer=enemy, is_trainer=False, inventory=inv)
+
+        # 1. Test Party selection scrolling
+        battle.phase = BattlePhase.PARTY_SELECT
+        battle.party_menu_index = 0
+        battle.party_scroll = 0
+        
+        down_event = pygame.event.Event(pygame.KEYDOWN, key=KEY_DOWN[0])
+        up_event = pygame.event.Event(pygame.KEYDOWN, key=KEY_UP[0])
+        
+        # Navigate down from 0 to 3 -> scroll should stay 0
+        for i in range(1, 4):
+            battle.handle_input(down_event)
+            self.assertEqual(battle.party_menu_index, i)
+            self.assertEqual(battle.party_scroll, 0)
+            
+        # Navigate down to index 4 -> scroll should become 1
+        battle.handle_input(down_event)
+        self.assertEqual(battle.party_menu_index, 4)
+        self.assertEqual(battle.party_scroll, 1)
+
+        # Navigate down to index 5 -> scroll should become 2
+        battle.handle_input(down_event)
+        self.assertEqual(battle.party_menu_index, 5)
+        self.assertEqual(battle.party_scroll, 2)
+
+        # Wrap around down to index 0 -> scroll should adjust to 0
+        battle.handle_input(down_event)
+        self.assertEqual(battle.party_menu_index, 0)
+        self.assertEqual(battle.party_scroll, 0)
+
+        # Wrap around up to index 5 -> scroll should adjust to 2
+        battle.handle_input(up_event)
+        self.assertEqual(battle.party_menu_index, 5)
+        self.assertEqual(battle.party_scroll, 2)
+
+        # Test battle draw in party select mode
+        surf = pygame.Surface((800, 600))
+        battle.draw(surf)
+
+        # 2. Test Bag selection scrolling
+        battle.phase = BattlePhase.BAG_SELECT
+        battle.bag_index = 0
+        battle.bag_scroll = 0
+        total_items = len(inv.get_items_list())
+        self.assertGreater(total_items, 4)
+
+        # Navigate down to 4
+        for _ in range(4):
+            battle.handle_input(down_event)
+        self.assertEqual(battle.bag_index, 4)
+        self.assertEqual(battle.bag_scroll, 1)
+
+        # Test battle draw in bag select mode
+        battle.draw(surf)
+
+    def test_mt_moon_and_all_map_passability(self):
+        world = World()
+        player = Player(x=1, y=21, current_map="Mt. Moon")
+
+        # Verify Mt. Moon entrance at (1, 21) can move right
+        self.assertTrue(world.is_passable("Mt. Moon", 2, 21), "Mt. Moon entrance (1, 21) right tile (2, 21) must be passable")
+        self.assertTrue(player.move(Direction.RIGHT, world))
+        player.update(1.0, world)
+        self.assertEqual((player.grid_x, player.grid_y), (2, 21))
+
+        # Verify Mt. Moon exit at (30, 2) can move left
+        self.assertTrue(world.is_passable("Mt. Moon", 30, 2), "Mt. Moon exit (30, 2) must be passable")
+        self.assertTrue(world.is_passable("Mt. Moon", 29, 2), "Mt. Moon exit left tile (29, 2) must be passable")
+
+        # Verify all map trainers and ground items are on passable tiles
+        for map_name, map_data in world.maps.items():
+            for item in map_data.get("ground_items", []):
+                self.assertTrue(
+                    world.is_passable(map_name, item["x"], item["y"]),
+                    f"Ground item '{item['id']}' in '{map_name}' is on an impassable tile ({item['x']}, {item['y']})"
+                )
+
 if __name__ == "__main__":
     unittest.main()
 
