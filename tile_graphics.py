@@ -975,7 +975,84 @@ def generate_tiles(fonts):
     pygame.draw.circle(ol_spark, (255, 255, 255), (20, T - 14), 2)
     prop_overlays['e'] = ol_spark
 
+    # ==========================================
+    # 24. PROGRESSION BARRIER & ROADBLOCK TILES
+    # ==========================================
+    # A. Police Roadblock Barricade
+    roadblock = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.rect(roadblock, (180, 180, 190), (2, 12, 4, 18), border_radius=1) # Left post
+    pygame.draw.rect(roadblock, (180, 180, 190), (26, 12, 4, 18), border_radius=1) # Right post
+    # Striped hazard board
+    pygame.draw.rect(roadblock, (240, 240, 245), (1, 14, 30, 10), border_radius=2)
+    for bx in range(2, 30, 8):
+        pygame.draw.polygon(roadblock, (220, 45, 45), [(bx, 14), (bx + 4, 14), (bx + 2, 24), (bx - 2, 24)])
+    # Flashing blue/red beacon on top
+    pygame.draw.circle(roadblock, (60, 120, 240), (16, 8), 4)
+    pygame.draw.circle(roadblock, (200, 230, 255), (16, 7), 2)
+    cached_tiles["police_roadblock"] = roadblock
 
+    # B. Pokémon League Elite Guard
+    guard = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.circle(guard, (230, 190, 140), (16, 8), 6) # Head
+    pygame.draw.rect(guard, (30, 50, 100), (10, 3, 12, 5), border_radius=1) # Guard cap
+    pygame.draw.rect(guard, (240, 200, 50), (14, 4, 4, 2)) # Gold badge
+    pygame.draw.rect(guard, (40, 70, 140), (8, 14, 16, 12), border_radius=2) # Blue uniform
+    pygame.draw.line(guard, (240, 200, 50), (16, 14), (16, 26), 2) # Gold button strip
+    pygame.draw.rect(guard, (20, 30, 50), (10, 26, 5, 6)) # Boots
+    pygame.draw.rect(guard, (20, 30, 50), (17, 26, 5, 6))
+    cached_tiles["league_guard"] = guard
 
+    # C. Sleeping Snorlax (Curled up with Zzz)
+    snorlax = pygame.Surface((T, T), pygame.SRCALPHA)
+    # Body
+    pygame.draw.ellipse(snorlax, (28, 75, 88), (2, 8, 28, 22))
+    pygame.draw.ellipse(snorlax, (240, 228, 195), (6, 12, 20, 16)) # Cream belly
+    # Head & ears
+    pygame.draw.polygon(snorlax, (28, 75, 88), [(4, 6), (7, 2), (10, 8)]) # Left ear
+    pygame.draw.polygon(snorlax, (28, 75, 88), [(22, 8), (25, 2), (28, 6)]) # Right ear
+    pygame.draw.circle(snorlax, (28, 75, 88), (16, 8), 7)
+    pygame.draw.circle(snorlax, (240, 228, 195), (16, 8), 5)
+    # Sleeping closed eye lines
+    pygame.draw.line(snorlax, (30, 30, 30), (13, 8), (15, 8), 1)
+    pygame.draw.line(snorlax, (30, 30, 30), (17, 8), (19, 8), 1)
+    # Floating 'Zzz' text/icon
+    if "small" in fonts:
+        z_surf = fonts["small"].render("Zzz", True, (120, 200, 255))
+        snorlax.blit(z_surf, (18, 0))
+    cached_tiles["snorlax_sleep"] = snorlax
+
+    # D. High-Voltage Electric Hazard Gate
+    elec_gate = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.rect(elec_gate, (70, 75, 85), (2, 4, 28, 26), border_radius=2)
+    for gy in range(8, 28, 6):
+        pygame.draw.line(elec_gate, (230, 195, 30), (4, gy), (28, gy), 2)
+    pygame.draw.lines(elec_gate, (255, 240, 60), False, [(16, 6), (12, 16), (18, 16), (14, 26)], 2) # Lightning
+    pygame.draw.circle(elec_gate, (255, 60, 60), (26, 8), 2) # Warning light
+    cached_tiles["electric_gate"] = elec_gate
+
+    # E. Safari Lodge Gate
+    safari_gate = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.rect(safari_gate, (140, 95, 45), (2, 4, 6, 26), border_radius=1)
+    pygame.draw.rect(safari_gate, (140, 95, 45), (24, 4, 6, 26), border_radius=1)
+    pygame.draw.rect(safari_gate, (180, 130, 70), (0, 8, T, 8), border_radius=2)
+    pygame.draw.circle(safari_gate, (240, 190, 40), (16, 12), 4) # Safari crest
+    cached_tiles["safari_gate"] = safari_gate
+
+    # F. Mystic Psychic Seal
+    psychic_seal = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.circle(psychic_seal, (170, 60, 240, 180), (16, 16), 13)
+    pygame.draw.circle(psychic_seal, (220, 120, 255, 230), (16, 16), 10, 2)
+    pygame.draw.circle(psychic_seal, (255, 230, 255), (16, 16), 4)
+    # Magic rune spikes
+    for angle_pt in [(16, 2), (16, 30), (2, 16), (30, 16), (6, 6), (26, 26), (6, 26), (26, 6)]:
+        pygame.draw.circle(psychic_seal, (190, 90, 255), angle_pt, 2)
+    cached_tiles["psychic_seal"] = psychic_seal
+
+    # G. Heavy Mountain Boulder
+    boulder = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.circle(boulder, (110, 95, 85), (16, 16), 13)
+    pygame.draw.circle(boulder, (140, 125, 115), (14, 13), 10)
+    pygame.draw.polygon(boulder, (80, 70, 60), [(8, 20), (16, 26), (24, 22), (20, 14)])
+    cached_tiles["boulder"] = boulder
 
     return cached_tiles, prop_overlays

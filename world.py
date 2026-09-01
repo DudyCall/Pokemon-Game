@@ -13,6 +13,7 @@ from sound_manager import sound_mgr
 from pokemon_data import WILD_ENCOUNTERS, TRAINERS
 from map_data import *
 from player import Player
+from barrier_system import barrier_mgr
 
 class World:
     def __init__(self):
@@ -20,6 +21,7 @@ class World:
         self.defeated_trainers = set()
         self.collected_items = set()
         self.badges = set()
+        self.unlocked_barriers = set()
         self.explored_tiles = {} # map_name -> set of (x, y) tuples
         self.timer = 0.0
         self.water_anim_timer = 0.0
@@ -65,6 +67,10 @@ class World:
         elif tile in ["#", "f", "R", "B", "W", "C", "N", "M", "^", "Y", "H", "K"]:
             return False
             
+        # Check Progression Barrier collisions
+        if barrier_mgr.is_tile_blocked(map_name, x, y, self.unlocked_barriers):
+            return False
+
         # Check NPC collisions
         npcs = self.maps[map_name].get("npcs", [])
         for npc in npcs:
@@ -359,6 +365,25 @@ class World:
                     surf.blit(gfx.cached_tiles["counter"], (draw_x, draw_y))
 
                     
+        # Draw Active Progression Barriers / Roadblocks
+        active_barriers = barrier_mgr.get_active_barriers_for_map(map_name, self.unlocked_barriers)
+        for b_data in active_barriers:
+            sprite_key = b_data.get("sprite_type", "police_roadblock")
+            b_surf = gfx.cached_tiles.get(sprite_key) or gfx.cached_tiles.get("police_roadblock")
+            for (bx, by) in b_data["tiles"]:
+                draw_bx = bx * TILE_SIZE - camera_x
+                draw_by = by * TILE_SIZE - camera_y
+                if -TILE_SIZE <= draw_bx <= SCREEN_WIDTH and -TILE_SIZE <= draw_by <= SCREEN_HEIGHT:
+                    if b_surf:
+                        surf.blit(b_surf, (draw_bx, draw_by))
+                    # Floating Lock Badge Indicator
+                    lx = int(draw_bx + TILE_SIZE // 2)
+                    ly = int(draw_by - 6)
+                    pygame.draw.circle(surf, (35, 20, 25), (lx, ly), 7)
+                    pygame.draw.circle(surf, (245, 60, 60), (lx, ly), 7, 1)
+                    l_txt = gfx.fonts["small"].render("!", True, (255, 80, 80))
+                    surf.blit(l_txt, (lx - l_txt.get_width() // 2, ly - l_txt.get_height() // 2))
+
         # Draw Ground Collectible Items (if not yet collected)
         ground_items = self.maps[map_name].get("ground_items", [])
         for g_item in ground_items:

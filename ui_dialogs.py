@@ -435,7 +435,7 @@ class DialogueBox:
     def handle_input(self, event):
         if event.type != pygame.KEYDOWN:
             return False
-        if any(event.key == k for k in KEY_CONFIRM):
+        if any(event.key == k for k in KEY_CONFIRM + KEY_CANCEL) or event.key in [pygame.K_SPACE, pygame.K_RETURN, pygame.K_z, pygame.K_x]:
             if not self.finished:
                 self.visible_chars = len(self.full_text)
                 self.finished = True
@@ -467,7 +467,10 @@ class DialogueBox:
         
         if has_portrait:
             portrait_size = (110, 110)
-            port_surf = gfx.get_trainer_portrait(self.portrait_key, size=portrait_size, is_talking=is_talking)
+            if self.portrait_key in POKEMON_SPECIES:
+                port_surf = gfx.get_pokemon_sprite(self.portrait_key, is_back=False, size=portrait_size)
+            else:
+                port_surf = gfx.get_trainer_portrait(self.portrait_key, size=portrait_size, is_talking=is_talking)
             
             px = bx + 16
             py = by + (bh - portrait_size[1]) // 2 + 6

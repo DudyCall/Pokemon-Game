@@ -17,6 +17,7 @@ from world import World, Player
 from battle_system import BattleSystem
 from save_system import SaveSystem, Pokedex
 from quest_system import QuestManager
+from barrier_system import barrier_mgr
 from ui_manager import (
     TitleScreen, StarterSelectScreen, TrainerCustomizationScreen, PauseMenu, PokedexScreen,
     PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen, PCBoxScreen,
@@ -109,6 +110,9 @@ class Game:
             x=8, y=6, current_map="Pallet Town",
             name=t_name, gender=t_gender, outfit_theme=t_outfit, hat_style=t_hat, hair_color=t_hair
         )
+        if self.player.follower:
+            self.player.follower.sync_with_party(self.party)
+            self.player.follower.teleport_to_player(self.player)
         self.inventory = Inventory()
         self.quest_mgr = QuestManager()
         self.world.reveal_area(self.player.current_map, self.player.grid_x, self.player.grid_y)
@@ -201,6 +205,9 @@ class Game:
                                 self.party, self.inventory, self.pokedex = res[:3]
                                 self.pc_box = []
                                 self.quest_mgr = QuestManager()
+                            if self.player.follower:
+                                self.player.follower.sync_with_party(self.party)
+                                self.player.follower.teleport_to_player(self.player)
                             self.state = GameState.OVERWORLD
                             sound_mgr.play_bgm("town")
                             self.show_notification(f"Slot {chosen_slot} loaded successfully!")
@@ -235,6 +242,9 @@ class Game:
                                     self.party, self.inventory, self.pokedex = res[:3]
                                     self.pc_box = []
                                     self.quest_mgr = QuestManager()
+                                if self.player.follower:
+                                    self.player.follower.sync_with_party(self.party)
+                                    self.player.follower.teleport_to_player(self.player)
                                 self.save_slot_screen = None
                                 self.state = GameState.OVERWORLD
                                 sound_mgr.play_bgm("town")
@@ -326,7 +336,7 @@ class Game:
                     self.trainer_card_screen = TrainerCardScreen(self.player, self.world, self.inventory, self.pokedex, initial_tab=0)
                     self.state = GameState.TRAINER_CARD
                 elif action == "PC BOX":
-                    self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
+                    self.pc_box_screen = PCBoxScreen(self.party, self.pc_box, inventory=self.inventory)
                     self.state = GameState.PC_BOX
                 elif action == "SAVE":
                     self.save_slot_screen = SaveSlotSelectScreen(
@@ -424,7 +434,8 @@ class Game:
                     done = self.current_dialogue.handle_input(event)
                     if done:
                         self.current_dialogue = None
-                        self.state = GameState.OVERWORLD
+                        if self.state == GameState.DIALOGUE:
+                            self.state = GameState.OVERWORLD
                 continue
 
             # Battle State
@@ -432,6 +443,42 @@ class Game:
                 if self.battle_system:
                     self.battle_system.handle_input(event)
                 continue
+
+    def _generate_partner_dialogue(self, partner):
+        name = partner.nickname or partner.species
+        hp_ratio = partner.current_hp / max(1, partner.max_hp)
+        
+        phrases = []
+        if partner.status in ["Poison", "Poisoned", "Toxic"]:
+            phrases.append(f"{name} is shivering from the poison, looking to you for care and comfort!")
+        elif partner.status in ["Paralyze", "Paralysis"]:
+            phrases.append(f"{name} has tiny sparks crackling and is trying its best to keep up!")
+        elif partner.status in ["Burn", "Burned"]:
+            phrases.append(f"{name} is wincing from its burn, but staying bravely by your side!")
+        elif partner.status in ["Sleep", "Asleep"]:
+            phrases.append(f"{name} is nodding off sleepily, walking in its sleep with you! zzz")
+        elif hp_ratio <= 0.3:
+            phrases.append(f"{name} is breathing heavily and tired from battle, but determined to keep going!")
+            phrases.append(f"{name} leaned gently against your leg to rest for a moment.")
+        elif self.player.is_sailing:
+            phrases.append(f"{name} is splashing excitedly in the cool water! ♪")
+            phrases.append(f"{name} looked over the side of the boat and let out a cheerful cry! ♥")
+        elif "Cave" in self.player.current_map or "Moon" in self.player.current_map or "Tunnel" in self.player.current_map:
+            phrases.append(f"{name} is listening closely to the mysterious echoes in the dark cave!")
+            phrases.append(f"{name} stayed extra close to you, keeping watch on the shadows.")
+        elif "Gym" in self.player.current_map:
+            phrases.append(f"{name} is staring intensely ahead, full of fiery fighting spirit for the Gym challenge!")
+        elif "Tower" in self.player.current_map:
+            phrases.append(f"{name} felt a chilly ghostly breeze and snuggled closer to you.")
+        else:
+            phrases.append(f"{name} looked up at you with happy, sparkling eyes! ♥")
+            phrases.append(f"{name} is happily skipping along, matching your footsteps!")
+            phrases.append(f"{name} nudged your hand affectionately! It loves traveling with you.")
+            phrases.append(f"{name} is scanning the surroundings with great focus, ready for any battle!")
+
+        selected_phrase = random.choice(phrases)
+        status_info = f"\n\n[Partner: Lv.{partner.level} {partner.species} | HP: {partner.current_hp}/{partner.max_hp} | Friendship: ♥♥♥♥♥]"
+        return selected_phrase + status_info
 
     def _handle_overworld_interaction(self):
         # Determine facing tile coordinate
@@ -444,6 +491,24 @@ class Game:
             fx -= 1
         elif self.player.facing == Direction.RIGHT:
             fx += 1
+
+        # 0. Check Following Partner Pokémon interaction
+        if self.player.follower and self.player.follower.current_pokemon:
+            f_x = self.player.follower.grid_x
+            f_y = self.player.follower.grid_y
+            if (fx, fy) == (f_x, f_y) or (self.player.grid_x, self.player.grid_y) == (f_x, f_y):
+                partner = self.player.follower.current_pokemon
+                sound_mgr.play_sfx("confirm")
+                self.player.follower.trigger_emote("heart", duration=3.0)
+                dialog_text = self._generate_partner_dialogue(partner)
+                self.current_dialogue = DialogueBox(
+                    partner.nickname or partner.species,
+                    dialog_text,
+                    on_complete=None,
+                    portrait_key=partner.species
+                )
+                self.state = GameState.DIALOGUE
+                return
 
         # 1. Check Ground Collectible Item (at player tile or facing tile)
         g_item = self.world.get_ground_item_at(self.player.current_map, self.player.grid_x, self.player.grid_y) or self.world.get_ground_item_at(self.player.current_map, fx, fy)
@@ -473,16 +538,49 @@ class Game:
         # 3. Check PC Terminal tile or interaction in Pokecenter
         if self.player.current_map == "Pokecenter" and fx == 8 and fy in [4, 5]:
             sound_mgr.play_sfx("confirm")
-            self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
+            self.pc_box_screen = PCBoxScreen(self.party, self.pc_box, inventory=self.inventory)
             self.state = GameState.PC_BOX
             return
 
-        # 4. Check NPC
+        # 4. Check Progression Barriers & Roadblocks
+        b_data = barrier_mgr.get_barrier_at(self.player.current_map, fx, fy, self.world.unlocked_barriers)
+        if b_data:
+            b_id = b_data["id"]
+            is_met, prog = barrier_mgr.evaluate_condition(
+                b_id, self.player, self.party, self.world, self.quest_mgr, self.pokedex, self.inventory
+            )
+            if is_met:
+                self.world.unlocked_barriers.add(b_id)
+                sound_mgr.play_sfx("confirm")
+                self.show_notification(f"Cleared: {b_data['name']}!")
+                SaveSystem.save_game(
+                    self.player, self.party, self.inventory, self.pokedex, self.world,
+                    slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                )
+                self.current_dialogue = DialogueBox(
+                    b_data["cleared_title"],
+                    b_data["cleared_message"],
+                    on_complete=None,
+                    portrait_key=b_data.get("name")
+                )
+            else:
+                sound_mgr.play_sfx("select")
+                blocked_full = f"{b_data['blocked_message']}\n\nRequirements Status:\n{prog}"
+                self.current_dialogue = DialogueBox(
+                    b_data["blocked_title"],
+                    blocked_full,
+                    on_complete=None,
+                    portrait_key=b_data.get("name")
+                )
+            self.state = GameState.DIALOGUE
+            return
+
+        # 5. Check NPC
         npc = self.world.get_npc_at(self.player.current_map, fx, fy)
         if npc:
             sound_mgr.play_sfx("confirm")
             if npc.get("is_pc"):
-                self.pc_box_screen = PCBoxScreen(self.party, self.pc_box)
+                self.pc_box_screen = PCBoxScreen(self.party, self.pc_box, inventory=self.inventory)
                 self.state = GameState.PC_BOX
             elif npc.get("is_healer"):
                 # Nurse Joy / Mom Healer
@@ -623,6 +721,8 @@ class Game:
         self.player.pixel_y = target_y * 32
         self.player.is_moving = False
         self.player.move_progress = 0.0
+        if self.player.follower:
+            self.player.follower.teleport_to_player(self.player)
         self.world.reveal_area(self.player.current_map, self.player.grid_x, self.player.grid_y)
 
 
@@ -647,6 +747,10 @@ class Game:
 
         # Overworld & Sub-Menus update
         elif self.state in [GameState.OVERWORLD, GameState.PARTY_MENU]:
+            # Sync following partner Pokemon with active party leader
+            if self.player.follower:
+                self.player.follower.sync_with_party(self.party)
+
             # Continuous grid movement
             if not self.player.is_moving and self.state == GameState.OVERWORLD:
                 keys = pygame.key.get_pressed()

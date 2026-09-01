@@ -102,6 +102,11 @@ ITEMS = {
         "name": "Move Reroll Disk", "category": "item", "price": 3000, "is_move_reroll": True,
         "desc": "A high-tech data disk containing rare techniques that allows a Pokémon to learn or reroll a new move from its species learnset.",
         "usage": "Use from the Bag on any party Pokémon or visit the Move Master in the PokéCenter."
+    },
+    "Poke Flute": {
+        "name": "Poké Flute", "category": "item", "price": 10000,
+        "desc": "A legendary musical flute that plays a magical melody so lively and enchanting it can awaken any slumbering Pokémon!",
+        "usage": "Use to awaken Sleeping Snorlax blocking Route 12 or cure Sleep status in battle."
     }
 }
 

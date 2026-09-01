@@ -17,6 +17,8 @@ from world import World, Player
 from save_system import SaveSystem, Pokedex
 from sound_manager import SoundManager, sound_mgr
 from graphics_manager import GraphicsManager, gfx
+from quest_system import QuestManager
+from barrier_system import barrier_mgr
 
 class TestPokemonEngine(unittest.TestCase):
     @classmethod
@@ -1441,6 +1443,298 @@ class TestPokemonEngine(unittest.TestCase):
         world.draw(surf, "Route 1", 0, 0, quest_mgr=q_mgr)
         world.draw(surf, "Pewter City", 0, 0, quest_mgr=q_mgr)
         world.draw(surf, "Vermilion City", 0, 0, quest_mgr=q_mgr)
+
+    def test_zone_barriers_and_gated_progression(self):
+        """Tests that zone barriers properly block movement, evaluate conditions, and persist unlocks."""
+        world = World()
+        player = Player(x=13, y=1, current_map="Viridian City")
+        party = [Pokemon("Charmander", level=5)]
+        inv = Inventory()
+        pokedex = Pokedex()
+        q_mgr = QuestManager()
+
+        # 1. Test Viridian City north barrier (Route 2 / Viridian Forest)
+        # Initially blocked
+        self.assertTrue(barrier_mgr.is_tile_blocked("Viridian City", 13, 5, world.unlocked_barriers))
+        self.assertFalse(world.is_passable("Viridian City", 13, 5))
+
+        # Evaluate condition initially (False because quest not done and <3 caught)
+        is_met, prog = barrier_mgr.evaluate_condition("barrier_route2_survey", player, party, world, q_mgr, pokedex, inv)
+        self.assertFalse(is_met)
+
+        # Catch 3 Pokemon to satisfy requirement
+        pokedex.register_caught("Caterpie")
+        pokedex.register_caught("Weedle")
+        pokedex.register_caught("Pidgey")
+        is_met, prog = barrier_mgr.evaluate_condition("barrier_route2_survey", player, party, world, q_mgr, pokedex, inv)
+        self.assertTrue(is_met)
+
+        # Unlock barrier
+        world.unlocked_barriers.add("barrier_route2_survey")
+        self.assertFalse(barrier_mgr.is_tile_blocked("Viridian City", 13, 5, world.unlocked_barriers))
+        self.assertTrue(world.is_passable("Viridian City", 13, 5))
+
+        # 2. Test Pewter City Boulder Badge Barrier
+        self.assertTrue(barrier_mgr.is_tile_blocked("Pewter City", 26, 7, world.unlocked_barriers))
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_pewter_boulder", player, party, world, q_mgr, pokedex, inv)
+        self.assertFalse(is_met)
+        # Earn Boulder Badge
+        world.badges.add("boulder")
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_pewter_boulder", player, party, world, q_mgr, pokedex, inv)
+        self.assertTrue(is_met)
+
+        # 3. Test Route 12 Sleeping Snorlax Barrier
+        self.assertTrue(barrier_mgr.is_tile_blocked("Route 12", 8, 10, world.unlocked_barriers))
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_snorlax_route12", player, party, world, q_mgr, pokedex, inv)
+        self.assertFalse(is_met)
+        # Level up to 25
+        party[0].level = 25
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_snorlax_route12", player, party, world, q_mgr, pokedex, inv)
+        self.assertTrue(is_met)
+        # Or have Poke Flute
+        party[0].level = 10
+        inv.add_item("Poke Flute", 1)
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_snorlax_route12", player, party, world, q_mgr, pokedex, inv)
+        self.assertTrue(is_met)
+
+        # 4. Test Victory Road 7-Badge + Level 45 Barrier
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_victory_road", player, party, world, q_mgr, pokedex, inv)
+        self.assertFalse(is_met)
+        for b in ["boulder", "cascade", "thunder", "rainbow", "soul", "marsh", "volcano"]:
+            world.badges.add(b)
+        party[0].level = 46
+        is_met, _ = barrier_mgr.evaluate_condition("barrier_victory_road", player, party, world, q_mgr, pokedex, inv)
+        self.assertTrue(is_met)
+
+        # 5. Test Persistence across Save & Load
+        world.unlocked_barriers.add("barrier_pewter_boulder")
+        world.unlocked_barriers.add("barrier_snorlax_route12")
+        SaveSystem.save_game(player, party, inv, pokedex, world, slot=1, quest_mgr=q_mgr)
+
+        new_player = Player()
+        new_world = World()
+        res, msg = SaveSystem.load_game(new_player, new_world, slot=1)
+        self.assertIsNotNone(res)
+        self.assertIn("barrier_route2_survey", new_world.unlocked_barriers)
+        self.assertIn("barrier_pewter_boulder", new_world.unlocked_barriers)
+        self.assertIn("barrier_snorlax_route12", new_world.unlocked_barriers)
+
+        # 6. Test Barrier rendering on overworld
+        surf = pygame.Surface((320, 240))
+        new_world.draw(surf, "Viridian City", 0, 0, quest_mgr=q_mgr)
+        new_world.draw(surf, "Pewter City", 0, 0, quest_mgr=q_mgr)
+        new_world.draw(surf, "Route 12", 0, 0, quest_mgr=q_mgr)
+
+    def test_pc_box_evolution_progression_chart(self):
+        """Tests evolution info calculations, family tree generation, and PC Box evolution progression chart modal."""
+        from ui_screens import get_pokemon_evolution_info, get_full_evolution_tree, PCBoxScreen
+
+        # 1. Test get_pokemon_evolution_info on various Pokemon
+        bulba = Pokemon("Bulbasaur", level=5)
+        e_bulba = get_pokemon_evolution_info(bulba)
+        self.assertEqual(e_bulba["method"], "LEVEL")
+        self.assertEqual(e_bulba["target_species"], "Ivysaur")
+        self.assertEqual(e_bulba["req_level"], 16)
+        self.assertEqual(e_bulba["levels_left"], 11)
+        self.assertFalse(e_bulba["is_ready"])
+
+        ivy = Pokemon("Ivysaur", level=32)
+        e_ivy = get_pokemon_evolution_info(ivy)
+        self.assertEqual(e_ivy["method"], "LEVEL")
+        self.assertEqual(e_ivy["target_species"], "Venusaur")
+        self.assertTrue(e_ivy["is_ready"])
+        self.assertEqual(e_ivy["levels_left"], 0)
+
+        venu = Pokemon("Venusaur", level=45)
+        e_venu = get_pokemon_evolution_info(venu)
+        self.assertEqual(e_venu["method"], "NONE")
+        self.assertIn("Final Form", e_venu["short_text"])
+
+        # 2. Test get_full_evolution_tree
+        root, chain = get_full_evolution_tree("Venusaur")
+        self.assertEqual(root, "Bulbasaur")
+        self.assertEqual(len(chain), 3)
+        self.assertEqual([node["species"] for node in chain], ["Bulbasaur", "Ivysaur", "Venusaur"])
+
+        root_eevee, chain_eevee = get_full_evolution_tree("Vaporeon")
+        self.assertEqual(root_eevee, "Eevee")
+        self.assertEqual(chain_eevee[0]["species"], "Eevee")
+
+        # 3. Test PCBoxScreen with Evolution Progression Chart
+        party = [Pokemon("Charmander", level=12), Pokemon("Pikachu", level=20)]
+        pc_box = [Pokemon("Caterpie", level=3), Pokemon("Snorlax", level=30)]
+        inv = Inventory()
+        screen = PCBoxScreen(party, pc_box, inventory=inv)
+
+        # Draw main PC Box screen (renders cards with evolution pills)
+        surf = pygame.Surface((800, 600))
+        screen.draw(surf)
+
+        # Open Action menu and select EVOLUTION PROGRESSION
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertEqual(screen.menu_mode, "ACTIONS")
+        actions = screen._get_available_actions()
+        self.assertIn("EVOLUTION PROGRESSION", actions)
+        evo_idx = actions.index("EVOLUTION PROGRESSION")
+        screen.action_idx = evo_idx
+
+        # Confirm action -> opens EVOLUTION_CHART
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertEqual(screen.menu_mode, "EVOLUTION_CHART")
+        self.assertIsNotNone(screen.evolution_pokemon)
+        self.assertEqual(screen.evolution_pokemon.species, "Charmander")
+
+        # Draw Evolution Progression Chart modal
+        screen.draw(surf)
+
+        # Navigate between Pokemon in Evolution Chart
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
+        self.assertEqual(screen.evolution_pokemon.species, "Pikachu")
+        screen.draw(surf)
+
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT))
+        self.assertEqual(screen.active_panel, "PC")
+        self.assertEqual(screen.evolution_pokemon.species, "Caterpie")
+        screen.draw(surf)
+
+        # Close Evolution Chart
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE))
+        self.assertEqual(screen.menu_mode, "NAVIGATE")
+        self.assertIsNone(screen.evolution_pokemon)
+
+        # Direct Hotkey [E] / [Tab]
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_e))
+        self.assertEqual(screen.menu_mode, "EVOLUTION_CHART")
+        screen.draw(surf)
+
+    def test_trainer_encounter_dialogue_and_battle_transition(self):
+        """Tests that approaching or talking to an undefeated trainer starts dialogue and transitions to GameState.BATTLE."""
+        from main import Game
+        from constants import GameState
+        from ui_dialogs import DialogueBox
+
+        game = Game()
+        # Initialize with player and party
+        game.player = Player(x=8, y=20, current_map="Route 1")
+        game.party = [Pokemon("Bulbasaur", level=8)]
+        game.state = GameState.OVERWORLD
+
+        # Check line of sight: Bug Catcher Sammy is at (6, 20) facing RIGHT, player at (8, 20)
+        spotted = game.world.check_trainer_line_of_sight("Route 1", 8, 20)
+        self.assertIsNotNone(spotted)
+        self.assertEqual(spotted["id"], "bug_catcher_sammy")
+
+        # Simulate line of sight trigger in main loop
+        dialog_text = spotted.get("dialog_before", "Let's battle!")
+        game.current_dialogue = DialogueBox(
+            spotted["name"],
+            dialog_text,
+            on_complete=lambda t=spotted: game.start_trainer_battle(t),
+            portrait_key=spotted.get("id"),
+            trainer_data=spotted
+        )
+        game.state = GameState.DIALOGUE
+
+        # Player skips typewriter text (first press)
+        evt_confirm = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z)
+        if game.state == GameState.DIALOGUE and game.current_dialogue:
+            done = game.current_dialogue.handle_input(evt_confirm)
+            if done:
+                game.current_dialogue = None
+                if game.state == GameState.DIALOGUE:
+                    game.state = GameState.OVERWORLD
+
+        self.assertTrue(game.current_dialogue.finished)
+        self.assertEqual(game.state, GameState.DIALOGUE)
+
+        # Player confirms finished text (second press) -> should transition to BATTLE!
+        if game.state == GameState.DIALOGUE and game.current_dialogue:
+            done = game.current_dialogue.handle_input(evt_confirm)
+            if done:
+                game.current_dialogue = None
+                if game.state == GameState.DIALOGUE:
+                    game.state = GameState.OVERWORLD
+
+        # Verify state is BATTLE and battle system is active
+        self.assertEqual(game.state, GameState.BATTLE)
+        self.assertIsNotNone(game.battle_system)
+        self.assertTrue(game.battle_system.is_trainer)
+        self.assertEqual(game.battle_system.trainer_data["id"], "bug_catcher_sammy")
+        self.assertEqual(game.battle_system.enemy_pokemon.species, "Caterpie")
+
+    def test_following_partner_pokemon(self):
+        """Tests that the first non-fainted party Pokemon follows the player, trails movement, updates on faint, and interacts."""
+        from player import FollowerPokemon, Player
+        from main import Game
+        from constants import Direction, GameState
+
+        # 1. Test FollowerPokemon syncing with party
+        p1 = Pokemon("Pikachu", level=15)
+        p2 = Pokemon("Charmander", level=12)
+        party = [p1, p2]
+
+        follower = FollowerPokemon(x=8, y=5)
+        follower.sync_with_party(party)
+        self.assertEqual(follower.current_pokemon.species, "Pikachu")
+
+        # When leader faints, follower switches to next conscious Pokemon
+        p1.current_hp = 0
+        self.assertTrue(p1.is_fainted())
+        follower.sync_with_party(party)
+        self.assertEqual(follower.current_pokemon.species, "Charmander")
+
+        # When all faint, follower has no active pokemon
+        p2.current_hp = 0
+        follower.sync_with_party(party)
+        self.assertIsNone(follower.current_pokemon)
+
+        # Revive and heal
+        p1.full_restore()
+        follower.sync_with_party(party)
+        self.assertEqual(follower.current_pokemon.species, "Pikachu")
+
+        # 2. Test Follower trailing behind Player movement
+        world = World()
+        player = Player(x=8, y=6, current_map="Pallet Town")
+        player.follower.sync_with_party(party)
+        player.follower.teleport_to_player(player)
+
+        # Player moves DOWN (from (8,6) to (8,7))
+        moved = player.move(Direction.DOWN, world)
+        self.assertTrue(moved)
+        self.assertTrue(player.is_moving)
+        self.assertTrue(player.follower.is_moving)
+        self.assertEqual(player.follower.target_x, 8)
+        self.assertEqual(player.follower.target_y, 6)
+
+        # Update until movement completes (move_speed=4.0 -> 0.3s)
+        player.update(0.3, world)
+        self.assertFalse(player.is_moving)
+        self.assertFalse(player.follower.is_moving)
+        self.assertEqual((player.grid_x, player.grid_y), (8, 7))
+        self.assertEqual((player.follower.grid_x, player.follower.grid_y), (8, 6))
+
+        # 3. Test Follower drawing and Emotes
+        surf = pygame.Surface((320, 240))
+        player.follower.trigger_emote("heart", duration=2.0)
+        self.assertEqual(player.follower.emote_type, "heart")
+        player.draw(surf, 0, 0)
+
+        # 4. Test Overworld Partner Interaction in Game
+        game = Game()
+        game.party = [Pokemon("Squirtle", level=10)]
+        game.player = Player(x=8, y=6, current_map="Pallet Town")
+        game.player.follower.sync_with_party(game.party)
+        game.player.follower.grid_x = 8
+        game.player.follower.grid_y = 5
+        game.player.facing = Direction.UP # Facing follower at (8, 5)
+        game.state = GameState.OVERWORLD
+
+        game._handle_overworld_interaction()
+        self.assertEqual(game.state, GameState.DIALOGUE)
+        self.assertIsNotNone(game.current_dialogue)
+        self.assertIn("Squirtle", game.current_dialogue.full_text)
+        self.assertEqual(game.current_dialogue.portrait_key, "Squirtle")
 
 if __name__ == "__main__":
     unittest.main()

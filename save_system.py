@@ -87,6 +87,7 @@ class SaveSystem:
         defeated = list(getattr(world, "defeated_trainers", [])) if world is not None else []
         collected = list(getattr(world, "collected_items", [])) if world is not None else []
         badges = list(getattr(world, "badges", [])) if world is not None else []
+        unlocked_barriers = list(getattr(world, "unlocked_barriers", [])) if world is not None else []
         explored = {k: [list(pt) for pt in v] for k, v in getattr(world, "explored_tiles", {}).items()} if world is not None else {}
         quests_data = quest_mgr.to_dict() if quest_mgr is not None else {}
         data = {
@@ -112,6 +113,7 @@ class SaveSystem:
             "defeated_trainers": defeated,
             "collected_items": collected,
             "badges": badges,
+            "unlocked_barriers": unlocked_barriers,
             "explored_tiles": explored,
             "quests": quests_data
         }
@@ -179,6 +181,7 @@ class SaveSystem:
                 world.defeated_trainers = set(data.get("defeated_trainers", []))
                 world.collected_items = set(data.get("collected_items", []))
                 world.badges = set(data.get("badges", []))
+                world.unlocked_barriers = set(data.get("unlocked_barriers", []))
                 raw_exp = data.get("explored_tiles", {})
                 world.explored_tiles = {k: set(tuple(pt) for pt in v) for k, v in raw_exp.items()}
                 world.reveal_area(player.current_map, player.grid_x, player.grid_y)
