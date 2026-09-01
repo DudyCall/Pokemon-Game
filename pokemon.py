@@ -151,6 +151,69 @@ class Pokemon:
             return True, f"1, 2, and... Poof! {self.nickname} forgot {old} and learned {move_name}!"
         return False, "Moves are full."
 
+    def get_rerollable_moves(self):
+        """
+        Returns a list of candidate move names available for this Pokémon to learn/reroll,
+        drawn from its species learnset and compatible elemental technique repertoire.
+        """
+        known_moves = {m["name"] for m in self.moves}
+        candidates = []
+
+        # 1. Species Full Learnset
+        learnset = self.species_data.get("learnset", {})
+        for lvl, m_list in learnset.items():
+            for m_name in m_list:
+                if m_name in MOVES and m_name not in known_moves and m_name not in candidates:
+                    candidates.append(m_name)
+
+        # 2. Type-compatible & coverage techniques from Move Database
+        for m_name, m_data in MOVES.items():
+            if m_name in known_moves or m_name in candidates:
+                continue
+            m_type = m_data.get("type", "Normal")
+            # If move type matches Pokémon types, or is a staple technique
+            if m_type in self.types or (m_type in ["Normal", "Psychic", "Ground", "Fighting"] and m_data.get("power", 0) >= 40):
+                candidates.append(m_name)
+
+        # Sort candidates: STAB & high power first, then alphabetical
+        def move_sort_key(name):
+            d = MOVES.get(name, {})
+            is_stab = 1 if d.get("type") in self.types else 0
+            power = d.get("power", 0)
+            return (-is_stab, -power, name)
+
+        candidates.sort(key=move_sort_key)
+        return candidates
+
+    def reroll_move(self, replace_idx=None, specific_move=None):
+        """
+        Rerolls or teaches a new move to this Pokémon.
+        If specific_move is provided, teaches that move; otherwise picks a random candidate.
+        Returns (success, new_move_name, old_move_name, message).
+        """
+        candidates = self.get_rerollable_moves()
+        if specific_move and specific_move in MOVES:
+            target_move = specific_move
+        elif candidates:
+            target_move = random.choice(candidates)
+        else:
+            return False, None, None, f"{self.nickname} cannot learn any new moves right now!"
+
+        old_move_name = None
+        if len(self.moves) < 4:
+            new_slot = self.create_move_slot(target_move)
+            self.moves.append(new_slot)
+            msg = f"{self.nickname} learned {target_move}!"
+            return True, target_move, None, msg
+        else:
+            target_idx = replace_idx if (replace_idx is not None and 0 <= replace_idx < 4) else 0
+            old_move_name = self.moves[target_idx]["name"]
+            new_slot = self.create_move_slot(target_move)
+            self.moves[target_idx] = new_slot
+            msg = f"1, 2, and... Poof! {self.nickname} forgot {old_move_name} and learned {target_move}!"
+            return True, target_move, old_move_name, msg
+
+
     def evolve(self, target_species):
         if target_species in POKEMON_SPECIES:
             old_name = self.species

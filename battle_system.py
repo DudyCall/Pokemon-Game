@@ -34,11 +34,12 @@ class BattlePhase:
     FINISHED = "FINISHED"
 
 class BattleSystem:
-    def __init__(self, player_party, opponent_pokemon_or_trainer, is_trainer=False, inventory=None, pokedex=None, pc_box=None):
+    def __init__(self, player_party, opponent_pokemon_or_trainer, is_trainer=False, inventory=None, pokedex=None, pc_box=None, quest_mgr=None):
         self.player_party = player_party
         self.inventory = inventory
         self.pokedex = pokedex
         self.pc_box = pc_box if pc_box is not None else []
+        self.quest_mgr = quest_mgr
         self.is_trainer = is_trainer
         self.trainer_data = opponent_pokemon_or_trainer if is_trainer else None
         
@@ -225,6 +226,8 @@ class BattleSystem:
                             sound_mgr.play_sfx("catch_success")
                             if self.pokedex:
                                 self.pokedex.register_caught(self.enemy_pokemon.species)
+                            if self.quest_mgr:
+                                self.quest_mgr.on_pokemon_caught(self.enemy_pokemon, self.inventory)
                             if len(self.player_party) < 6:
                                 self.player_party.append(self.enemy_pokemon)
                                 self.queue_message(f"Gotcha! {self.enemy_pokemon.species.upper()} was caught!", on_done=self._end_battle_victory)
@@ -695,6 +698,8 @@ class BattleSystem:
                     ))
             else:
                 # Enemy Pokemon fainted -> Gain EXP
+                if self.quest_mgr:
+                    self.quest_mgr.on_pokemon_defeated(self.enemy_pokemon, self.inventory, is_trainer=self.is_trainer)
                 self._award_exp()
         return handler
 
@@ -759,6 +764,8 @@ class BattleSystem:
             prize = self.trainer_data.get("reward_money", 200)
             if self.inventory:
                 self.inventory.money += prize
+            if self.quest_mgr and self.trainer_data:
+                self.quest_mgr.on_trainer_defeated(self.trainer_data.get("id"), self.inventory)
             self.queue_message(f"You defeated {self.trainer_data['name']}!", on_done=lambda: self.queue_message(
                 f"You got ${prize} for winning!", on_done=self._finish_battle
             ))
@@ -981,11 +988,11 @@ class BattleSystem:
                 pp_txt = gfx.fonts["small"].render(f"PP {move['pp']}/{move['max_pp']}", True, UI_TEXT_MUTED)
                 surf.blit(pp_txt, (rx + btn_w - pp_txt.get_width() - 12, ry + 34))
 
-        # Bag Selection Sub-Menu
+        # Bag Selection Sub-Menu with Live Item Explanation Tooltip
         elif self.phase == BattlePhase.BAG_SELECT:
             items_list = self.inventory.get_items_list() if self.inventory else []
-            title = gfx.fonts["medium"].render("Select an Item to Use:", True, UI_TEXT)
-            surf.blit(title, (bx + 20, by + 15))
+            title = gfx.fonts["medium"].render("Select an Item to Use:", True, (40, 80, 160))
+            surf.blit(title, (bx + 20, by + 12))
             
             if not items_list:
                 empty_txt = gfx.fonts["regular"].render("Your bag is empty!", True, UI_TEXT_MUTED)
@@ -993,17 +1000,68 @@ class BattleSystem:
             else:
                 self._adjust_bag_scroll()
                 visible_items = items_list[self.bag_scroll : self.bag_scroll + 4]
+                
+                # Left Column: Item Selector
                 for rel_idx, (name, count, data) in enumerate(visible_items):
                     actual_idx = self.bag_scroll + rel_idx
-                    iy = by + 50 + rel_idx * 28
+                    iy = by + 45 + rel_idx * 30
                     is_sel = (self.bag_index == actual_idx)
-                    marker = "> " if is_sel else "  "
-                    itxt = gfx.fonts["regular"].render(f"{marker}{name} x{count}", True, (200, 80, 0) if is_sel else UI_TEXT)
-                    surf.blit(itxt, (bx + 20, iy))
+                    
+                    if is_sel:
+                        pygame.draw.rect(surf, (255, 235, 180), (bx + 16, iy - 3, 310, 28), border_radius=5)
+                        pygame.draw.rect(surf, (240, 140, 40), (bx + 16, iy - 3, 310, 28), 1, border_radius=5)
+                    
+                    # Mini Icon
+                    icon = gfx.get_item_sprite(name, (22, 22))
+                    surf.blit(icon, (bx + 22, iy))
+
+                    itxt = gfx.fonts["regular"].render(name, True, (200, 60, 0) if is_sel else UI_TEXT)
+                    c_txt = gfx.fonts["regular"].render(f"x{count}", True, (30, 130, 50))
+                    surf.blit(itxt, (bx + 50, iy))
+                    surf.blit(c_txt, (bx + 280, iy))
 
                 if len(items_list) > 4:
                     scroll_info = gfx.fonts["small"].render(f"▲ ▼ ({self.bag_index + 1}/{len(items_list)})", True, (200, 80, 0))
-                    surf.blit(scroll_info, (bx + bw - scroll_info.get_width() - 25, by + 18))
+                    surf.blit(scroll_info, (bx + 250, by + 14))
+
+                # Right Column: Live Item Explanation Tooltip Card
+                if 0 <= self.bag_index < len(items_list):
+                    sel_name, sel_cnt, sel_data = items_list[self.bag_index]
+                    tx, ty, tw, th = bx + 340, by + 10, bw - 360, bh - 20
+                    
+                    pygame.draw.rect(surf, (244, 247, 252), (tx, ty, tw, th), border_radius=8)
+                    pygame.draw.rect(surf, (215, 225, 240), (tx, ty, tw, th), 1, border_radius=8)
+
+                    # Icon & Name
+                    sel_icon = gfx.get_item_sprite(sel_name, (36, 36))
+                    surf.blit(sel_icon, (tx + 10, ty + 10))
+
+                    name_lbl = gfx.fonts["regular"].render(sel_name, True, (30, 50, 90))
+                    surf.blit(name_lbl, (tx + 52, ty + 8))
+
+                    cat_lbl = gfx.fonts["small"].render(f"[{sel_data.get('category', 'item').upper()}]", True, (200, 80, 0))
+                    surf.blit(cat_lbl, (tx + 52, ty + 28))
+
+                    # Explanation Text
+                    desc_words = sel_data.get("desc", "").split(" ")
+                    lines, cur = [], ""
+                    for w in desc_words:
+                        t = cur + (" " if cur else "") + w
+                        if gfx.fonts["small"].size(t)[0] < tw - 24:
+                            cur = t
+                        else:
+                            lines.append(cur)
+                            cur = w
+                    if cur:
+                        lines.append(cur)
+                    for l_idx, l_str in enumerate(lines[:3]):
+                        surf.blit(gfx.fonts["small"].render(l_str, True, UI_TEXT), (tx + 12, ty + 54 + l_idx * 20))
+
+                    # Usage summary
+                    usage_txt = sel_data.get("usage", "")
+                    if usage_txt:
+                        u_surf = gfx.fonts["small"].render(f"▶ {usage_txt[:50]}...", True, (40, 120, 200)) if len(usage_txt) > 50 else gfx.fonts["small"].render(f"▶ {usage_txt}", True, (40, 120, 200))
+                        surf.blit(u_surf, (tx + 12, ty + th - 24))
 
         # Party Selection Sub-Menu
         elif self.phase in [BattlePhase.PARTY_SELECT, BattlePhase.FAINT_SWITCH]:

@@ -1,167 +1,26 @@
 {
   "slot": 3,
-  "timestamp": "2026-08-31 22:01",
+  "timestamp": "2026-09-01 00:41",
   "player": {
     "name": "H\u00e1kun",
     "gender": "Boy",
     "outfit_theme": "Shadow Black",
     "hat_style": "Trainer Cap",
     "hair_color": "Dark Brown",
-    "grid_x": 7,
-    "grid_y": 6,
-    "map": "Lavender Town",
-    "facing": 3,
+    "grid_x": 14,
+    "grid_y": 16,
+    "map": "Route 1",
+    "facing": 2,
     "has_boat": true,
     "is_sailing": false
   },
   "party": [
     {
-      "species": "Rhyhorn",
-      "nickname": "Rhyhorn",
-      "level": 26,
-      "current_hp": 81,
-      "exp": 19574,
-      "status": null,
-      "ivs": {
-        "hp": 14,
-        "atk": 24,
-        "def": 10,
-        "spatk": 26,
-        "spdef": 12,
-        "spd": 14
-      },
-      "moves": [
-        {
-          "name": "Tail Whip",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "Lowers the foe's Defense.",
-          "effect": {
-            "stages": -1,
-            "stat": "def"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Rock Throw",
-          "type": "Rock",
-          "power": 50,
-          "accuracy": 90,
-          "category": "Physical",
-          "max_pp": 15,
-          "pp": 15,
-          "desc": "Drops small rocks on the target.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Rock Slide",
-          "type": "Rock",
-          "power": 75,
-          "accuracy": 90,
-          "category": "Physical",
-          "max_pp": 10,
-          "pp": 10,
-          "desc": "Large boulders are hurled.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Stomp",
-          "type": "Normal",
-          "power": 65,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Stomps the foe with huge feet.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Charmeleon",
-      "nickname": "Charmeleon",
-      "level": 27,
-      "current_hp": 76,
-      "exp": 21366,
-      "status": null,
-      "ivs": {
-        "hp": 29,
-        "atk": 31,
-        "def": 21,
-        "spatk": 30,
-        "spdef": 22,
-        "spd": 27
-      },
-      "moves": [
-        {
-          "name": "Scratch",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "Hard, pointed claws rake the foe.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Growl",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 40,
-          "pp": 40,
-          "desc": "Lowers the foe's Attack.",
-          "effect": {
-            "stages": -1,
-            "stat": "atk"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Ember",
-          "type": "Fire",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Small flames hit the target.",
-          "effect": {
-            "chance": 15,
-            "status": "Burn"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Quick Attack",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "An extremely fast physical strike.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
       "species": "Scyther",
       "nickname": "Scyther",
-      "level": 31,
-      "current_hp": 94,
-      "exp": 30801,
+      "level": 42,
+      "current_hp": 123,
+      "exp": 79458,
       "status": null,
       "ivs": {
         "hp": 31,
@@ -179,7 +38,7 @@
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 30,
-          "pp": 30,
+          "pp": 24,
           "desc": "An extremely fast physical strike.",
           "effect": null,
           "crit_bonus": false
@@ -226,86 +85,11 @@
       ]
     },
     {
-      "species": "Ponyta",
-      "nickname": "Ponyta",
-      "level": 28,
-      "current_hp": 74,
-      "exp": 23839,
-      "status": null,
-      "ivs": {
-        "hp": 31,
-        "atk": 18,
-        "def": 24,
-        "spatk": 27,
-        "spdef": 19,
-        "spd": 18
-      },
-      "moves": [
-        {
-          "name": "Ember",
-          "type": "Fire",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Small flames hit the target.",
-          "effect": {
-            "chance": 15,
-            "status": "Burn"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Flame Wheel",
-          "type": "Fire",
-          "power": 60,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "A fiery charge attack.",
-          "effect": {
-            "chance": 10,
-            "status": "Burn"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Quick Attack",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "An extremely fast physical strike.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Flamethrower",
-          "type": "Fire",
-          "power": 90,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 15,
-          "pp": 15,
-          "desc": "A scorching stream of fire.",
-          "effect": {
-            "chance": 20,
-            "status": "Burn"
-          },
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
       "species": "Kangaskhan",
       "nickname": "Kangaskhan",
-      "level": 33,
-      "current_hp": 120,
-      "exp": 38782,
+      "level": 38,
+      "current_hp": 136,
+      "exp": 59133,
       "status": null,
       "ivs": {
         "hp": 24,
@@ -379,9 +163,9 @@
     {
       "species": "Dragonair",
       "nickname": "Dragonair",
-      "level": 34,
-      "current_hp": 90,
-      "exp": 42612,
+      "level": 36,
+      "current_hp": 94,
+      "exp": 49703,
       "status": null,
       "ivs": {
         "hp": 14,
@@ -429,6 +213,237 @@
           "pp": 20,
           "desc": "Slams the foe with a long tail or body.",
           "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Flamethrower",
+          "type": "Fire",
+          "power": 90,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 15,
+          "pp": 15,
+          "desc": "A scorching stream of fire.",
+          "effect": {
+            "chance": 20,
+            "status": "Burn"
+          },
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Rhyhorn",
+      "nickname": "Rhyhorn",
+      "level": 28,
+      "current_hp": 86,
+      "exp": 23449,
+      "status": null,
+      "ivs": {
+        "hp": 14,
+        "atk": 24,
+        "def": 10,
+        "spatk": 26,
+        "spdef": 12,
+        "spd": 14
+      },
+      "moves": [
+        {
+          "name": "Tail Whip",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "Lowers the foe's Defense.",
+          "effect": {
+            "stages": -1,
+            "stat": "def"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Rock Throw",
+          "type": "Rock",
+          "power": 50,
+          "accuracy": 90,
+          "category": "Physical",
+          "max_pp": 15,
+          "pp": 15,
+          "desc": "Drops small rocks on the target.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Rock Slide",
+          "type": "Rock",
+          "power": 75,
+          "accuracy": 90,
+          "category": "Physical",
+          "max_pp": 10,
+          "pp": 10,
+          "desc": "Large boulders are hurled.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Stomp",
+          "type": "Normal",
+          "power": 65,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 20,
+          "pp": 20,
+          "desc": "Stomps the foe with huge feet.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Charmeleon",
+      "nickname": "Charmeleon",
+      "level": 28,
+      "current_hp": 78,
+      "exp": 23585,
+      "status": null,
+      "ivs": {
+        "hp": 29,
+        "atk": 31,
+        "def": 21,
+        "spatk": 30,
+        "spdef": 22,
+        "spd": 27
+      },
+      "moves": [
+        {
+          "name": "Scratch",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 35,
+          "pp": 35,
+          "desc": "Hard, pointed claws rake the foe.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Ember",
+          "type": "Fire",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Small flames hit the target.",
+          "effect": {
+            "chance": 15,
+            "status": "Burn"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        }
+      ]
+    },
+    {
+      "species": "Ponyta",
+      "nickname": "Ponyta",
+      "level": 30,
+      "current_hp": 79,
+      "exp": 28733,
+      "status": null,
+      "ivs": {
+        "hp": 31,
+        "atk": 18,
+        "def": 24,
+        "spatk": 27,
+        "spdef": 19,
+        "spd": 18
+      },
+      "moves": [
+        {
+          "name": "Ember",
+          "type": "Fire",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "Small flames hit the target.",
+          "effect": {
+            "chance": 15,
+            "status": "Burn"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Flame Wheel",
+          "type": "Fire",
+          "power": 60,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 25,
+          "pp": 25,
+          "desc": "A fiery charge attack.",
+          "effect": {
+            "chance": 10,
+            "status": "Burn"
+          },
+          "crit_bonus": false
+        },
+        {
+          "name": "Quick Attack",
+          "type": "Normal",
+          "power": 40,
+          "accuracy": 100,
+          "category": "Physical",
+          "max_pp": 30,
+          "pp": 30,
+          "desc": "An extremely fast physical strike.",
+          "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Flamethrower",
+          "type": "Fire",
+          "power": 90,
+          "accuracy": 100,
+          "category": "Special",
+          "max_pp": 15,
+          "pp": 15,
+          "desc": "A scorching stream of fire.",
+          "effect": {
+            "chance": 20,
+            "status": "Burn"
+          },
           "crit_bonus": false
         }
       ]
@@ -2033,13 +2048,13 @@
     }
   ],
   "inventory": {
-    "money": 12280,
+    "money": 13480,
     "items": {
       "Potion": 5,
       "Antidote": 4,
       "Revive": 2,
-      "Rare Candy": 7,
-      "Super Potion": 4,
+      "Rare Candy": 8,
+      "Super Potion": 7,
       "Moon Stone": 1,
       "Escape Rope": 2,
       "Nugget": 1,
@@ -2050,159 +2065,163 @@
   },
   "pokedex": {
     "seen": [
-      "Growlithe",
-      "Scyther",
-      "Staryu",
-      "Geodude",
-      "Electabuzz",
-      "Rattata",
-      "Voltorb",
-      "Pidgeotto",
+      "Exeggcute",
+      "Jigglypuff",
       "Charmander",
-      "Dratini",
-      "Oddish",
-      "Sandshrew",
-      "Pinsir",
-      "Bellsprout",
-      "Vulpix",
-      "Doduo",
+      "Caterpie",
       "Psyduck",
+      "Abra",
+      "Magmar",
+      "Scyther",
+      "Weedle",
+      "Nidorina",
       "Mankey",
       "Pikachu",
-      "Nidorino",
-      "Magikarp",
-      "Exeggcute",
-      "Slowpoke",
-      "Weedle",
-      "Ekans",
-      "Onix",
-      "Kangaskhan",
-      "Magmar",
-      "Magneton",
-      "Magnemite",
-      "Zubat",
-      "Goldeen",
-      "Koffing",
-      "Abra",
-      "Venonat",
-      "Nidorina",
-      "Tentacool",
-      "Seel",
-      "Ponyta",
-      "Rhyhorn",
-      "Eevee",
-      "Gastly",
-      "Tauros",
-      "Jigglypuff",
-      "Seaking",
-      "Nidoran-F",
-      "Shellder",
-      "Grimer",
-      "Paras",
-      "Caterpie",
       "Pidgey",
-      "Spearow",
+      "Poliwag",
+      "Tauros",
+      "Rhyhorn",
+      "Seaking",
+      "Staryu",
+      "Ponyta",
+      "Goldeen",
+      "Voltorb",
       "Haunter",
-      "Dragonair"
+      "Electabuzz",
+      "Slowpoke",
+      "Magnemite",
+      "Grimer",
+      "Doduo",
+      "Magneton",
+      "Oddish",
+      "Sandshrew",
+      "Growlithe",
+      "Pidgeotto",
+      "Venonat",
+      "Magikarp",
+      "Pinsir",
+      "Kangaskhan",
+      "Tangela",
+      "Nidorino",
+      "Bellsprout",
+      "Cubone",
+      "Vulpix",
+      "Onix",
+      "Tentacool",
+      "Dragonair",
+      "Geodude",
+      "Nidoran-F",
+      "Dratini",
+      "Paras",
+      "Spearow",
+      "Gastly",
+      "Chansey",
+      "Eevee",
+      "Zubat",
+      "Shellder",
+      "Koffing",
+      "Seel",
+      "Ekans",
+      "Rattata"
     ],
     "caught": [
-      "Growlithe",
-      "Scyther",
-      "Rattata",
-      "Pidgeotto",
-      "Charmander",
-      "Sandshrew",
-      "Pinsir",
-      "Vulpix",
-      "Doduo",
-      "Psyduck",
-      "Pikachu",
-      "Nidorino",
-      "Slowpoke",
       "Exeggcute",
-      "Ekans",
-      "Kangaskhan",
-      "Koffing",
+      "Charmander",
+      "Psyduck",
       "Abra",
-      "Venonat",
+      "Scyther",
       "Nidorina",
-      "Ponyta",
+      "Pikachu",
       "Rhyhorn",
-      "Eevee",
-      "Gastly",
+      "Ponyta",
+      "Slowpoke",
       "Grimer",
-      "Dragonair"
+      "Doduo",
+      "Sandshrew",
+      "Growlithe",
+      "Pidgeotto",
+      "Venonat",
+      "Pinsir",
+      "Kangaskhan",
+      "Nidorino",
+      "Vulpix",
+      "Dragonair",
+      "Gastly",
+      "Eevee",
+      "Koffing",
+      "Ekans",
+      "Rattata"
     ]
   },
   "defeated_trainers": [
-    "youngster_ben",
-    "bug_catcher_colton",
-    "super_nerd_miguel",
-    "scientist_bray",
-    "firebreather_dick",
-    "fisherman_barny",
-    "skier_dianne",
-    "bug_catcher_rick",
-    "bridge_challenger_3",
-    "blackbelt_koji",
-    "bridge_challenger_4",
-    "rival_blue",
-    "bug_catcher_sammy",
-    "pokemaniac_mark",
-    "hiker_marcos",
-    "picnicker_alicia",
-    "bridge_challenger_1",
-    "lass_crissy",
-    "bridge_challenger_2",
-    "engineer_bucky",
-    "boarder_felix",
-    "channeler_hope",
-    "channeler_carly",
-    "bridge_challenger_5",
-    "lass_janice",
     "scientist_ted",
-    "lass_haley",
-    "youngster_joey",
-    "rocket_grunt_1",
-    "hiker_alan",
-    "camper_drew",
-    "hiker_wayne",
+    "channeler_hope",
     "swimmer_douglas",
+    "picnicker_alicia",
+    "engineer_bucky",
+    "scientist_bray",
+    "rival_blue",
+    "hiker_alan",
+    "youngster_joey",
+    "blackbelt_koji",
+    "bug_catcher_sammy",
     "hiker_franklin",
-    "channeler_patricia"
+    "bridge_challenger_3",
+    "hiker_wayne",
+    "lass_crissy",
+    "channeler_patricia",
+    "bug_catcher_colton",
+    "channeler_carly",
+    "rocket_grunt_1",
+    "bridge_challenger_4",
+    "lass_haley",
+    "bridge_challenger_5",
+    "firebreather_dick",
+    "skier_dianne",
+    "hiker_marcos",
+    "pokemaniac_mark",
+    "lass_janice",
+    "camper_drew",
+    "boarder_felix",
+    "fisherman_barny",
+    "bridge_challenger_1",
+    "super_nerd_miguel",
+    "youngster_ben",
+    "bug_catcher_rick",
+    "bridge_challenger_2"
   ],
   "collected_items": [
+    "mtmoon_candy",
     "route22_potion",
+    "seafoam_iceheal",
+    "route22_greatball",
     "safari_ball2",
-    "route3_superpotion",
-    "powerplant_thunderstone",
+    "route1_potion",
+    "forest_antidote",
     "mtmoon_moonstone",
-    "lavender_superball",
-    "safari_ball1",
-    "seafoam_candy",
     "tower_candy",
     "powerplant_magnet",
-    "route21_ultraball",
-    "cinnabar_maxpotion",
+    "pallet_potion",
     "mtmoon_escaperope",
-    "tower_revive",
-    "powerplant_ultraball",
-    "route4_greatball",
     "route24_nugget",
-    "tower_escape",
-    "seafoam_waterstone",
-    "forest_antidote",
-    "cinnabar_candy",
-    "route22_greatball",
+    "safari_ball1",
+    "route21_ultraball",
+    "seafoam_candy",
+    "route4_greatball",
+    "powerplant_thunderstone",
     "bill_eevee_gift",
-    "route9_tm",
-    "mtmoon_candy",
-    "forest_pokeball",
-    "lavender_elixir",
-    "seafoam_iceheal",
-    "route1_potion",
     "forest_candy",
-    "pallet_potion"
+    "cinnabar_candy",
+    "forest_pokeball",
+    "route3_superpotion",
+    "tower_revive",
+    "cinnabar_maxpotion",
+    "tower_escape",
+    "lavender_superball",
+    "route9_tm",
+    "seafoam_waterstone",
+    "powerplant_ultraball",
+    "lavender_elixir"
   ],
   "badges": [],
   "explored_tiles": {
@@ -8752,208 +8771,56 @@
     ],
     "Route 1": [
       [
-        12,
-        4
-      ],
-      [
-        6,
-        18
-      ],
-      [
-        16,
-        20
+        15,
+        21
       ],
       [
         7,
         17
       ],
       [
-        15,
-        21
+        18,
+        17
       ],
       [
         8,
         0
       ],
       [
-        14,
-        13
-      ],
-      [
-        5,
-        10
-      ],
-      [
         8,
         9
-      ],
-      [
-        10,
-        6
-      ],
-      [
-        12,
-        25
-      ],
-      [
-        9,
-        8
-      ],
-      [
-        5,
-        19
-      ],
-      [
-        8,
-        18
       ],
       [
         11,
         5
       ],
       [
-        9,
-        17
+        8,
+        18
+      ],
+      [
+        19,
+        18
       ],
       [
         11,
         14
       ],
       [
-        14,
-        22
-      ],
-      [
-        17,
-        21
-      ],
-      [
         11,
         23
-      ],
-      [
-        13,
-        8
-      ],
-      [
-        6,
-        2
-      ],
-      [
-        7,
-        1
-      ],
-      [
-        13,
-        17
-      ],
-      [
-        6,
-        11
-      ],
-      [
-        7,
-        10
-      ],
-      [
-        15,
-        23
-      ],
-      [
-        6,
-        20
-      ],
-      [
-        16,
-        22
-      ],
-      [
-        7,
-        19
-      ],
-      [
-        5,
-        3
-      ],
-      [
-        8,
-        2
-      ],
-      [
-        9,
-        1
-      ],
-      [
-        12,
-        18
-      ],
-      [
-        5,
-        12
-      ],
-      [
-        8,
-        11
       ],
       [
         14,
         15
       ],
       [
-        9,
-        10
-      ],
-      [
-        11,
-        7
-      ],
-      [
-        5,
-        21
-      ],
-      [
         14,
         24
       ],
       [
-        17,
-        23
-      ],
-      [
-        9,
-        19
-      ],
-      [
-        11,
-        16
-      ],
-      [
-        13,
-        1
-      ],
-      [
-        13,
-        10
-      ],
-      [
-        6,
-        4
-      ],
-      [
-        10,
-        20
-      ],
-      [
         7,
         3
-      ],
-      [
-        13,
-        19
-      ],
-      [
-        6,
-        13
       ],
       [
         15,
@@ -8966,10 +8833,6 @@
       [
         15,
         25
-      ],
-      [
-        16,
-        24
       ],
       [
         7,
@@ -8980,648 +8843,476 @@
         21
       ],
       [
-        14,
-        8
-      ],
-      [
-        5,
-        5
-      ],
-      [
         8,
         4
-      ],
-      [
-        12,
-        20
-      ],
-      [
-        9,
-        3
-      ],
-      [
-        5,
-        14
       ],
       [
         11,
         0
       ],
       [
-        14,
-        17
-      ],
-      [
-        9,
-        12
-      ],
-      [
         11,
         9
-      ],
-      [
-        5,
-        23
-      ],
-      [
-        9,
-        21
-      ],
-      [
-        13,
-        3
-      ],
-      [
-        13,
-        12
-      ],
-      [
-        6,
-        6
-      ],
-      [
-        8,
-        25
       ],
       [
         10,
         22
       ],
       [
-        7,
-        5
+        14,
+        1
       ],
       [
-        13,
-        21
+        14,
+        10
       ],
       [
-        15,
-        18
-      ],
-      [
-        16,
-        17
+        14,
+        19
       ],
       [
         7,
-        14
+        7
       ],
       [
         7,
-        23
+        16
       ],
       [
         18,
-        23
-      ],
-      [
-        14,
-        1
-      ],
-      [
-        12,
-        13
-      ],
-      [
-        14,
-        10
-      ],
-      [
-        5,
-        7
-      ],
-      [
-        9,
-        5
-      ],
-      [
-        12,
-        22
-      ],
-      [
-        5,
         16
-      ],
-      [
-        11,
-        2
-      ],
-      [
-        14,
-        19
-      ],
-      [
-        9,
-        14
-      ],
-      [
-        5,
-        25
-      ],
-      [
-        13,
-        5
-      ],
-      [
-        10,
-        15
-      ],
-      [
-        13,
-        14
-      ],
-      [
-        10,
-        24
-      ],
-      [
-        7,
-        7
-      ],
-      [
-        13,
-        23
-      ],
-      [
-        16,
-        19
-      ],
-      [
-        7,
-        16
-      ],
-      [
-        12,
-        6
-      ],
-      [
-        14,
-        3
-      ],
-      [
-        12,
-        15
-      ],
-      [
-        14,
-        12
-      ],
-      [
-        5,
-        9
-      ],
-      [
-        12,
-        24
       ],
       [
         11,
         4
       ],
       [
-        9,
-        7
-      ],
-      [
-        5,
-        18
-      ],
-      [
-        14,
-        21
-      ],
-      [
-        9,
-        16
-      ],
-      [
         10,
         8
-      ],
-      [
-        13,
-        7
-      ],
-      [
-        8,
-        20
       ],
       [
         10,
         17
-      ],
-      [
-        7,
-        0
-      ],
-      [
-        13,
-        16
-      ],
-      [
-        7,
-        9
-      ],
-      [
-        11,
-        25
-      ],
-      [
-        16,
-        21
-      ],
-      [
-        12,
-        8
-      ],
-      [
-        6,
-        22
       ],
       [
         14,
         5
       ],
       [
-        9,
-        0
-      ],
-      [
-        12,
-        17
-      ],
-      [
-        5,
-        11
-      ],
-      [
         14,
         14
       ],
       [
-        9,
-        9
-      ],
-      [
         14,
         23
-      ],
-      [
-        10,
-        1
-      ],
-      [
-        13,
-        0
-      ],
-      [
-        8,
-        13
-      ],
-      [
-        10,
-        10
-      ],
-      [
-        13,
-        9
       ],
       [
         17,
         25
       ],
       [
-        8,
-        22
-      ],
-      [
-        10,
-        19
-      ],
-      [
         7,
         2
       ],
       [
-        11,
+        7,
+        11
+      ],
+      [
+        6,
+        15
+      ],
+      [
+        6,
+        24
+      ],
+      [
+        10,
+        3
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        21
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        14,
+        9
+      ],
+      [
+        14,
         18
       ],
       [
+        17,
+        20
+      ],
+      [
+        9,
+        25
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        6,
+        19
+      ],
+      [
+        10,
+        7
+      ],
+      [
+        10,
+        16
+      ],
+      [
+        10,
+        25
+      ],
+      [
+        14,
+        4
+      ],
+      [
+        17,
+        15
+      ],
+      [
+        9,
+        11
+      ],
+      [
+        5,
+        22
+      ],
+      [
+        17,
+        24
+      ],
+      [
+        9,
+        20
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        14
+      ],
+      [
+        6,
+        23
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        10,
+        11
+      ],
+      [
         13,
+        13
+      ],
+      [
+        13,
+        22
+      ],
+      [
+        16,
         18
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        9,
+        6
+      ],
+      [
+        5,
+        17
+      ],
+      [
+        17,
+        19
+      ],
+      [
+        9,
+        15
+      ],
+      [
+        9,
+        24
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        9
+      ],
+      [
+        6,
+        18
+      ],
+      [
+        10,
+        6
+      ],
+      [
+        12,
+        25
+      ],
+      [
+        13,
+        8
+      ],
+      [
+        13,
+        17
+      ],
+      [
+        16,
+        13
+      ],
+      [
+        16,
+        22
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        17,
+        14
+      ],
+      [
+        5,
+        12
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        5,
+        21
+      ],
+      [
+        17,
+        23
+      ],
+      [
+        9,
+        19
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        6,
+        13
+      ],
+      [
+        20,
+        15
+      ],
+      [
+        12,
+        20
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        13,
+        12
+      ],
+      [
+        13,
+        21
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        5,
+        7
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        5,
+        16
+      ],
+      [
+        9,
+        14
+      ],
+      [
+        5,
+        25
+      ],
+      [
+        12,
+        6
+      ],
+      [
+        12,
+        15
+      ],
+      [
+        12,
+        24
+      ],
+      [
+        13,
+        7
+      ],
+      [
+        13,
+        16
+      ],
+      [
+        16,
+        12
+      ],
+      [
+        16,
+        21
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        5,
+        11
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        8,
+        13
+      ],
+      [
+        8,
+        22
       ],
       [
         19,
         22
       ],
       [
-        7,
+        11,
+        18
+      ],
+      [
+        12,
+        1
+      ],
+      [
+        12,
+        10
+      ],
+      [
+        12,
+        19
+      ],
+      [
+        13,
+        2
+      ],
+      [
+        13,
         11
       ],
       [
         16,
-        23
-      ],
-      [
-        12,
-        1
-      ],
-      [
-        6,
-        15
-      ],
-      [
-        12,
-        10
-      ],
-      [
-        6,
-        24
-      ],
-      [
-        14,
-        7
-      ],
-      [
-        5,
-        4
-      ],
-      [
-        9,
-        2
-      ],
-      [
-        12,
-        19
-      ],
-      [
-        5,
-        13
-      ],
-      [
-        14,
         16
-      ],
-      [
-        14,
-        25
-      ],
-      [
-        8,
-        6
-      ],
-      [
-        10,
-        3
-      ],
-      [
-        13,
-        2
-      ],
-      [
-        17,
-        18
-      ],
-      [
-        8,
-        15
-      ],
-      [
-        10,
-        12
-      ],
-      [
-        13,
-        11
-      ],
-      [
-        11,
-        11
-      ],
-      [
-        8,
-        24
-      ],
-      [
-        10,
-        21
-      ],
-      [
-        9,
-        23
-      ],
-      [
-        11,
-        20
-      ],
-      [
-        7,
-        4
-      ],
-      [
-        6,
-        8
-      ],
-      [
-        12,
-        3
-      ],
-      [
-        6,
-        17
-      ],
-      [
-        14,
-        0
       ],
       [
         15,
         20
       ],
       [
-        12,
-        12
-      ],
-      [
-        14,
-        9
-      ],
-      [
         5,
         6
       ],
       [
         7,
         25
-      ],
-      [
-        12,
-        21
-      ],
-      [
-        14,
-        18
       ],
       [
         8,
         8
       ],
       [
-        10,
-        5
-      ],
-      [
-        13,
-        4
-      ],
-      [
-        17,
-        20
-      ],
-      [
         8,
         17
       ],
       [
-        10,
-        14
+        19,
+        17
       ],
       [
         11,
         13
       ],
       [
-        10,
-        23
-      ],
-      [
-        9,
-        25
-      ],
-      [
         11,
         22
-      ],
-      [
-        6,
-        10
-      ],
-      [
-        13,
-        25
       ],
       [
         12,
         5
       ],
       [
-        6,
-        19
-      ],
-      [
-        14,
-        2
-      ],
-      [
-        7,
-        18
-      ],
-      [
-        15,
-        22
-      ],
-      [
         12,
         14
-      ],
-      [
-        14,
-        11
       ],
       [
         12,
         23
       ],
       [
-        8,
-        1
-      ],
-      [
-        8,
-        10
-      ],
-      [
-        10,
-        7
-      ],
-      [
-        11,
-        6
-      ],
-      [
-        5,
-        20
-      ],
-      [
-        8,
-        19
-      ],
-      [
-        10,
-        16
-      ],
-      [
-        9,
-        18
-      ],
-      [
-        11,
+        15,
         15
-      ],
-      [
-        17,
-        22
-      ],
-      [
-        10,
-        25
-      ],
-      [
-        11,
-        24
-      ],
-      [
-        6,
-        3
-      ],
-      [
-        6,
-        12
-      ],
-      [
-        12,
-        7
-      ],
-      [
-        6,
-        21
-      ],
-      [
-        14,
-        4
-      ],
-      [
-        7,
-        20
       ],
       [
         15,
         24
       ],
       [
-        12,
-        16
+        7,
+        20
       ],
       [
         18,
@@ -9632,68 +9323,664 @@
         3
       ],
       [
-        10,
-        0
-      ],
-      [
         8,
         12
-      ],
-      [
-        10,
-        9
-      ],
-      [
-        9,
-        11
       ],
       [
         11,
         8
       ],
       [
-        5,
-        22
-      ],
-      [
         8,
         21
-      ],
-      [
-        10,
-        18
-      ],
-      [
-        9,
-        20
-      ],
-      [
-        11,
-        17
-      ],
-      [
-        17,
-        24
       ],
       [
         19,
         21
       ],
       [
-        6,
-        5
-      ],
-      [
-        13,
-        20
+        11,
+        17
       ],
       [
         12,
         0
       ],
       [
-        6,
+        12,
+        9
+      ],
+      [
+        7,
+        6
+      ],
+      [
+        15,
+        19
+      ],
+      [
+        7,
+        15
+      ],
+      [
+        18,
+        15
+      ],
+      [
+        7,
+        24
+      ],
+      [
+        18,
+        24
+      ],
+      [
+        8,
+        7
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        8,
+        16
+      ],
+      [
+        19,
+        16
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        21
+      ],
+      [
+        12,
+        4
+      ],
+      [
+        14,
+        13
+      ],
+      [
+        14,
+        22
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        15,
         14
+      ],
+      [
+        7,
+        10
+      ],
+      [
+        15,
+        23
+      ],
+      [
+        7,
+        19
+      ],
+      [
+        18,
+        19
+      ],
+      [
+        8,
+        2
+      ],
+      [
+        8,
+        11
+      ],
+      [
+        11,
+        7
+      ],
+      [
+        11,
+        16
+      ],
+      [
+        10,
+        20
+      ],
+      [
+        14,
+        8
+      ],
+      [
+        14,
+        17
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        15,
+        18
+      ],
+      [
+        7,
+        14
+      ],
+      [
+        18,
+        14
+      ],
+      [
+        7,
+        23
+      ],
+      [
+        18,
+        23
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        10,
+        24
+      ],
+      [
+        14,
+        3
+      ],
+      [
+        14,
+        12
+      ],
+      [
+        14,
+        21
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        15,
+        13
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        18,
+        18
+      ],
+      [
+        6,
+        22
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        10,
+        19
+      ],
+      [
+        14,
+        7
+      ],
+      [
+        14,
+        16
+      ],
+      [
+        14,
+        25
+      ],
+      [
+        17,
+        18
+      ],
+      [
+        7,
+        4
+      ],
+      [
+        9,
+        23
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        17
+      ],
+      [
+        10,
+        5
+      ],
+      [
+        10,
+        14
+      ],
+      [
+        10,
+        23
+      ],
+      [
+        13,
+        25
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        14,
+        11
+      ],
+      [
+        17,
+        13
+      ],
+      [
+        5,
+        20
+      ],
+      [
+        17,
+        22
+      ],
+      [
+        9,
+        18
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        6,
+        12
+      ],
+      [
+        6,
+        21
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        10,
+        9
+      ],
+      [
+        10,
+        18
+      ],
+      [
+        13,
+        20
+      ],
+      [
+        14,
+        6
+      ],
+      [
+        16,
+        25
+      ],
+      [
+        9,
+        4
+      ],
+      [
+        17,
+        17
+      ],
+      [
+        5,
+        15
+      ],
+      [
+        9,
+        13
+      ],
+      [
+        5,
+        24
+      ],
+      [
+        9,
+        22
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        6,
+        16
+      ],
+      [
+        6,
+        25
+      ],
+      [
+        10,
+        4
+      ],
+      [
+        10,
+        13
+      ],
+      [
+        13,
+        6
+      ],
+      [
+        13,
+        15
+      ],
+      [
+        13,
+        24
+      ],
+      [
+        16,
+        20
+      ],
+      [
+        5,
+        10
+      ],
+      [
+        9,
+        8
+      ],
+      [
+        5,
+        19
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        9,
+        17
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        6,
+        11
+      ],
+      [
+        6,
+        20
+      ],
+      [
+        12,
+        18
+      ],
+      [
+        13,
+        1
+      ],
+      [
+        13,
+        10
+      ],
+      [
+        13,
+        19
+      ],
+      [
+        16,
+        15
+      ],
+      [
+        16,
+        24
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        9,
+        3
+      ],
+      [
+        5,
+        14
+      ],
+      [
+        17,
+        16
+      ],
+      [
+        9,
+        12
+      ],
+      [
+        5,
+        23
+      ],
+      [
+        9,
+        21
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        8,
+        25
+      ],
+      [
+        20,
+        17
+      ],
+      [
+        12,
+        13
+      ],
+      [
+        12,
+        22
+      ],
+      [
+        13,
+        5
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        13,
+        23
+      ],
+      [
+        16,
+        19
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        9,
+        7
+      ],
+      [
+        5,
+        18
+      ],
+      [
+        9,
+        16
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        8,
+        20
+      ],
+      [
+        11,
+        25
+      ],
+      [
+        12,
+        8
+      ],
+      [
+        12,
+        17
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        13,
+        9
+      ],
+      [
+        13,
+        18
+      ],
+      [
+        16,
+        14
+      ],
+      [
+        16,
+        23
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        5,
+        13
+      ],
+      [
+        8,
+        6
+      ],
+      [
+        8,
+        15
+      ],
+      [
+        19,
+        15
+      ],
+      [
+        11,
+        11
+      ],
+      [
+        8,
+        24
+      ],
+      [
+        11,
+        20
+      ],
+      [
+        12,
+        3
+      ],
+      [
+        20,
+        16
+      ],
+      [
+        12,
+        12
+      ],
+      [
+        12,
+        21
+      ],
+      [
+        13,
+        4
+      ],
+      [
+        15,
+        22
+      ],
+      [
+        7,
+        18
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        11,
+        6
+      ],
+      [
+        8,
+        19
+      ],
+      [
+        11,
+        15
+      ],
+      [
+        11,
+        24
+      ],
+      [
+        12,
+        7
+      ],
+      [
+        12,
+        16
       ],
       [
         15,
@@ -9704,16 +9991,8 @@
         13
       ],
       [
-        12,
-        9
-      ],
-      [
-        6,
-        23
-      ],
-      [
-        14,
-        6
+        18,
+        13
       ],
       [
         7,
@@ -9724,48 +10003,24 @@
         22
       ],
       [
-        16,
-        25
-      ],
-      [
         8,
         5
-      ],
-      [
-        10,
-        2
-      ],
-      [
-        9,
-        4
       ],
       [
         11,
         1
       ],
       [
-        5,
-        15
-      ],
-      [
         8,
         14
       ],
       [
-        10,
-        11
-      ],
-      [
-        9,
-        13
+        19,
+        14
       ],
       [
         11,
         10
-      ],
-      [
-        5,
-        24
       ],
       [
         8,
@@ -9776,140 +10031,28 @@
         23
       ],
       [
-        9,
-        22
-      ],
-      [
         11,
         19
-      ],
-      [
-        13,
-        13
-      ],
-      [
-        6,
-        7
-      ],
-      [
-        7,
-        6
-      ],
-      [
-        13,
-        22
       ],
       [
         12,
         2
       ],
       [
-        6,
-        16
-      ],
-      [
-        15,
-        19
-      ],
-      [
-        7,
-        15
-      ],
-      [
-        16,
-        18
-      ],
-      [
         12,
         11
-      ],
-      [
-        6,
-        25
-      ],
-      [
-        7,
-        24
-      ],
-      [
-        18,
-        24
-      ],
-      [
-        5,
-        8
-      ],
-      [
-        8,
-        7
-      ],
-      [
-        10,
-        4
-      ],
-      [
-        9,
-        6
-      ],
-      [
-        11,
-        3
-      ],
-      [
-        5,
-        17
-      ],
-      [
-        8,
-        16
-      ],
-      [
-        10,
-        13
-      ],
-      [
-        9,
-        15
-      ],
-      [
-        11,
-        12
       ],
       [
         14,
         20
       ],
       [
-        17,
-        19
-      ],
-      [
-        9,
-        24
-      ],
-      [
-        11,
-        21
-      ],
-      [
-        13,
-        6
-      ],
-      [
-        13,
-        15
-      ],
-      [
-        6,
-        9
+        15,
+        12
       ],
       [
         7,
         8
-      ],
-      [
-        13,
-        24
       ]
     ],
     "Viridian City": [
@@ -9942,6 +10085,10 @@
         18
       ],
       [
+        19,
+        18
+      ],
+      [
         11,
         14
       ],
@@ -9952,6 +10099,10 @@
       [
         11,
         23
+      ],
+      [
+        22,
+        19
       ],
       [
         3,
@@ -9982,12 +10133,16 @@
         12
       ],
       [
+        18,
+        21
+      ],
+      [
         7,
         21
       ],
       [
-        18,
-        21
+        19,
+        4
       ],
       [
         11,
@@ -10010,12 +10165,20 @@
         1
       ],
       [
+        22,
+        14
+      ],
+      [
         14,
         10
       ],
       [
         3,
         10
+      ],
+      [
+        22,
+        23
       ],
       [
         14,
@@ -10046,6 +10209,10 @@
         16
       ],
       [
+        21,
+        18
+      ],
+      [
         11,
         4
       ],
@@ -10064,6 +10231,10 @@
       [
         14,
         5
+      ],
+      [
+        22,
+        18
       ],
       [
         14,
@@ -10098,6 +10269,14 @@
         15
       ],
       [
+        21,
+        13
+      ],
+      [
+        21,
+        22
+      ],
+      [
         10,
         3
       ],
@@ -10116,6 +10295,10 @@
       [
         14,
         0
+      ],
+      [
+        22,
+        13
       ],
       [
         14,
@@ -10144,6 +10327,10 @@
       [
         6,
         19
+      ],
+      [
+        21,
+        17
       ],
       [
         10,
@@ -10180,6 +10367,10 @@
       [
         6,
         14
+      ],
+      [
+        21,
+        21
       ],
       [
         10,
@@ -10236,6 +10427,14 @@
       [
         6,
         18
+      ],
+      [
+        21,
+        16
+      ],
+      [
+        20,
+        20
       ],
       [
         10,
@@ -10258,6 +10457,10 @@
         15
       ],
       [
+        24,
+        17
+      ],
+      [
         16,
         13
       ],
@@ -10296,12 +10499,20 @@
       [
         6,
         13
+      ],
+      [
+        20,
+        15
       ],
       [
         12,
         20
       ],
       [
+        23,
+        20
+      ],
+      [
         13,
         3
       ],
@@ -10319,6 +10530,10 @@
       ],
       [
         13,
+        21
+      ],
+      [
+        24,
         21
       ],
       [
@@ -10350,7 +10565,15 @@
         6
       ],
       [
+        20,
+        19
+      ],
+      [
         12,
+        15
+      ],
+      [
+        23,
         15
       ],
       [
@@ -10376,6 +10599,10 @@
       [
         1,
         14
+      ],
+      [
+        24,
+        16
       ],
       [
         16,
@@ -10406,6 +10633,10 @@
         13
       ],
       [
+        19,
+        22
+      ],
+      [
         11,
         18
       ],
@@ -10414,11 +10645,23 @@
         1
       ],
       [
+        20,
+        14
+      ],
+      [
         12,
         10
       ],
       [
+        20,
+        23
+      ],
+      [
         12,
+        19
+      ],
+      [
+        23,
         19
       ],
       [
@@ -10466,6 +10709,10 @@
         17
       ],
       [
+        19,
+        17
+      ],
+      [
         0,
         13
       ],
@@ -10486,7 +10733,15 @@
         5
       ],
       [
+        20,
+        18
+      ],
+      [
         12,
+        14
+      ],
+      [
+        23,
         14
       ],
       [
@@ -10522,6 +10777,10 @@
         20
       ],
       [
+        19,
+        3
+      ],
+      [
         8,
         12
       ],
@@ -10538,6 +10797,10 @@
         21
       ],
       [
+        19,
+        21
+      ],
+      [
         11,
         17
       ],
@@ -10546,12 +10809,24 @@
         0
       ],
       [
+        20,
+        13
+      ],
+      [
         12,
         9
       ],
       [
+        23,
+        18
+      ],
+      [
         4,
         14
+      ],
+      [
+        22,
+        22
       ],
       [
         15,
@@ -10590,6 +10865,10 @@
         16
       ],
       [
+        19,
+        16
+      ],
+      [
         0,
         12
       ],
@@ -10608,6 +10887,10 @@
       [
         4,
         9
+      ],
+      [
+        22,
+        17
       ],
       [
         14,
@@ -10650,6 +10933,10 @@
         19
       ],
       [
+        18,
+        19
+      ],
+      [
         8,
         11
       ],
@@ -10680,6 +10967,10 @@
       [
         3,
         8
+      ],
+      [
+        22,
+        21
       ],
       [
         14,
@@ -10718,6 +11009,10 @@
         23
       ],
       [
+        19,
+        6
+      ],
+      [
         11,
         2
       ],
@@ -10728,6 +11023,10 @@
       [
         14,
         3
+      ],
+      [
+        22,
+        16
       ],
       [
         14,
@@ -10770,6 +11069,10 @@
         11
       ],
       [
+        21,
+        20
+      ],
+      [
         10,
         1
       ],
@@ -10788,6 +11091,10 @@
       [
         14,
         7
+      ],
+      [
+        22,
+        20
       ],
       [
         14,
@@ -10814,6 +11121,10 @@
         17
       ],
       [
+        21,
+        15
+      ],
+      [
         10,
         5
       ],
@@ -10824,6 +11135,10 @@
       [
         2,
         10
+      ],
+      [
+        10,
+        23
       ],
       [
         2,
@@ -10870,6 +11185,10 @@
         21
       ],
       [
+        21,
+        19
+      ],
+      [
         10,
         0
       ],
@@ -10887,6 +11206,10 @@
       ],
       [
         13,
+        20
+      ],
+      [
+        24,
         20
       ],
       [
@@ -10918,6 +11241,14 @@
         16
       ],
       [
+        21,
+        14
+      ],
+      [
+        21,
+        23
+      ],
+      [
         10,
         4
       ],
@@ -10936,6 +11267,10 @@
       [
         2,
         18
+      ],
+      [
+        24,
+        15
       ],
       [
         13,
@@ -10990,6 +11325,10 @@
         20
       ],
       [
+        20,
+        22
+      ],
+      [
         12,
         18
       ],
@@ -11007,6 +11346,10 @@
       ],
       [
         13,
+        19
+      ],
+      [
+        24,
         19
       ],
       [
@@ -11038,11 +11381,19 @@
         8
       ],
       [
+        20,
+        17
+      ],
+      [
         12,
         13
       ],
       [
         12,
+        22
+      ],
+      [
+        23,
         22
       ],
       [
@@ -11102,6 +11453,10 @@
         20
       ],
       [
+        19,
+        20
+      ],
+      [
         20,
         12
       ],
@@ -11110,7 +11465,15 @@
         8
       ],
       [
+        20,
+        21
+      ],
+      [
         12,
+        17
+      ],
+      [
+        23,
         17
       ],
       [
@@ -11138,6 +11501,10 @@
         16
       ],
       [
+        24,
+        18
+      ],
+      [
         16,
         14
       ],
@@ -11151,6 +11518,10 @@
       ],
       [
         8,
+        15
+      ],
+      [
+        19,
         15
       ],
       [
@@ -11170,6 +11541,10 @@
         3
       ],
       [
+        20,
+        16
+      ],
+      [
         12,
         12
       ],
@@ -11179,6 +11554,10 @@
       ],
       [
         12,
+        21
+      ],
+      [
+        23,
         21
       ],
       [
@@ -11226,6 +11605,10 @@
         19
       ],
       [
+        19,
+        19
+      ],
+      [
         11,
         15
       ],
@@ -11243,6 +11626,10 @@
       ],
       [
         12,
+        16
+      ],
+      [
+        23,
         16
       ],
       [
@@ -11278,11 +11665,19 @@
         22
       ],
       [
+        19,
+        5
+      ],
+      [
         11,
         1
       ],
       [
         8,
+        14
+      ],
+      [
+        19,
         14
       ],
       [
@@ -11292,6 +11687,10 @@
       [
         0,
         10
+      ],
+      [
+        19,
+        23
       ],
       [
         11,
@@ -11308,6 +11707,10 @@
       [
         4,
         16
+      ],
+      [
+        22,
+        15
       ],
       [
         14,
@@ -11476,6 +11879,10 @@
         29
       ],
       [
+        22,
+        5
+      ],
+      [
         14,
         1
       ],
@@ -11714,6 +12121,10 @@
       [
         25,
         14
+      ],
+      [
+        22,
+        8
       ],
       [
         13,
@@ -12004,6 +12415,10 @@
         30
       ],
       [
+        24,
+        30
+      ],
+      [
         16,
         26
       ],
@@ -12393,6 +12808,10 @@
       ],
       [
         22,
+        22
+      ],
+      [
+        22,
         31
       ],
       [
@@ -12582,6 +13001,10 @@
       [
         14,
         8
+      ],
+      [
+        22,
+        21
       ],
       [
         14,
@@ -12660,6 +13083,10 @@
         22
       ],
       [
+        22,
+        7
+      ],
+      [
         14,
         3
       ],
@@ -12756,6 +13183,10 @@
         7
       ],
       [
+        22,
+        20
+      ],
+      [
         14,
         16
       ],
@@ -12792,6 +13223,10 @@
         10
       ],
       [
+        21,
+        6
+      ],
+      [
         29,
         19
       ],
@@ -12814,6 +13249,10 @@
       [
         25,
         21
+      ],
+      [
+        22,
+        6
       ],
       [
         13,
@@ -12942,6 +13381,10 @@
       [
         29,
         9
+      ],
+      [
+        21,
+        5
       ],
       [
         29,
@@ -13150,6 +13593,10 @@
       [
         23,
         22
+      ],
+      [
+        23,
+        31
       ],
       [
         13,
@@ -13646,15 +14093,15 @@
         5
       ],
       [
-        30,
-        18
-      ],
-      [
         19,
         18
       ],
       [
         8,
+        18
+      ],
+      [
+        30,
         18
       ],
       [
@@ -13772,6 +14219,10 @@
       [
         10,
         22
+      ],
+      [
+        25,
+        20
       ],
       [
         22,
@@ -14338,6 +14789,10 @@
         19
       ],
       [
+        24,
+        21
+      ],
+      [
         16,
         17
       ],
@@ -15315,6 +15770,10 @@
       ],
       [
         17,
+        13
+      ],
+      [
+        17,
         22
       ],
       [
@@ -15504,6 +15963,10 @@
       [
         5,
         10
+      ],
+      [
+        17,
+        12
       ],
       [
         17,
@@ -18190,15 +18653,15 @@
         5
       ],
       [
-        19,
-        18
-      ],
-      [
         30,
         18
       ],
       [
         8,
+        18
+      ],
+      [
+        19,
         18
       ],
       [
@@ -22562,6 +23025,10 @@
         18
       ],
       [
+        8,
+        18
+      ],
+      [
         0,
         14
       ],
@@ -23074,6 +23541,10 @@
         10
       ],
       [
+        9,
+        19
+      ],
+      [
         6,
         4
       ],
@@ -23095,6 +23566,10 @@
       ],
       [
         23,
+        20
+      ],
+      [
+        12,
         20
       ],
       [
@@ -23650,6 +24125,10 @@
         11
       ],
       [
+        19,
+        11
+      ],
+      [
         11,
         7
       ],
@@ -23660,6 +24139,10 @@
       [
         0,
         16
+      ],
+      [
+        10,
+        20
       ],
       [
         25,
@@ -23994,6 +24477,10 @@
         16
       ],
       [
+        13,
+        20
+      ],
+      [
         14,
         6
       ],
@@ -24392,6 +24879,10 @@
       [
         11,
         11
+      ],
+      [
+        11,
+        20
       ],
       [
         20,
@@ -26558,12 +27049,12 @@
         9
       ],
       [
-        16,
-        8
-      ],
-      [
         25,
         11
+      ],
+      [
+        16,
+        8
       ],
       [
         13,
@@ -29782,6 +30273,10 @@
         18
       ],
       [
+        17,
+        1
+      ],
+      [
         5,
         8
       ],
@@ -29952,6 +30447,10 @@
       [
         16,
         17
+      ],
+      [
+        17,
+        0
       ],
       [
         5,
@@ -30547,6 +31046,10 @@
       ],
       [
         15,
+        0
+      ],
+      [
+        15,
         9
       ],
       [
@@ -31158,6 +31661,10 @@
         5
       ],
       [
+        16,
+        1
+      ],
+      [
         1,
         12
       ],
@@ -31180,6 +31687,10 @@
       [
         16,
         19
+      ],
+      [
+        17,
+        2
       ],
       [
         5,
@@ -31388,6 +31899,10 @@
       [
         13,
         4
+      ],
+      [
+        16,
+        0
       ],
       [
         1,
@@ -31632,11 +32147,11 @@
         17
       ],
       [
-        19,
+        8,
         9
       ],
       [
-        8,
+        19,
         9
       ],
       [
@@ -33534,6 +34049,14 @@
         0
       ],
       [
+        27,
+        13
+      ],
+      [
+        30,
+        0
+      ],
+      [
         19,
         9
       ],
@@ -33678,6 +34201,10 @@
         4
       ],
       [
+        30,
+        4
+      ],
+      [
         11,
         0
       ],
@@ -33686,8 +34213,16 @@
         9
       ],
       [
+        25,
+        11
+      ],
+      [
         10,
         22
+      ],
+      [
+        25,
+        20
       ],
       [
         10,
@@ -33750,7 +34285,15 @@
         2
       ],
       [
+        26,
+        2
+      ],
+      [
         15,
+        11
+      ],
+      [
+        26,
         11
       ],
       [
@@ -33762,12 +34305,20 @@
         7
       ],
       [
+        26,
+        20
+      ],
+      [
         18,
         16
       ],
       [
         7,
         16
+      ],
+      [
+        29,
+        13
       ],
       [
         21,
@@ -33820,6 +34371,10 @@
       [
         2,
         22
+      ],
+      [
+        22,
+        0
       ],
       [
         2,
@@ -33906,6 +34461,10 @@
         15
       ],
       [
+        29,
+        17
+      ],
+      [
         21,
         13
       ],
@@ -33928,6 +34487,10 @@
       [
         10,
         3
+      ],
+      [
+        25,
+        1
       ],
       [
         10,
@@ -33998,6 +34561,10 @@
         18
       ],
       [
+        26,
+        1
+      ],
+      [
         17,
         20
       ],
@@ -34018,8 +34585,16 @@
         25
       ],
       [
+        29,
+        3
+      ],
+      [
         6,
         10
+      ],
+      [
+        29,
+        12
       ],
       [
         21,
@@ -34162,6 +34737,10 @@
         14
       ],
       [
+        29,
+        16
+      ],
+      [
         21,
         12
       ],
@@ -34176,6 +34755,10 @@
       [
         10,
         2
+      ],
+      [
+        25,
+        0
       ],
       [
         10,
@@ -34234,11 +34817,19 @@
         1
       ],
       [
+        28,
+        1
+      ],
+      [
         5,
         8
       ],
       [
         17,
+        10
+      ],
+      [
+        28,
         10
       ],
       [
@@ -34274,8 +34865,16 @@
         24
       ],
       [
+        29,
+        2
+      ],
+      [
         6,
         0
+      ],
+      [
+        29,
+        11
       ],
       [
         6,
@@ -34390,6 +34989,10 @@
         12
       ],
       [
+        28,
+        14
+      ],
+      [
         9,
         10
       ],
@@ -34439,6 +35042,10 @@
       ],
       [
         12,
+        20
+      ],
+      [
+        23,
         20
       ],
       [
@@ -34506,6 +35113,10 @@
         0
       ],
       [
+        28,
+        0
+      ],
+      [
         17,
         9
       ],
@@ -34524,6 +35135,10 @@
       [
         5,
         16
+      ],
+      [
+        28,
+        18
       ],
       [
         9,
@@ -34551,6 +35166,10 @@
       ],
       [
         20,
+        1
+      ],
+      [
+        31,
         1
       ],
       [
@@ -34718,7 +35337,15 @@
         5
       ],
       [
+        31,
+        5
+      ],
+      [
         12,
+        1
+      ],
+      [
+        23,
         1
       ],
       [
@@ -34775,6 +35402,10 @@
       ],
       [
         24,
+        2
+      ],
+      [
+        24,
         11
       ],
       [
@@ -34810,16 +35441,20 @@
         25
       ],
       [
-        18,
-        8
-      ],
-      [
         7,
         25
       ],
       [
+        18,
+        8
+      ],
+      [
         27,
         3
+      ],
+      [
+        27,
+        12
       ],
       [
         19,
@@ -34858,11 +35493,19 @@
         26
       ],
       [
+        30,
+        26
+      ],
+      [
         11,
         22
       ],
       [
         20,
+        0
+      ],
+      [
+        31,
         0
       ],
       [
@@ -34980,6 +35623,10 @@
       [
         27,
         16
+      ],
+      [
+        30,
+        3
       ],
       [
         19,
@@ -35030,7 +35677,15 @@
         4
       ],
       [
+        31,
+        4
+      ],
+      [
         12,
+        0
+      ],
+      [
+        23,
         0
       ],
       [
@@ -35124,6 +35779,14 @@
       [
         7,
         24
+      ],
+      [
+        27,
+        2
+      ],
+      [
+        27,
+        11
       ],
       [
         19,
@@ -35286,6 +35949,10 @@
         2
       ],
       [
+        30,
+        2
+      ],
+      [
         19,
         11
       ],
@@ -35367,6 +36034,10 @@
       ],
       [
         26,
+        0
+      ],
+      [
+        26,
         9
       ],
       [
@@ -35406,6 +36077,10 @@
         23
       ],
       [
+        27,
+        1
+      ],
+      [
         6,
         27
       ],
@@ -35420,6 +36095,10 @@
       [
         21,
         25
+      ],
+      [
+        30,
+        6
       ],
       [
         11,
@@ -35542,12 +36221,20 @@
         18
       ],
       [
+        29,
+        15
+      ],
+      [
         21,
         11
       ],
       [
         6,
         22
+      ],
+      [
+        21,
+        20
       ],
       [
         6,
@@ -35599,6 +36286,10 @@
       ],
       [
         22,
+        2
+      ],
+      [
+        22,
         11
       ],
       [
@@ -35608,6 +36299,10 @@
       [
         3,
         7
+      ],
+      [
+        22,
+        20
       ],
       [
         14,
@@ -35650,8 +36345,16 @@
         23
       ],
       [
+        29,
+        1
+      ],
+      [
         6,
         8
+      ],
+      [
+        29,
+        10
       ],
       [
         21,
@@ -35696,6 +36399,10 @@
       [
         2,
         10
+      ],
+      [
+        25,
+        12
       ],
       [
         10,
@@ -35742,6 +36449,10 @@
         13
       ],
       [
+        28,
+        13
+      ],
+      [
         5,
         20
       ],
@@ -35784,6 +36495,10 @@
       [
         6,
         12
+      ],
+      [
+        29,
+        14
       ],
       [
         21,
@@ -35834,7 +36549,15 @@
         23
       ],
       [
+        22,
+        1
+      ],
+      [
         13,
+        20
+      ],
+      [
+        24,
         20
       ],
       [
@@ -35902,12 +36625,20 @@
         22
       ],
       [
+        29,
+        0
+      ],
+      [
         9,
         31
       ],
       [
         6,
         7
+      ],
+      [
+        29,
+        9
       ],
       [
         21,
@@ -35934,12 +36665,20 @@
         27
       ],
       [
+        31,
+        27
+      ],
+      [
         10,
         4
       ],
       [
         2,
         0
+      ],
+      [
+        25,
+        2
       ],
       [
         10,
@@ -35998,11 +36737,19 @@
         1
       ],
       [
+        28,
+        3
+      ],
+      [
         5,
         10
       ],
       [
         17,
+        12
+      ],
+      [
+        28,
         12
       ],
       [
@@ -36040,6 +36787,14 @@
       [
         6,
         2
+      ],
+      [
+        29,
+        4
+      ],
+      [
+        21,
+        0
       ],
       [
         6,
@@ -36091,6 +36846,10 @@
       ],
       [
         24,
+        1
+      ],
+      [
+        24,
         10
       ],
       [
@@ -36290,11 +37049,19 @@
         0
       ],
       [
+        28,
+        2
+      ],
+      [
         5,
         9
       ],
       [
         17,
+        11
+      ],
+      [
+        28,
         11
       ],
       [
@@ -36350,6 +37117,10 @@
         3
       ],
       [
+        31,
+        3
+      ],
+      [
         20,
         12
       ],
@@ -36398,11 +37169,19 @@
         26
       ],
       [
+        15,
+        12
+      ],
+      [
         4,
         22
       ],
       [
         13,
+        0
+      ],
+      [
+        24,
         0
       ],
       [
@@ -36464,6 +37243,10 @@
       [
         8,
         6
+      ],
+      [
+        27,
+        19
       ],
       [
         19,
@@ -36622,6 +37405,10 @@
         14
       ],
       [
+        30,
+        1
+      ],
+      [
         19,
         10
       ],
@@ -36667,6 +37454,10 @@
       ],
       [
         20,
+        2
+      ],
+      [
+        31,
         2
       ],
       [
@@ -36750,6 +37541,10 @@
         22
       ],
       [
+        27,
+        0
+      ],
+      [
         7,
         31
       ],
@@ -36798,6 +37593,10 @@
         10
       ],
       [
+        30,
+        5
+      ],
+      [
         8,
         23
       ],
@@ -36823,6 +37622,10 @@
       ],
       [
         12,
+        2
+      ],
+      [
+        23,
         2
       ],
       [
@@ -36882,7 +37685,7 @@
         3
       ],
       [
-        15,
+        26,
         12
       ],
       [
@@ -38216,12 +39019,12 @@
         6
       ],
       [
-        7,
-        8
-      ],
-      [
         10,
         19
+      ],
+      [
+        7,
+        8
       ],
       [
         2,
@@ -39486,11 +40289,11 @@
         21
       ],
       [
-        7,
+        18,
         17
       ],
       [
-        18,
+        7,
         17
       ],
       [
@@ -41522,5 +42325,13 @@
         8
       ]
     ]
+  },
+  "quests": {
+    "active_quests": {},
+    "completed_quests": {
+      "bird_watcher_avian": {
+        "completed_at": "2026-09-01 00:41"
+      }
+    }
   }
 }

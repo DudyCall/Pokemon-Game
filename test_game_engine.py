@@ -15,7 +15,7 @@ from pokemon import Pokemon
 from inventory import Inventory
 from world import World, Player
 from save_system import SaveSystem, Pokedex
-from sound_manager import SoundManager
+from sound_manager import SoundManager, sound_mgr
 from graphics_manager import GraphicsManager, gfx
 
 class TestPokemonEngine(unittest.TestCase):
@@ -124,7 +124,7 @@ class TestPokemonEngine(unittest.TestCase):
         loaded_p1 = Player()
         res1, msg = SaveSystem.load_game(loaded_p1, World(), slot=1)
         self.assertIsNotNone(res1)
-        lp1, li1, lpd1, lpc1 = res1
+        lp1, li1, lpd1, lpc1 = res1[:4]
         self.assertEqual(loaded_p1.grid_x, 5)
         self.assertEqual(loaded_p1.current_map, "Pallet Town")
         self.assertEqual(lp1[0].species, "Squirtle")
@@ -135,7 +135,7 @@ class TestPokemonEngine(unittest.TestCase):
         loaded_p2 = Player()
         res2, msg = SaveSystem.load_game(loaded_p2, World(), slot=2)
         self.assertIsNotNone(res2)
-        lp2, li2, lpd2, lpc2 = res2
+        lp2, li2, lpd2, lpc2 = res2[:4]
         self.assertEqual(loaded_p2.grid_x, 12)
         self.assertEqual(loaded_p2.current_map, "Route 1")
         self.assertEqual(len(lp2), 2)
@@ -302,7 +302,7 @@ class TestPokemonEngine(unittest.TestCase):
         loaded_player = Player()
         res, msg = SaveSystem.load_game(loaded_player, World(), slot=2)
         self.assertIsNotNone(res)
-        l_party, l_inv, l_pdx, l_pc = res
+        l_party, l_inv, l_pdx, l_pc = res[:4]
         self.assertEqual(len(l_party), 6)
         self.assertEqual(l_party[-1].species, "Pikachu")
         self.assertEqual(len(l_pc), 1)
@@ -850,8 +850,597 @@ class TestPokemonEngine(unittest.TestCase):
         self.assertTrue(loaded_player.has_boat)
         self.assertTrue(loaded_player.is_sailing)
 
+    def test_walk_through_encounter_props(self):
+        from constants import ENCOUNTER_PROP_TILES
+        from pokemon_data import WILD_PROP_ENCOUNTERS, get_wild_encounters_for_prop
+        world = World()
+        player = Player(x=8, y=6, current_map="Pallet Town")
+        
+        # 1. Verify ENCOUNTER_PROP_TILES registry completeness
+        expected_props = ['G', 'F', '*', 'L', 'r', 'x', 'm', 'a', 'u', 'e']
+        for p_code in expected_props:
+            self.assertIn(p_code, ENCOUNTER_PROP_TILES, f"Prop '{p_code}' missing from ENCOUNTER_PROP_TILES")
+            info = ENCOUNTER_PROP_TILES[p_code]
+            self.assertIn("name", info)
+            self.assertIn("sfx", info)
+            self.assertIn("minimap_color", info)
+
+        # 2. Verify all prop tiles exist in gfx.cached_tiles and gfx.prop_overlays
+        expected_tiles = [
+            "tall_grass", "flower_meadow", "flower_red", "leaf_pile",
+            "cave_rubble", "snow_drift", "spooky_mist", "volcanic_ash",
+            "swamp_marsh", "electric_surge"
+        ]
+        for t_name in expected_tiles:
+            self.assertIn(t_name, gfx.cached_tiles, f"Cached tile '{t_name}' missing from gfx")
+            self.assertIsInstance(gfx.cached_tiles[t_name], pygame.Surface)
+
+        for p_code in expected_props:
+            self.assertIn(p_code, gfx.prop_overlays, f"Prop overlay '{p_code}' missing from gfx")
+            self.assertIsInstance(gfx.prop_overlays[p_code], pygame.Surface)
+
+        # 3. Verify all procedural step sounds are generated
+        for p_code in expected_props:
+            sfx_name = ENCOUNTER_PROP_TILES[p_code]["sfx"]
+            self.assertIn(sfx_name, sound_mgr.sounds, f"Step SFX '{sfx_name}' missing from sound_mgr")
+            # Verify playing SFX does not error
+            sound_mgr.play_sfx(sfx_name)
+
+        # 4. Verify player detection and foot immersion overlay rendering on each prop
+        surf = pygame.Surface((800, 600))
+        for p_code in expected_props:
+            player.current_prop = p_code
+            player.in_tall_grass = True
+            player.is_moving = False
+            player.draw(surf, 0, 0)
+            self.assertEqual(player.current_prop, p_code)
+
+        # 5. Verify passability across maps containing new props
+        # Route 1: (3, 2) is F (Wildflower), (3, 4) is L (Leaf pile)
+        self.assertEqual(world.get_tile("Route 1", 3, 2), "G")
+        self.assertEqual(world.get_tile("Route 1", 13, 2), "F")
+        self.assertTrue(world.is_passable("Route 1", 13, 2))
+        self.assertEqual(world.get_tile("Route 1", 3, 4), "L")
+        self.assertTrue(world.is_passable("Route 1", 3, 4))
+        
+        # Route 22: (6, 5) is u (Swamp marsh), (18, 3) is r (Cave rubble)
+        self.assertEqual(world.get_tile("Route 22", 6, 5), "u")
+        self.assertTrue(world.is_passable("Route 22", 6, 5))
+        self.assertEqual(world.get_tile("Route 22", 18, 3), "r")
+        self.assertTrue(world.is_passable("Route 22", 18, 3))
+
+        # Mt. Moon: (6, 3) is r (Cave rubble), (19, 3) is e (Electric surge / crystal)
+        self.assertEqual(world.get_tile("Mt. Moon", 6, 3), "r")
+        self.assertTrue(world.is_passable("Mt. Moon", 6, 3))
+        self.assertEqual(world.get_tile("Mt. Moon", 19, 3), "e")
+        self.assertTrue(world.is_passable("Mt. Moon", 19, 3))
+
+        # Seafoam Islands: (6, 3) is x (Deep snow drift)
+        self.assertEqual(world.get_tile("Seafoam Islands", 6, 3), "x")
+        self.assertTrue(world.is_passable("Seafoam Islands", 6, 3))
+
+        # Pokémon Tower: (6, 3) is m (Haunted mist)
+        self.assertEqual(world.get_tile("Pokémon Tower", 6, 3), "m")
+        self.assertTrue(world.is_passable("Pokémon Tower", 6, 3))
+
+        # Cinnabar Island: (6, 15) is a (Volcanic ash)
+        self.assertEqual(world.get_tile("Cinnabar Island", 6, 15), "a")
+        self.assertTrue(world.is_passable("Cinnabar Island", 6, 15))
+
+        # 6. Verify WILD_PROP_ENCOUNTERS database integrity
+        for zone_name, props_dict in WILD_PROP_ENCOUNTERS.items():
+            for p_code, encounters in props_dict.items():
+                self.assertIn(p_code, ENCOUNTER_PROP_TILES, f"Unknown prop '{p_code}' in WILD_PROP_ENCOUNTERS['{zone_name}']")
+                self.assertGreater(len(encounters), 0, f"Empty encounters for '{p_code}' in '{zone_name}'")
+                for enc in encounters:
+                    species = enc["species"]
+                    self.assertIn(species, POKEMON_SPECIES, f"Unknown species '{species}' in prop '{p_code}' of '{zone_name}'")
+                    self.assertLessEqual(enc["min_lvl"], enc["max_lvl"])
+                    self.assertGreater(enc["weight"], 0)
+
+        # 7. Verify get_wild_encounters_for_prop resolution
+        table_flower = get_wild_encounters_for_prop("Route 1", "F")
+        self.assertGreater(len(table_flower), 0)
+        self.assertTrue(any(e["species"] == "Butterfree" for e in table_flower))
+
+        table_ash = get_wild_encounters_for_prop("Cinnabar Island", "a")
+        self.assertGreater(len(table_ash), 0)
+        self.assertTrue(any(e["species"] == "Magmar" for e in table_ash))
+
+        table_mist = get_wild_encounters_for_prop("Pokémon Tower", "m")
+        self.assertGreater(len(table_mist), 0)
+        self.assertTrue(any(e["species"] == "Gastly" for e in table_mist))
+
+        table_spark = get_wild_encounters_for_prop("Power Plant", "e")
+        self.assertGreater(len(table_spark), 0)
+        self.assertTrue(any(e["species"] == "Voltorb" for e in table_spark))
+
+        table_snow = get_wild_encounters_for_prop("Seafoam Islands", "x")
+        self.assertGreater(len(table_snow), 0)
+        self.assertTrue(any(e["species"] == "Seel" for e in table_snow))
+
+        # 8. Test drawing world and minimap across all maps with new props
+        all_maps = list(world.maps.keys())
+        for m_name in all_maps:
+            world.draw(surf, m_name, 0, 0)
+            world.draw_minimap(surf, m_name, 5, 5)
+
+    def test_trainer_portraits_and_pre_battle_dialogue(self):
+        from ui_manager import DialogueBox
+        surf = pygame.Surface((800, 600))
+        
+        # 1. Test portrait generation for every registered trainer
+        for t in TRAINERS:
+            t_id = t["id"]
+            # Idle portrait
+            p_idle = gfx.get_trainer_portrait(t_id, size=(96, 96), is_talking=False)
+            self.assertIsInstance(p_idle, pygame.Surface)
+            self.assertEqual(p_idle.get_size(), (96, 96))
+            
+            # Talking animated portrait
+            p_talk = gfx.get_trainer_portrait(t_id, size=(96, 96), is_talking=True)
+            self.assertIsInstance(p_talk, pygame.Surface)
+            self.assertEqual(p_talk.get_size(), (96, 96))
+
+        # 2. Test NPC and Special Portraits
+        npc_keys = ["Nurse Joy", "Prof. Oak", "Bill", "Mom", "Mart Clerk", "Museum Scientist", "item", "sign"]
+        for key in npc_keys:
+            p_surf = gfx.get_trainer_portrait(key, size=(96, 96))
+            self.assertIsInstance(p_surf, pygame.Surface)
+            self.assertEqual(p_surf.get_size(), (96, 96))
+
+        # 3. Test DialogueBox functionality with trainer portrait
+        joey = [t for t in TRAINERS if t["id"] == "youngster_joey"][0]
+        battle_started = []
+        
+        def on_battle_trigger():
+            battle_started.append(True)
+
+        diag = DialogueBox(
+            joey["name"],
+            joey["dialog_before"],
+            on_complete=on_battle_trigger,
+            portrait_key=joey["id"],
+            trainer_data=joey
+        )
+
+        self.assertEqual(diag.speaker, "Youngster Joey")
+        self.assertEqual(diag.portrait_key, "youngster_joey")
+        self.assertFalse(diag.finished)
+        self.assertEqual(diag.visible_chars, 0)
+
+        # Update dialogue typing
+        diag.update(0.5)
+        self.assertGreater(diag.visible_chars, 0)
+        self.assertFalse(diag.finished)
+
+        # Draw dialogue window with portrait
+        diag.draw(surf)
+
+        # Confirm to finish text instantly
+        event_confirm = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z)
+        done = diag.handle_input(event_confirm)
+        self.assertFalse(done) # First confirm completes typewriter text
+        self.assertTrue(diag.finished)
+        self.assertEqual(diag.visible_chars, len(joey["dialog_before"]))
+        self.assertEqual(len(battle_started), 0)
+
+        # Second confirm triggers on_complete callback (battle launch)
+        diag.draw(surf)
+        done = diag.handle_input(event_confirm)
+        self.assertTrue(done)
+        self.assertEqual(len(battle_started), 1)
+
+        # 4. Test Gym Leader and Team Rocket badge headers
+        brock = [t for t in TRAINERS if t["id"] == "gym_leader_brock"][0]
+        diag_brock = DialogueBox(brock["name"], brock["dialog_before"], portrait_key=brock["id"])
+        diag_brock.draw(surf)
+
+        rocket = [t for t in TRAINERS if t["id"] == "rocket_grunt_1"][0]
+        diag_rocket = DialogueBox(rocket["name"], rocket["dialog_before"], portrait_key=rocket["id"])
+        diag_rocket.draw(surf)
+
+    def test_pokemon_move_reroll_and_tutor_system(self):
+        from ui_manager import MoveRerollScreen
+        from world import World
+        surf = pygame.Surface((800, 600))
+        
+        # 1. Test get_rerollable_moves for various species
+        charmander = Pokemon("Charmander", level=10)
+        c_moves = charmander.get_rerollable_moves()
+        self.assertGreater(len(c_moves), 0)
+        # Should not contain currently known moves
+        known = {m["name"] for m in charmander.moves}
+        for km in known:
+            self.assertNotIn(km, c_moves)
+            
+        # 2. Test reroll_move when having < 4 moves
+        charmander.moves = [charmander.create_move_slot("Scratch")]
+        ok, new_m, old_m, msg = charmander.reroll_move(specific_move="Flamethrower")
+        self.assertTrue(ok)
+        self.assertEqual(new_m, "Flamethrower")
+        self.assertIsNone(old_m)
+        self.assertEqual(len(charmander.moves), 2)
+        self.assertEqual(charmander.moves[1]["name"], "Flamethrower")
+
+        # 3. Test reroll_move when having 4 moves (replacing slot 1)
+        charmander.moves = [
+            charmander.create_move_slot("Scratch"),
+            charmander.create_move_slot("Growl"),
+            charmander.create_move_slot("Ember"),
+            charmander.create_move_slot("Dragon Breath")
+        ]
+        ok, new_m, old_m, msg = charmander.reroll_move(replace_idx=1, specific_move="Fire Blast")
+        self.assertTrue(ok)
+        self.assertEqual(new_m, "Fire Blast")
+        self.assertEqual(old_m, "Growl")
+        self.assertEqual(len(charmander.moves), 4)
+        self.assertEqual(charmander.moves[1]["name"], "Fire Blast")
+
+        # 4. Test Move Master NPC in Pokecenter
+        w = World()
+        pc_npcs = w.maps["Pokecenter"]["npcs"]
+        move_master = [n for n in pc_npcs if n.get("name") == "Move Master"]
+        self.assertEqual(len(move_master), 1)
+        self.assertTrue(move_master[0].get("is_move_tutor"))
+
+        # 5. Test Move Reroll Disk item in ITEMS and Inventory usage
+        self.assertIn("Move Reroll Disk", ITEMS)
+        self.assertEqual(ITEMS["Move Reroll Disk"]["price"], 3000)
+
+        inv = Inventory()
+        inv.money = 10000
+        inv.add_item("Move Reroll Disk", 1)
+        ok, msg = inv.use_item_on_pokemon("Move Reroll Disk", charmander)
+        self.assertTrue(ok)
+        self.assertEqual(inv.get_count("Move Reroll Disk"), 0)
+
+        # 6. Test MoveRerollScreen navigation and 3000 coin transactions
+        screen = MoveRerollScreen([charmander], inv)
+        self.assertEqual(screen.cost, 3000)
+        
+        # Test Drawing UI
+        screen.draw(surf)
+        
+        # Test Random Reroll ($3,000)
+        initial_money = inv.money
+        # Press Confirm on option 0 (Random Reroll)
+        event_confirm = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z)
+        screen.handle_input(event_confirm)
+        
+        # If 4 moves, screen enters REPLACE_SLOT mode
+        self.assertEqual(screen.mode, "REPLACE_SLOT")
+        self.assertIsNotNone(screen.pending_move)
+        
+        # Select slot 0 to replace
+        screen.handle_input(event_confirm)
+        self.assertEqual(screen.mode, "MENU")
+        self.assertEqual(inv.money, initial_money - 3000)
+        
+        # Test Catalogue Mode
+        event_down = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN)
+        screen.handle_input(event_down) # Highlight option 1 (Catalogue)
+        screen.handle_input(event_confirm) # Enter Catalogue
+        self.assertEqual(screen.mode, "CATALOGUE")
+        screen.draw(surf)
+        
+        # Cancel back to Menu
+        event_cancel = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_x)
+        screen.handle_input(event_cancel)
+        self.assertEqual(screen.mode, "MENU")
+
+        # Test Insufficient Funds ($0 balance)
+        inv.money = 500
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP)) # Back to Random Reroll
+        screen.handle_input(event_confirm)
+        self.assertEqual(screen.mode, "MENU")
+        self.assertIn("You need 3000 coins", screen.message)
+        self.assertEqual(inv.money, 500) # No money deducted
+
+    def test_item_explanations_and_bag_screen(self):
+        from ui_manager import BagScreen, ShopScreen
+        from battle_system import BattleSystem, BattlePhase
+        surf = pygame.Surface((800, 600))
+        
+        # 1. Verify every item in ITEMS has full explanations and metadata
+        self.assertGreater(len(ITEMS), 10)
+        for item_name, data in ITEMS.items():
+            self.assertIn("name", data, f"{item_name} missing name")
+            self.assertIn("category", data, f"{item_name} missing category")
+            self.assertIn("desc", data, f"{item_name} missing explanation desc")
+            self.assertGreater(len(data["desc"]), 10, f"{item_name} explanation desc is too short")
+            self.assertIn("usage", data, f"{item_name} missing usage instructions")
+            self.assertGreater(len(data["usage"]), 5, f"{item_name} usage is too short")
+            self.assertIn("price", data, f"{item_name} missing price")
+
+        # 2. Test evolution stone item usage (e.g. Eevee -> Flareon with Fire Stone)
+        eevee = Pokemon("Eevee", level=20)
+        inv = Inventory()
+        inv.add_item("Fire Stone", 1)
+        inv.add_item("Burn Heal", 1)
+        inv.add_item("Potion", 5)
+
+        # Test Evolution Stone
+        ok, msg = inv.use_item_on_pokemon("Fire Stone", eevee)
+        self.assertTrue(ok)
+        self.assertEqual(eevee.species, "Flareon")
+        self.assertEqual(inv.get_count("Fire Stone"), 0)
+
+        # Test Incompatible Stone
+        inv.add_item("Water Stone", 1)
+        ok, msg = inv.use_item_on_pokemon("Water Stone", eevee) # Flareon cannot evolve with Water Stone
+        self.assertFalse(ok)
+        self.assertIn("isn't affected", msg)
+
+        # Test Burn Heal
+        eevee.status = "Burn"
+        ok, msg = inv.use_item_on_pokemon("Burn Heal", eevee)
+        self.assertTrue(ok)
+        self.assertIsNone(eevee.status)
+
+        # 3. Test BagScreen navigation, category filtering, and drawing
+        bag = BagScreen([eevee], inv)
+        self.assertEqual(bag.mode, "BAG")
+        
+        # Draw Bag Screen
+        bag.draw(surf)
+        
+        # Switch category tab (Right arrow)
+        bag.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT))
+        self.assertEqual(bag.category_idx, 1)
+        bag.draw(surf)
+        
+        # Switch back to ALL tab
+        bag.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT))
+        self.assertEqual(bag.category_idx, 0)
+        
+        # Test item usage flow in BagScreen (Using Potion on damaged Pokemon)
+        eevee.current_hp = 10
+        potion_idx = [i for i, (n, c, d) in enumerate(bag.get_filtered_items()) if n == "Potion"][0]
+        bag.selected_idx = potion_idx
+        
+        # Press Confirm to enter USE_TARGET mode
+        bag.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertEqual(bag.mode, "USE_TARGET")
+        bag.draw(surf) # Verify target selection overlay draws
+        
+        # Confirm target Pokemon 0
+        bag.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertEqual(bag.mode, "BAG")
+        self.assertGreater(eevee.current_hp, 10) # Potion healed 20 HP
+        
+        # 4. Test In-Battle Bag Select Item Explanation Card
+        wild_pidgey = Pokemon("Pidgey", level=3)
+        battle = BattleSystem([eevee], wild_pidgey, is_trainer=False, inventory=inv)
+        battle.phase = BattlePhase.BAG_SELECT
+        battle.bag_index = 0
+        battle._draw_bottom_panel(surf) # Must draw item selector and live explanation card without error
+
+    def test_expanded_world_maps_and_gym_leaders(self):
+        from world import MAP_DEFINITIONS, World, Player
+        from ui_manager import TrainerCardScreen
+        from save_system import Pokedex
+        surf = pygame.Surface((800, 600))
+        
+        # 1. Test MAP_DEFINITIONS integrity
+        expected_new_maps = [
+            "Route 5", "Route 6", "Vermilion City", "Vermilion Gym", "S.S. Anne",
+            "Route 11", "Diglett's Cave", "Route 7", "Route 8", "Celadon City",
+            "Celadon Gym", "Saffron City", "Saffron Gym", "Route 12",
+            "Fuchsia City", "Fuchsia Gym", "Victory Road", "Indigo Plateau", "Cerulean Cave"
+        ]
+        for m_name in expected_new_maps:
+            self.assertIn(m_name, MAP_DEFINITIONS, f"Map '{m_name}' not found in MAP_DEFINITIONS")
+            m_data = MAP_DEFINITIONS[m_name]
+            grid = m_data["grid"]
+            self.assertGreater(len(grid), 0)
+            row_len = len(grid[0])
+            for r_idx, row in enumerate(grid):
+                self.assertEqual(len(row), row_len, f"Inconsistent row length in {m_name} row {r_idx}")
+
+        # 2. Test Warps validity
+        for m_name, m_data in MAP_DEFINITIONS.items():
+            warps = m_data.get("warps", {})
+            for (wx, wy), w_info in warps.items():
+                tgt_map = w_info["target_map"]
+                self.assertIn(tgt_map, MAP_DEFINITIONS, f"Warp in {m_name} at ({wx},{wy}) points to nonexistent map {tgt_map}")
+                tgt_grid = MAP_DEFINITIONS[tgt_map]["grid"]
+                tgt_h = len(tgt_grid)
+                tgt_w = len(tgt_grid[0])
+                tx, ty = w_info["target_x"], w_info["target_y"]
+                self.assertTrue(0 <= tx < tgt_w, f"Warp in {m_name} has invalid target_x {tx} for {tgt_map} (width {tgt_w})")
+                self.assertTrue(0 <= ty < tgt_h, f"Warp in {m_name} has invalid target_y {ty} for {tgt_map} (height {tgt_h})")
+
+        # 3. Test Gym Leaders & League Champion existence
+        gym_leader_ids = [
+            "gym_leader_brock", "gym_leader_misty", "gym_leader_surge",
+            "gym_leader_erika", "gym_leader_sabrina", "gym_leader_koga", "champion_blue"
+        ]
+        trainer_ids = {t["id"]: t for t in TRAINERS}
+        for gl_id in gym_leader_ids:
+            self.assertIn(gl_id, trainer_ids, f"Leader/Champion {gl_id} missing in TRAINERS")
+            t_entry = trainer_ids[gl_id]
+            self.assertGreater(len(t_entry["party"]), 0)
+            self.assertTrue("reward_badge" in t_entry or "reward_money" in t_entry)
+
+        # 4. Test TrainerCardScreen Region Map Drawing
+        world = World()
+        player = Player(x=8, y=6, current_map="Vermilion City")
+        inv = Inventory()
+        dex = Pokedex()
+        card_screen = TrainerCardScreen(player, world, inv, dex, initial_tab=1)
+        self.assertEqual(card_screen.active_tab, 1)
+        self.assertGreater(len(card_screen.map_nodes), 30)
+        card_screen.draw(surf)
+
+    def test_quest_system_catch_progression_and_auto_completion(self):
+        from quest_system import QuestManager, QUEST_DEFINITIONS
+        q_mgr = QuestManager()
+        inv = Inventory()
+        inv.money = 500
+
+        # 1. Accept bug hunt quest
+        self.assertTrue(q_mgr.accept_quest("oak_bug_hunt"))
+        self.assertTrue(q_mgr.is_active("oak_bug_hunt"))
+        self.assertEqual(q_mgr.get_progress("oak_bug_hunt"), 0)
+
+        # 2. Catch Non-Bug Pokemon (e.g. Pidgey) -> No progress
+        q_mgr.on_pokemon_caught("Pidgey", inv)
+        self.assertEqual(q_mgr.get_progress("oak_bug_hunt"), 0)
+
+        # 3. Catch Bug Pokemon 1 (Caterpie)
+        q_mgr.on_pokemon_caught("Caterpie", inv)
+        self.assertEqual(q_mgr.get_progress("oak_bug_hunt"), 1)
+        self.assertFalse(q_mgr.is_completed("oak_bug_hunt"))
+
+        # 4. Catch Bug Pokemon 2 (Weedle)
+        q_mgr.on_pokemon_caught("Weedle", inv)
+        self.assertEqual(q_mgr.get_progress("oak_bug_hunt"), 2)
+
+        # 5. Catch Bug Pokemon 3 (Butterfree) -> Meets target (3) -> Auto-completes instantly!
+        q_mgr.on_pokemon_caught("Butterfree", inv)
+        self.assertFalse(q_mgr.is_active("oak_bug_hunt"))
+        self.assertTrue(q_mgr.is_completed("oak_bug_hunt"))
+
+        # 6. Verify Instant Rewards Delivery
+        # Oak bug hunt rewards: $1000, 5x Great Ball, 1x Rare Candy
+        self.assertEqual(inv.money, 1500)
+        self.assertEqual(inv.get_count("Great Ball"), 5)
+        self.assertEqual(inv.get_count("Rare Candy"), 1)
+
+        # 7. Verify Notification
+        notifs = q_mgr.pop_notifications()
+        self.assertEqual(len(notifs), 1)
+        self.assertIn("QUEST COMPLETE", notifs[0])
+        self.assertIn("Bug Researcher's Survey", notifs[0])
+
+    def test_quest_system_defeat_and_trainer_triggers(self):
+        from quest_system import QuestManager
+        q_mgr = QuestManager()
+        inv = Inventory()
+        inv.money = 0
+
+        # Accept karate spirit quest (Defeat 4 Fighting or Rock Pokémon)
+        q_mgr.accept_quest("karate_spirit")
+        self.assertTrue(q_mgr.is_active("karate_spirit"))
+
+        # Defeat Water Pokemon -> No progress
+        q_mgr.on_pokemon_defeated("Squirtle", inv)
+        self.assertEqual(q_mgr.get_progress("karate_spirit"), 0)
+
+        # Defeat Fighting/Rock Pokemon
+        q_mgr.on_pokemon_defeated("Mankey", inv) # Fighting
+        q_mgr.on_pokemon_defeated("Geodude", inv) # Rock
+        q_mgr.on_pokemon_defeated("Machop", inv) # Fighting
+        self.assertEqual(q_mgr.get_progress("karate_spirit"), 3)
+
+        q_mgr.on_pokemon_defeated("Onix", inv) # Rock -> 4/4!
+        self.assertTrue(q_mgr.is_completed("karate_spirit"))
+        self.assertEqual(inv.money, 3000)
+        self.assertEqual(inv.get_count("Move Reroll Disk"), 1)
+        self.assertEqual(inv.get_count("Max Potion"), 2)
+
+        # Accept and complete Trainer trials quest (Defeat 5 trainers)
+        q_mgr.accept_quest("champion_road_trial")
+        for i in range(5):
+            q_mgr.on_trainer_defeated(f"trainer_{i}", inv)
+        self.assertTrue(q_mgr.is_completed("champion_road_trial"))
+        self.assertEqual(inv.get_count("Rare Candy"), 5)
+        self.assertEqual(inv.get_count("Nugget"), 2)
+
+    def test_quest_system_stone_evolution_trigger(self):
+        from quest_system import QuestManager
+        q_mgr = QuestManager()
+        inv = Inventory()
+        inv.money = 0
+
+        q_mgr.accept_quest("celadon_evolution_mastery")
+        self.assertTrue(q_mgr.is_active("celadon_evolution_mastery"))
+
+        # Use Potion -> No progress
+        q_mgr.on_item_used("Potion", inv, is_evolution_stone=False)
+        self.assertEqual(q_mgr.get_progress("celadon_evolution_mastery"), 0)
+
+        # Use Water Stone -> Completes quest!
+        q_mgr.on_item_used("Water Stone", inv, is_evolution_stone=True)
+        self.assertTrue(q_mgr.is_completed("celadon_evolution_mastery"))
+        self.assertEqual(inv.money, 3500)
+        self.assertEqual(inv.get_count("Rare Candy"), 3)
+        self.assertEqual(inv.get_count("Nugget"), 1)
+
+    def test_quest_persistence_save_and_load(self):
+        from quest_system import QuestManager
+        world = World()
+        player = Player(x=8, y=6, current_map="Pallet Town")
+        party = [Pokemon("Pikachu", level=12)]
+        inv = Inventory()
+        dex = Pokedex()
+        q_mgr = QuestManager()
+
+        # Set up active quest with partial progress and one completed quest
+        q_mgr.accept_quest("oak_bug_hunt")
+        q_mgr.active_quests["oak_bug_hunt"]["progress"] = 2
+        q_mgr.completed_quests["sparky_electric_charge"] = {"completed_at": "2026-09-01 12:00:00"}
+
+        SaveSystem.save_game(player, party, inv, dex, world, slot=2, quest_mgr=q_mgr)
+
+        loaded_player = Player()
+        loaded_world = World()
+        res, msg = SaveSystem.load_game(loaded_player, loaded_world, slot=2)
+        self.assertIsNotNone(res)
+        self.assertGreaterEqual(len(res), 5)
+        loaded_party, loaded_inv, loaded_dex, loaded_pc, loaded_q_data = res[:5]
+
+        loaded_q_mgr = QuestManager.from_dict(loaded_q_data)
+        self.assertTrue(loaded_q_mgr.is_active("oak_bug_hunt"))
+        self.assertEqual(loaded_q_mgr.get_progress("oak_bug_hunt"), 2)
+        self.assertTrue(loaded_q_mgr.is_completed("sparky_electric_charge"))
+        self.assertFalse(loaded_q_mgr.is_active("sparky_electric_charge"))
+
+    def test_quest_log_ui_screen_and_map_indicators(self):
+        from quest_system import QuestManager
+        from ui_manager import QuestLogScreen, PauseMenu
+        surf = pygame.Surface((800, 600))
+        q_mgr = QuestManager()
+        player = Player(x=8, y=6, current_map="Pallet Town")
+        world = World()
+
+        # Pause menu contains QUESTS option
+        p_menu = PauseMenu()
+        self.assertIn("QUESTS", p_menu.options)
+
+        # Empty Quest log draw
+        screen = QuestLogScreen(q_mgr, player)
+        screen.draw(surf)
+
+        # Accept active quest and complete another
+        q_mgr.accept_quest("oak_bug_hunt")
+        q_mgr.active_quests["oak_bug_hunt"]["progress"] = 1
+        q_mgr.completed_quests["bird_watcher_avian"] = {"completed_at": "2026-09-01"}
+
+        # Draw active tab
+        self.assertEqual(screen.active_tab, 0)
+        screen.draw(surf)
+
+        # Switch to Completed tab
+        event_right = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
+        screen.handle_input(event_right)
+        self.assertEqual(screen.active_tab, 1)
+        screen.draw(surf)
+
+        # World draw with quest indicator badges
+        world.draw(surf, "Pallet Town", 0, 0, quest_mgr=q_mgr)
+        world.draw(surf, "Route 1", 0, 0, quest_mgr=q_mgr)
+        world.draw(surf, "Pewter City", 0, 0, quest_mgr=q_mgr)
+        world.draw(surf, "Vermilion City", 0, 0, quest_mgr=q_mgr)
+
 if __name__ == "__main__":
     unittest.main()
+
+
+
+
+
 
 
 

@@ -2794,59 +2794,133 @@ POKEMON_SPECIES = {
 ITEMS = {
     "Poke Ball": {
         "name": "Poké Ball", "category": "ball", "catch_mult": 1.0, "price": 200,
-        "desc": "A device for catching wild Pokémon. It is thrown like a ball."
+        "desc": "A standard capsule for capturing wild Pokémon in battle. Throw it at weakened wild Pokémon to catch them.",
+        "usage": "Use during wild Pokémon battles. Best when target has low HP or a status condition."
     },
     "Great Ball": {
         "name": "Great Ball", "category": "ball", "catch_mult": 1.5, "price": 600,
-        "desc": "A good, high-performance Ball that provides a higher catch rate."
+        "desc": "A high-performance capsule providing a 1.5x higher catch rate than a standard Poké Ball.",
+        "usage": "Use during wild Pokémon battles for tough or higher-level targets."
     },
     "Ultra Ball": {
         "name": "Ultra Ball", "category": "ball", "catch_mult": 2.0, "price": 1200,
-        "desc": "An ultra-performance Ball with a superior catch rate."
+        "desc": "An ultra-grade capsule providing a superior 2.0x catch rate for capturing rare, powerful, or elusive wild Pokémon.",
+        "usage": "Use during battle against rare species or Legendary Pokémon for maximum catch probability."
     },
     "Potion": {
         "name": "Potion", "category": "medicine", "heal_hp": 20, "price": 300,
-        "desc": "A spray-type medicine that restores the HP of one Pokémon by 20 points."
+        "desc": "A spray-type wound medicine that restores 20 HP to a single injured Pokémon.",
+        "usage": "Use from the Bag or during battle on any damaged Pokémon."
     },
     "Super Potion": {
         "name": "Super Potion", "category": "medicine", "heal_hp": 50, "price": 700,
-        "desc": "A spray-type medicine that restores the HP of one Pokémon by 50 points."
+        "desc": "An advanced medical spray that restores 50 HP to a single injured Pokémon.",
+        "usage": "Use from the Bag or during battle to heal moderate battle damage."
     },
     "Max Potion": {
         "name": "Max Potion", "category": "medicine", "heal_hp": 9999, "price": 2500,
-        "desc": "Fully restores the HP of one Pokémon."
+        "desc": "A fully concentrated pharmaceutical spray that completely restores 100% of a Pokémon's maximum HP.",
+        "usage": "Use from the Bag or during battle on heavily injured high-level Pokémon."
     },
     "Revive": {
         "name": "Revive", "category": "medicine", "revive_hp_percent": 50, "price": 1500,
-        "desc": "Revives a fainted Pokémon and restores half of its maximum HP."
+        "desc": "A revitalizing medicine that revives a fainted Pokémon (0 HP) and restores half of its maximum HP.",
+        "usage": "Use from the Bag or during battle on a fainted Pokémon to bring it back into action."
     },
     "Antidote": {
         "name": "Antidote", "category": "medicine", "cure_status": "Poison", "price": 100,
-        "desc": "Cures a Pokémon of poison."
+        "desc": "A specialized serum that cures a Pokémon of Poison status and stops residual poison damage.",
+        "usage": "Use from the Bag or during battle whenever a Pokémon is afflicted with Poison."
     },
     "Paralyze Heal": {
         "name": "Paralyze Heal", "category": "medicine", "cure_status": "Paralysis", "price": 200,
-        "desc": "Heals a paralyzed Pokémon."
+        "desc": "A spray medicine that cures Paralysis, restoring full Speed and eliminating the chance of full paralysis.",
+        "usage": "Use from the Bag or during battle whenever a Pokémon is paralyzed."
     },
     "Awakening": {
         "name": "Awakening", "category": "medicine", "cure_status": "Sleep", "price": 250,
-        "desc": "Awakens a sleeping Pokémon."
+        "desc": "An aromatic smelling-salts spray that immediately awakens a Pokémon from Sleep status.",
+        "usage": "Use from the Bag or during battle whenever a Pokémon has fallen asleep."
+    },
+    "Burn Heal": {
+        "name": "Burn Heal", "category": "medicine", "cure_status": "Burn", "price": 250,
+        "desc": "A cooling salve that cures Burn status, stopping burn damage and restoring physical Attack power.",
+        "usage": "Use from the Bag or during battle whenever a Pokémon is burned."
     },
     "Rare Candy": {
         "name": "Rare Candy", "category": "candy", "level_up": 1, "price": 4800,
-        "desc": "A candy that raises the level of a single Pokémon by one."
+        "desc": "A legendary energy-dense candy that instantly raises a single Pokémon's level by 1 and boosts all stats.",
+        "usage": "Use from the Bag on any Pokémon below Level 100 to level up immediately."
     },
     "Moon Stone": {
-        "name": "Moon Stone", "category": "item", "price": 5000,
-        "desc": "A peculiar stone that makes certain species of Pokémon evolve."
+        "name": "Moon Stone", "category": "stone", "price": 5000, "stone_type": "Moon Stone",
+        "desc": "A cosmic lunar stone that radiates a pale glow. Triggers evolution for Clefairy, Jigglypuff, Nidorina, and Nidorino.",
+        "usage": "Use from the Bag on Clefairy (-> Clefable), Nidorina (-> Nidoqueen), or Nidorino (-> Nidoking)."
+    },
+    "Fire Stone": {
+        "name": "Fire Stone", "category": "stone", "price": 5000, "stone_type": "Fire Stone",
+        "desc": "A warm elemental stone with an inner flame core. Triggers evolution for Vulpix, Growlithe, and Eevee.",
+        "usage": "Use from the Bag on Vulpix (-> Ninetales), Growlithe (-> Arcanine), or Eevee (-> Flareon)."
+    },
+    "Water Stone": {
+        "name": "Water Stone", "category": "stone", "price": 5000, "stone_type": "Water Stone",
+        "desc": "A clear blue crystalline stone. Triggers evolution for Poliwhirl, Shellder, Staryu, and Eevee.",
+        "usage": "Use from the Bag on Poliwhirl (-> Poliwrath), Shellder (-> Cloyster), Staryu (-> Starmie), or Eevee (-> Vaporeon)."
+    },
+    "Thunder Stone": {
+        "name": "Thunder Stone", "category": "stone", "price": 5000, "stone_type": "Thunder Stone",
+        "desc": "An electric stone crackling with lightning sparks. Triggers evolution for Pikachu and Eevee.",
+        "usage": "Use from the Bag on Pikachu (-> Raichu) or Eevee (-> Jolteon)."
+    },
+    "Leaf Stone": {
+        "name": "Leaf Stone", "category": "stone", "price": 5000, "stone_type": "Leaf Stone",
+        "desc": "A verdant woodland stone with a leaf imprint. Triggers evolution for Gloom, Weepinbell, and Exeggcute.",
+        "usage": "Use from the Bag on Gloom (-> Vileplume), Weepinbell (-> Victreebel), or Exeggcute (-> Exeggutor)."
     },
     "Nugget": {
-        "name": "Nugget", "category": "item", "price": 5000,
-        "desc": "A nugget of pure gold that can be sold for a high price at the PokéMart."
+        "name": "Nugget", "category": "valuable", "price": 5000,
+        "desc": "A gleaming nugget of pure 24-karat gold with no battle effect. Can be sold at any PokéMart for $5,000 coins!",
+        "usage": "Sell at the PokéMart to fund items, Poké Balls, or Move Master technique rerolls."
     },
     "Escape Rope": {
         "name": "Escape Rope", "category": "item", "price": 550,
-        "desc": "A long, durable rope that lets the player escape from any cave or dungeon."
+        "desc": "A long, durable woven rope that immediately warps the player out of any cave, dungeon, or dark tunnel back to the entrance.",
+        "usage": "Use from the Bag inside caves (Mt. Moon, Rock Tunnel, Seafoam Islands) for emergency extraction."
+    },
+    "Move Reroll Disk": {
+        "name": "Move Reroll Disk", "category": "item", "price": 3000, "is_move_reroll": True,
+        "desc": "A high-tech data disk containing rare techniques that allows a Pokémon to learn or reroll a new move from its species learnset.",
+        "usage": "Use from the Bag on any party Pokémon or visit the Move Master in the PokéCenter."
+    }
+}
+
+# Stone Evolution Compatibility Map
+STONE_EVOLUTIONS = {
+    "Moon Stone": {
+        "Nidorina": "Nidoqueen",
+        "Nidorino": "Nidoking",
+        "Clefairy": "Clefable",
+        "Jigglypuff": "Wigglytuff"
+    },
+    "Fire Stone": {
+        "Vulpix": "Ninetales",
+        "Growlithe": "Arcanine",
+        "Eevee": "Flareon"
+    },
+    "Water Stone": {
+        "Poliwhirl": "Poliwrath",
+        "Shellder": "Cloyster",
+        "Staryu": "Starmie",
+        "Eevee": "Vaporeon"
+    },
+    "Thunder Stone": {
+        "Pikachu": "Raichu",
+        "Eevee": "Jolteon"
+    },
+    "Leaf Stone": {
+        "Gloom": "Vileplume",
+        "Weepinbell": "Victreebel",
+        "Exeggcute": "Exeggutor"
     }
 }
 
@@ -2980,6 +3054,75 @@ WILD_ENCOUNTERS = {
         {"species": "Shellder", "min_lvl": 23, "max_lvl": 28, "weight": 5},
         {"species": "Dewgong", "min_lvl": 28, "max_lvl": 32, "weight": 3},
         {"species": "Jynx", "min_lvl": 26, "max_lvl": 30, "weight": 2}
+    ],
+    "Route 5": [
+        {"species": "Pidgey", "min_lvl": 13, "max_lvl": 16, "weight": 30},
+        {"species": "Meowth", "min_lvl": 13, "max_lvl": 17, "weight": 25},
+        {"species": "Oddish", "min_lvl": 13, "max_lvl": 16, "weight": 20},
+        {"species": "Bellsprout", "min_lvl": 13, "max_lvl": 16, "weight": 20},
+        {"species": "Mankey", "min_lvl": 14, "max_lvl": 17, "weight": 5}
+    ],
+    "Route 6": [
+        {"species": "Pidgey", "min_lvl": 14, "max_lvl": 17, "weight": 30},
+        {"species": "Meowth", "min_lvl": 14, "max_lvl": 17, "weight": 25},
+        {"species": "Psyduck", "min_lvl": 15, "max_lvl": 18, "weight": 20},
+        {"species": "Bellsprout", "min_lvl": 14, "max_lvl": 17, "weight": 15},
+        {"species": "Magnemite", "min_lvl": 15, "max_lvl": 18, "weight": 10}
+    ],
+    "Route 11": [
+        {"species": "Drowzee", "min_lvl": 15, "max_lvl": 19, "weight": 30},
+        {"species": "Sandshrew", "min_lvl": 15, "max_lvl": 19, "weight": 25},
+        {"species": "Spearow", "min_lvl": 15, "max_lvl": 18, "weight": 25},
+        {"species": "Ekans", "min_lvl": 15, "max_lvl": 19, "weight": 15},
+        {"species": "Magnemite", "min_lvl": 16, "max_lvl": 19, "weight": 5}
+    ],
+    "Diglett's Cave": [
+        {"species": "Diglett", "min_lvl": 16, "max_lvl": 22, "weight": 85},
+        {"species": "Dugtrio", "min_lvl": 28, "max_lvl": 31, "weight": 15}
+    ],
+    "Route 7": [
+        {"species": "Pidgeotto", "min_lvl": 19, "max_lvl": 23, "weight": 30},
+        {"species": "Vulpix", "min_lvl": 18, "max_lvl": 22, "weight": 25},
+        {"species": "Growlithe", "min_lvl": 18, "max_lvl": 22, "weight": 25},
+        {"species": "Meowth", "min_lvl": 18, "max_lvl": 22, "weight": 15},
+        {"species": "Abra", "min_lvl": 17, "max_lvl": 21, "weight": 5}
+    ],
+    "Route 8": [
+        {"species": "Pidgeotto", "min_lvl": 20, "max_lvl": 24, "weight": 25},
+        {"species": "Growlithe", "min_lvl": 19, "max_lvl": 23, "weight": 25},
+        {"species": "Vulpix", "min_lvl": 19, "max_lvl": 23, "weight": 25},
+        {"species": "Kadabra", "min_lvl": 21, "max_lvl": 25, "weight": 15},
+        {"species": "Ekans", "min_lvl": 19, "max_lvl": 23, "weight": 10}
+    ],
+    "Route 12": [
+        {"species": "Venonat", "min_lvl": 23, "max_lvl": 27, "weight": 30},
+        {"species": "Pidgeotto", "min_lvl": 23, "max_lvl": 28, "weight": 25},
+        {"species": "Slowpoke", "min_lvl": 24, "max_lvl": 28, "weight": 20},
+        {"species": "Gloom", "min_lvl": 24, "max_lvl": 28, "weight": 15},
+        {"species": "Snorlax", "min_lvl": 30, "max_lvl": 30, "weight": 10}
+    ],
+    "Victory Road": [
+        {"species": "Machoke", "min_lvl": 38, "max_lvl": 44, "weight": 25},
+        {"species": "Graveler", "min_lvl": 38, "max_lvl": 44, "weight": 25},
+        {"species": "Onix", "min_lvl": 39, "max_lvl": 45, "weight": 20},
+        {"species": "Golbat", "min_lvl": 39, "max_lvl": 44, "weight": 15},
+        {"species": "Marowak", "min_lvl": 40, "max_lvl": 45, "weight": 10},
+        {"species": "Moltres", "min_lvl": 50, "max_lvl": 50, "weight": 5}
+    ],
+    "Indigo Plateau": [
+        {"species": "Dragonair", "min_lvl": 44, "max_lvl": 50, "weight": 30},
+        {"species": "Alakazam", "min_lvl": 45, "max_lvl": 52, "weight": 25},
+        {"species": "Gengar", "min_lvl": 45, "max_lvl": 52, "weight": 20},
+        {"species": "Lapras", "min_lvl": 46, "max_lvl": 52, "weight": 15},
+        {"species": "Dragonite", "min_lvl": 52, "max_lvl": 58, "weight": 10}
+    ],
+    "Cerulean Cave": [
+        {"species": "Raichu", "min_lvl": 52, "max_lvl": 58, "weight": 20},
+        {"species": "Magneton", "min_lvl": 52, "max_lvl": 58, "weight": 20},
+        {"species": "Rhydon", "min_lvl": 53, "max_lvl": 60, "weight": 20},
+        {"species": "Chansey", "min_lvl": 54, "max_lvl": 60, "weight": 15},
+        {"species": "Ditto", "min_lvl": 52, "max_lvl": 58, "weight": 15},
+        {"species": "Mewtwo", "min_lvl": 70, "max_lvl": 70, "weight": 10}
     ]
 }
 
@@ -2993,6 +3136,19 @@ WILD_WATER_ENCOUNTERS = {
         {"species": "Staryu", "min_lvl": 17, "max_lvl": 22, "weight": 7},
         {"species": "Lapras", "min_lvl": 18, "max_lvl": 23, "weight": 2},
         {"species": "Dratini", "min_lvl": 16, "max_lvl": 21, "weight": 1}
+    ],
+    "Vermilion City": [
+        {"species": "Tentacool", "min_lvl": 15, "max_lvl": 20, "weight": 40},
+        {"species": "Shellder", "min_lvl": 15, "max_lvl": 20, "weight": 30},
+        {"species": "Krabby", "min_lvl": 15, "max_lvl": 20, "weight": 20},
+        {"species": "Staryu", "min_lvl": 16, "max_lvl": 21, "weight": 10}
+    ],
+    "Route 12": [
+        {"species": "Tentacool", "min_lvl": 22, "max_lvl": 27, "weight": 30},
+        {"species": "Krabby", "min_lvl": 22, "max_lvl": 27, "weight": 25},
+        {"species": "Kingler", "min_lvl": 26, "max_lvl": 30, "weight": 20},
+        {"species": "Goldeen", "min_lvl": 22, "max_lvl": 27, "weight": 15},
+        {"species": "Seaking", "min_lvl": 26, "max_lvl": 31, "weight": 10}
     ],
     "Pallet Town": [
         {"species": "Tentacool", "min_lvl": 5, "max_lvl": 10, "weight": 40},
@@ -3027,6 +3183,269 @@ WILD_WATER_ENCOUNTERS = {
         {"species": "Gyarados", "min_lvl": 28, "max_lvl": 34, "weight": 10}
     ]
 }
+
+# Specialized Wild Encounter Tables by Walk-Through Prop Type & Zone
+WILD_PROP_ENCOUNTERS = {
+    "Pallet Town": {
+        "F": [
+            {"species": "Butterfree", "min_lvl": 4, "max_lvl": 7, "weight": 25},
+            {"species": "Oddish", "min_lvl": 3, "max_lvl": 6, "weight": 35},
+            {"species": "Bellsprout", "min_lvl": 3, "max_lvl": 6, "weight": 30},
+            {"species": "Pidgey", "min_lvl": 3, "max_lvl": 5, "weight": 10}
+        ],
+        "*": [
+            {"species": "Oddish", "min_lvl": 3, "max_lvl": 6, "weight": 50},
+            {"species": "Bellsprout", "min_lvl": 3, "max_lvl": 6, "weight": 50}
+        ]
+    },
+    "Route 1": {
+        "F": [
+            {"species": "Butterfree", "min_lvl": 4, "max_lvl": 7, "weight": 20},
+            {"species": "Oddish", "min_lvl": 3, "max_lvl": 6, "weight": 30},
+            {"species": "Bellsprout", "min_lvl": 3, "max_lvl": 6, "weight": 30},
+            {"species": "Pikachu", "min_lvl": 3, "max_lvl": 6, "weight": 15},
+            {"species": "Clefairy", "min_lvl": 4, "max_lvl": 7, "weight": 5}
+        ],
+        "L": [
+            {"species": "Pidgey", "min_lvl": 3, "max_lvl": 6, "weight": 35},
+            {"species": "Spearow", "min_lvl": 3, "max_lvl": 6, "weight": 30},
+            {"species": "Rattata", "min_lvl": 2, "max_lvl": 5, "weight": 20},
+            {"species": "Mankey", "min_lvl": 3, "max_lvl": 6, "weight": 15}
+        ]
+    },
+    "Viridian City": {
+        "F": [
+            {"species": "Butterfree", "min_lvl": 5, "max_lvl": 8, "weight": 30},
+            {"species": "Beedrill", "min_lvl": 5, "max_lvl": 8, "weight": 25},
+            {"species": "Oddish", "min_lvl": 4, "max_lvl": 7, "weight": 25},
+            {"species": "Jigglypuff", "min_lvl": 5, "max_lvl": 8, "weight": 20}
+        ],
+        "L": [
+            {"species": "Pidgey", "min_lvl": 4, "max_lvl": 7, "weight": 40},
+            {"species": "Rattata", "min_lvl": 4, "max_lvl": 7, "weight": 30},
+            {"species": "Spearow", "min_lvl": 4, "max_lvl": 7, "weight": 30}
+        ]
+    },
+    "Route 22": {
+        "u": [
+            {"species": "Poliwag", "min_lvl": 5, "max_lvl": 8, "weight": 40},
+            {"species": "Psyduck", "min_lvl": 5, "max_lvl": 8, "weight": 30},
+            {"species": "Nidoran-F", "min_lvl": 4, "max_lvl": 7, "weight": 15},
+            {"species": "Nidoran-M", "min_lvl": 4, "max_lvl": 7, "weight": 15}
+        ],
+        "r": [
+            {"species": "Geodude", "min_lvl": 4, "max_lvl": 7, "weight": 35},
+            {"species": "Mankey", "min_lvl": 4, "max_lvl": 7, "weight": 35},
+            {"species": "Sandshrew", "min_lvl": 4, "max_lvl": 7, "weight": 30}
+        ]
+    },
+    "Viridian Forest": {
+        "F": [
+            {"species": "Butterfree", "min_lvl": 7, "max_lvl": 11, "weight": 25},
+            {"species": "Beedrill", "min_lvl": 7, "max_lvl": 11, "weight": 25},
+            {"species": "Pikachu", "min_lvl": 6, "max_lvl": 10, "weight": 20},
+            {"species": "Oddish", "min_lvl": 6, "max_lvl": 9, "weight": 15},
+            {"species": "Bellsprout", "min_lvl": 6, "max_lvl": 9, "weight": 15}
+        ],
+        "L": [
+            {"species": "Pinsir", "min_lvl": 8, "max_lvl": 13, "weight": 20},
+            {"species": "Scyther", "min_lvl": 8, "max_lvl": 13, "weight": 20},
+            {"species": "Eevee", "min_lvl": 7, "max_lvl": 11, "weight": 20},
+            {"species": "Caterpie", "min_lvl": 5, "max_lvl": 8, "weight": 20},
+            {"species": "Weedle", "min_lvl": 5, "max_lvl": 8, "weight": 20}
+        ],
+        "u": [
+            {"species": "Psyduck", "min_lvl": 6, "max_lvl": 10, "weight": 40},
+            {"species": "Poliwag", "min_lvl": 6, "max_lvl": 10, "weight": 35},
+            {"species": "Oddish", "min_lvl": 6, "max_lvl": 9, "weight": 25}
+        ]
+    },
+    "Pewter City": {
+        "r": [
+            {"species": "Geodude", "min_lvl": 7, "max_lvl": 11, "weight": 45},
+            {"species": "Onix", "min_lvl": 8, "max_lvl": 12, "weight": 25},
+            {"species": "Sandshrew", "min_lvl": 7, "max_lvl": 11, "weight": 30}
+        ],
+        "F": [
+            {"species": "Butterfree", "min_lvl": 7, "max_lvl": 11, "weight": 35},
+            {"species": "Jigglypuff", "min_lvl": 7, "max_lvl": 11, "weight": 35},
+            {"species": "Clefairy", "min_lvl": 8, "max_lvl": 12, "weight": 30}
+        ]
+    },
+    "Route 3": {
+        "r": [
+            {"species": "Geodude", "min_lvl": 8, "max_lvl": 12, "weight": 35},
+            {"species": "Sandshrew", "min_lvl": 8, "max_lvl": 12, "weight": 30},
+            {"species": "Mankey", "min_lvl": 9, "max_lvl": 12, "weight": 20},
+            {"species": "Machop", "min_lvl": 9, "max_lvl": 13, "weight": 15}
+        ],
+        "L": [
+            {"species": "Spearow", "min_lvl": 8, "max_lvl": 12, "weight": 35},
+            {"species": "Pidgey", "min_lvl": 8, "max_lvl": 12, "weight": 35},
+            {"species": "Jigglypuff", "min_lvl": 8, "max_lvl": 12, "weight": 20},
+            {"species": "Ekans", "min_lvl": 8, "max_lvl": 11, "weight": 10}
+        ]
+    },
+    "Mt. Moon": {
+        "r": [
+            {"species": "Onix", "min_lvl": 10, "max_lvl": 15, "weight": 25},
+            {"species": "Geodude", "min_lvl": 9, "max_lvl": 14, "weight": 35},
+            {"species": "Sandshrew", "min_lvl": 9, "max_lvl": 13, "weight": 20},
+            {"species": "Paras", "min_lvl": 9, "max_lvl": 13, "weight": 20}
+        ],
+        "e": [
+            {"species": "Clefairy", "min_lvl": 10, "max_lvl": 15, "weight": 45},
+            {"species": "Magnemite", "min_lvl": 9, "max_lvl": 14, "weight": 30},
+            {"species": "Zubat", "min_lvl": 9, "max_lvl": 13, "weight": 25}
+        ]
+    },
+    "Route 4": {
+        "r": [
+            {"species": "Sandshrew", "min_lvl": 11, "max_lvl": 15, "weight": 35},
+            {"species": "Geodude", "min_lvl": 11, "max_lvl": 15, "weight": 35},
+            {"species": "Ekans", "min_lvl": 12, "max_lvl": 15, "weight": 30}
+        ],
+        "u": [
+            {"species": "Psyduck", "min_lvl": 12, "max_lvl": 16, "weight": 45},
+            {"species": "Poliwag", "min_lvl": 12, "max_lvl": 16, "weight": 35},
+            {"species": "Magikarp", "min_lvl": 10, "max_lvl": 15, "weight": 20}
+        ]
+    },
+    "Cerulean City": {
+        "F": [
+            {"species": "Oddish", "min_lvl": 12, "max_lvl": 16, "weight": 35},
+            {"species": "Bellsprout", "min_lvl": 12, "max_lvl": 16, "weight": 35},
+            {"species": "Jigglypuff", "min_lvl": 12, "max_lvl": 16, "weight": 20},
+            {"species": "Butterfree", "min_lvl": 13, "max_lvl": 17, "weight": 10}
+        ],
+        "u": [
+            {"species": "Psyduck", "min_lvl": 13, "max_lvl": 17, "weight": 40},
+            {"species": "Poliwag", "min_lvl": 13, "max_lvl": 17, "weight": 35},
+            {"species": "Slowpoke", "min_lvl": 13, "max_lvl": 17, "weight": 25}
+        ]
+    },
+    "Route 24": {
+        "F": [
+            {"species": "Butterfree", "min_lvl": 14, "max_lvl": 18, "weight": 25},
+            {"species": "Oddish", "min_lvl": 13, "max_lvl": 17, "weight": 25},
+            {"species": "Bellsprout", "min_lvl": 13, "max_lvl": 17, "weight": 25},
+            {"species": "Abra", "min_lvl": 13, "max_lvl": 16, "weight": 20},
+            {"species": "Bulbasaur", "min_lvl": 12, "max_lvl": 16, "weight": 5}
+        ],
+        "u": [
+            {"species": "Psyduck", "min_lvl": 13, "max_lvl": 17, "weight": 35},
+            {"species": "Slowpoke", "min_lvl": 13, "max_lvl": 17, "weight": 30},
+            {"species": "Poliwag", "min_lvl": 13, "max_lvl": 17, "weight": 25},
+            {"species": "Squirtle", "min_lvl": 12, "max_lvl": 16, "weight": 10}
+        ]
+    },
+    "Route 9": {
+        "r": [
+            {"species": "Geodude", "min_lvl": 15, "max_lvl": 19, "weight": 30},
+            {"species": "Machop", "min_lvl": 15, "max_lvl": 19, "weight": 30},
+            {"species": "Sandshrew", "min_lvl": 15, "max_lvl": 18, "weight": 25},
+            {"species": "Onix", "min_lvl": 16, "max_lvl": 20, "weight": 15}
+        ],
+        "L": [
+            {"species": "Spearow", "min_lvl": 14, "max_lvl": 18, "weight": 35},
+            {"species": "Rattata", "min_lvl": 14, "max_lvl": 17, "weight": 30},
+            {"species": "Ekans", "min_lvl": 15, "max_lvl": 18, "weight": 20},
+            {"species": "Doduo", "min_lvl": 15, "max_lvl": 19, "weight": 15}
+        ]
+    },
+    "Lavender Town": {
+        "m": [
+            {"species": "Gastly", "min_lvl": 18, "max_lvl": 23, "weight": 50},
+            {"species": "Haunter", "min_lvl": 21, "max_lvl": 25, "weight": 25},
+            {"species": "Cubone", "min_lvl": 18, "max_lvl": 22, "weight": 25}
+        ],
+        "F": [
+            {"species": "Vulpix", "min_lvl": 18, "max_lvl": 22, "weight": 40},
+            {"species": "Pidgeotto", "min_lvl": 18, "max_lvl": 22, "weight": 35},
+            {"species": "Gastly", "min_lvl": 18, "max_lvl": 22, "weight": 25}
+        ]
+    },
+    "Pokémon Tower": {
+        "m": [
+            {"species": "Gastly", "min_lvl": 19, "max_lvl": 25, "weight": 45},
+            {"species": "Haunter", "min_lvl": 23, "max_lvl": 28, "weight": 30},
+            {"species": "Cubone", "min_lvl": 19, "max_lvl": 24, "weight": 15},
+            {"species": "Drowzee", "min_lvl": 20, "max_lvl": 24, "weight": 10}
+        ]
+    },
+    "Power Plant": {
+        "e": [
+            {"species": "Voltorb", "min_lvl": 22, "max_lvl": 27, "weight": 25},
+            {"species": "Magnemite", "min_lvl": 22, "max_lvl": 27, "weight": 25},
+            {"species": "Pikachu", "min_lvl": 23, "max_lvl": 28, "weight": 20},
+            {"species": "Electrode", "min_lvl": 26, "max_lvl": 31, "weight": 12},
+            {"species": "Magneton", "min_lvl": 26, "max_lvl": 31, "weight": 12},
+            {"species": "Electabuzz", "min_lvl": 27, "max_lvl": 33, "weight": 6}
+        ]
+    },
+    "Safari Zone": {
+        "u": [
+            {"species": "Dratini", "min_lvl": 22, "max_lvl": 27, "weight": 20},
+            {"species": "Psyduck", "min_lvl": 22, "max_lvl": 26, "weight": 30},
+            {"species": "Slowpoke", "min_lvl": 22, "max_lvl": 26, "weight": 30},
+            {"species": "Dragonair", "min_lvl": 28, "max_lvl": 33, "weight": 10},
+            {"species": "Poliwag", "min_lvl": 21, "max_lvl": 25, "weight": 10}
+        ],
+        "F": [
+            {"species": "Exeggcute", "min_lvl": 23, "max_lvl": 28, "weight": 30},
+            {"species": "Chansey", "min_lvl": 26, "max_lvl": 30, "weight": 15},
+            {"species": "Scyther", "min_lvl": 25, "max_lvl": 30, "weight": 20},
+            {"species": "Pinsir", "min_lvl": 25, "max_lvl": 30, "weight": 20},
+            {"species": "Tangela", "min_lvl": 24, "max_lvl": 28, "weight": 15}
+        ],
+        "L": [
+            {"species": "Doduo", "min_lvl": 23, "max_lvl": 27, "weight": 30},
+            {"species": "Kangaskhan", "min_lvl": 25, "max_lvl": 30, "weight": 25},
+            {"species": "Tauros", "min_lvl": 25, "max_lvl": 30, "weight": 25},
+            {"species": "Rhyhorn", "min_lvl": 24, "max_lvl": 28, "weight": 20}
+        ]
+    },
+    "Seafoam Islands": {
+        "x": [
+            {"species": "Seel", "min_lvl": 23, "max_lvl": 28, "weight": 30},
+            {"species": "Dewgong", "min_lvl": 28, "max_lvl": 33, "weight": 20},
+            {"species": "Jynx", "min_lvl": 26, "max_lvl": 31, "weight": 20},
+            {"species": "Shellder", "min_lvl": 23, "max_lvl": 28, "weight": 15},
+            {"species": "Lapras", "min_lvl": 27, "max_lvl": 32, "weight": 15}
+        ],
+        "r": [
+            {"species": "Zubat", "min_lvl": 20, "max_lvl": 26, "weight": 40},
+            {"species": "Golbat", "min_lvl": 24, "max_lvl": 28, "weight": 30},
+            {"species": "Geodude", "min_lvl": 21, "max_lvl": 26, "weight": 30}
+        ]
+    },
+    "Cinnabar Island": {
+        "a": [
+            {"species": "Magmar", "min_lvl": 23, "max_lvl": 28, "weight": 25},
+            {"species": "Growlithe", "min_lvl": 21, "max_lvl": 26, "weight": 25},
+            {"species": "Vulpix", "min_lvl": 21, "max_lvl": 26, "weight": 25},
+            {"species": "Ponyta", "min_lvl": 22, "max_lvl": 27, "weight": 15},
+            {"species": "Charmander", "min_lvl": 20, "max_lvl": 25, "weight": 10}
+        ],
+        "r": [
+            {"species": "Koffing", "min_lvl": 21, "max_lvl": 26, "weight": 35},
+            {"species": "Grimer", "min_lvl": 21, "max_lvl": 26, "weight": 35},
+            {"species": "Rhyhorn", "min_lvl": 22, "max_lvl": 27, "weight": 30}
+        ]
+    }
+}
+
+def get_wild_encounters_for_prop(zone, prop_char, is_water=False):
+    """Returns the encounter table for a specific zone and prop character."""
+    if is_water:
+        return WILD_WATER_ENCOUNTERS.get(zone, WILD_WATER_ENCOUNTERS.get("Route 21", []))
+    
+    # Check specific prop encounter table for this zone
+    if zone in WILD_PROP_ENCOUNTERS and prop_char in WILD_PROP_ENCOUNTERS[zone]:
+        return WILD_PROP_ENCOUNTERS[zone][prop_char]
+    
+    # Fallback to general zone encounter table
+    return WILD_ENCOUNTERS.get(zone, WILD_ENCOUNTERS.get("Route 1", []))
 
 # Overworld Trainers
 TRAINERS = [
@@ -3609,6 +4028,325 @@ TRAINERS = [
             {"species": "Cloyster", "level": 28},
             {"species": "Jynx", "level": 28}
         ]
+    },
+    # Vermilion City & S.S. Anne
+    {
+        "id": "sailor_eddie",
+        "name": "Sailor Eddie",
+        "map": "Vermilion City",
+        "x": 20, "y": 14,
+        "direction": "LEFT",
+        "dialog_before": "Ahoy! The sea air keeps me and my Water Pokémon energized!",
+        "dialog_after": "Washed overboard!",
+        "reward_money": 560,
+        "party": [
+            {"species": "Poliwhirl", "level": 20},
+            {"species": "Shellder", "level": 21}
+        ]
+    },
+    {
+        "id": "sailor_dwayne",
+        "name": "Sailor Dwayne",
+        "map": "S.S. Anne",
+        "x": 12, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Welcome aboard the luxury cruise liner S.S. Anne! Let's spar!",
+        "dialog_after": "You are a first-rate passenger!",
+        "reward_money": 640,
+        "party": [
+            {"species": "Machop", "level": 20},
+            {"species": "Tentacool", "level": 21}
+        ]
+    },
+    {
+        "id": "gentleman_thomas",
+        "name": "Gentleman Thomas",
+        "map": "S.S. Anne",
+        "x": 22, "y": 6,
+        "direction": "LEFT",
+        "dialog_before": "Pardon me! Traveling around the world with Pokémon is the finest pastime!",
+        "dialog_after": "Splendid match, young trainer!",
+        "reward_money": 1200,
+        "party": [
+            {"species": "Growlithe", "level": 21},
+            {"species": "Ponyta", "level": 21}
+        ]
+    },
+    # Vermilion Gym
+    {
+        "id": "rocker_gene",
+        "name": "Rocker Gene",
+        "map": "Vermilion Gym",
+        "x": 6, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Lt. Surge was my commanding officer! His Electric Pokémon pack real voltage!",
+        "dialog_after": "Blown fuse!",
+        "reward_money": 580,
+        "party": [
+            {"species": "Voltorb", "level": 20},
+            {"species": "Magnemite", "level": 20}
+        ]
+    },
+    {
+        "id": "gym_leader_surge",
+        "name": "Leader Lt. Surge",
+        "map": "Vermilion Gym",
+        "x": 6, "y": 3,
+        "direction": "DOWN",
+        "dialog_before": "Hey kid! What do you think you're doing? I tell you, Electric Pokémon saved me in war! You won't shock me!",
+        "dialog_after": "Whoa! You're the real deal, kid! Take the Thunder Badge!",
+        "reward_badge": "Thunder Badge",
+        "reward_money": 2400,
+        "party": [
+            {"species": "Voltorb", "level": 21},
+            {"species": "Pikachu", "level": 22},
+            {"species": "Raichu", "level": 24}
+        ]
+    },
+    # Route 6 & Route 11
+    {
+        "id": "camper_jeff",
+        "name": "Camper Jeff",
+        "map": "Route 6",
+        "x": 8, "y": 10,
+        "direction": "RIGHT",
+        "dialog_before": "I'm heading south to Vermilion Harbor! Let's battle on the path!",
+        "dialog_after": "Good game!",
+        "reward_money": 440,
+        "party": [
+            {"species": "Spearow", "level": 16},
+            {"species": "Raticate", "level": 17}
+        ]
+    },
+    {
+        "id": "engineer_bernie",
+        "name": "Engineer Bernie",
+        "map": "Route 11",
+        "x": 16, "y": 7,
+        "direction": "DOWN",
+        "dialog_before": "Diglett's Cave is right ahead! Diglett dug that massive tunnel through the mountains!",
+        "dialog_after": "Overloaded!",
+        "reward_money": 520,
+        "party": [
+            {"species": "Magnemite", "level": 18},
+            {"species": "Magneton", "level": 20}
+        ]
+    },
+    # Celadon City & Celadon Gym
+    {
+        "id": "lass_kay",
+        "name": "Lass Kay",
+        "map": "Celadon City",
+        "x": 14, "y": 14,
+        "direction": "DOWN",
+        "dialog_before": "Celadon Department Store has every evolution stone and TM you could dream of!",
+        "dialog_after": "I'm off to do more shopping!",
+        "reward_money": 600,
+        "party": [
+            {"species": "Clefairy", "level": 23},
+            {"species": "Wigglytuff", "level": 25}
+        ]
+    },
+    {
+        "id": "beauty_tamia",
+        "name": "Beauty Tamia",
+        "map": "Celadon Gym",
+        "x": 6, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Erika's flower arrangements and Grass Pokémon are truly exquisite!",
+        "dialog_after": "Scattered petals!",
+        "reward_money": 680,
+        "party": [
+            {"species": "Bellsprout", "level": 24},
+            {"species": "Weepinbell", "level": 26}
+        ]
+    },
+    {
+        "id": "gym_leader_erika",
+        "name": "Leader Erika",
+        "map": "Celadon Gym",
+        "x": 6, "y": 3,
+        "direction": "DOWN",
+        "dialog_before": "Hello... Lovely weather, isn't it? I am Erika, the Nature-Loving Princess. My fragrant Pokémon will soothe your soul.",
+        "dialog_after": "Oh dear, I must concede defeat. You are remarkably strong. I proudly confer the Rainbow Badge upon you.",
+        "reward_badge": "Rainbow Badge",
+        "reward_money": 2900,
+        "party": [
+            {"species": "Victreebel", "level": 29},
+            {"species": "Tangela", "level": 27},
+            {"species": "Vileplume", "level": 30}
+        ]
+    },
+    # Route 8
+    {
+        "id": "gambler_rich",
+        "name": "Gambler Rich",
+        "map": "Route 8",
+        "x": 14, "y": 8,
+        "direction": "DOWN",
+        "dialog_before": "I'm on a roll from Celadon Game Corner! Double or nothing!",
+        "dialog_after": "Snake eyes!",
+        "reward_money": 900,
+        "party": [
+            {"species": "Growlithe", "level": 23},
+            {"species": "Vulpix", "level": 23}
+        ]
+    },
+    {
+        "id": "super_nerd_glenn",
+        "name": "Super Nerd Glenn",
+        "map": "Route 8",
+        "x": 22, "y": 8,
+        "direction": "LEFT",
+        "dialog_before": "Saffron City is directly to the west! Let me test my chemical formulas on you!",
+        "dialog_after": "Reaction failed!",
+        "reward_money": 620,
+        "party": [
+            {"species": "Grimer", "level": 23},
+            {"species": "Muk", "level": 25}
+        ]
+    },
+    # Saffron City & Saffron Gym
+    {
+        "id": "blackbelt_nob",
+        "name": "Black Belt Nob",
+        "map": "Saffron City",
+        "x": 8, "y": 14,
+        "direction": "RIGHT",
+        "dialog_before": "We practice relentless martial arts discipline here in Saffron!",
+        "dialog_after": "Your spirit is unbreakable!",
+        "reward_money": 750,
+        "party": [
+            {"species": "Hitmonlee", "level": 33},
+            {"species": "Hitmonchan", "level": 33}
+        ]
+    },
+    {
+        "id": "psychic_johan",
+        "name": "Psychic Johan",
+        "map": "Saffron Gym",
+        "x": 6, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "I foresaw your arrival with telepathic clarity! Can you bypass psychic energy?",
+        "dialog_after": "My telepathy failed to predict that power!",
+        "reward_money": 820,
+        "party": [
+            {"species": "Slowpoke", "level": 33},
+            {"species": "Kadabra", "level": 35}
+        ]
+    },
+    {
+        "id": "gym_leader_sabrina",
+        "name": "Leader Sabrina",
+        "map": "Saffron Gym",
+        "x": 6, "y": 3,
+        "direction": "DOWN",
+        "dialog_before": "I had a vision of your arrival. I dislike battling, but it is my duty as Gym Leader. Behold psychic mastery!",
+        "dialog_after": "I am shocked... but your victory is absolute. Take the Marsh Badge!",
+        "reward_badge": "Marsh Badge",
+        "reward_money": 3800,
+        "party": [
+            {"species": "Kadabra", "level": 36},
+            {"species": "Mr. Mime", "level": 35},
+            {"species": "Alakazam", "level": 38}
+        ]
+    },
+    # Route 12 & Fuchsia Gym
+    {
+        "id": "bird_keeper_rod",
+        "name": "Bird Keeper Rod",
+        "map": "Route 12",
+        "x": 10, "y": 14,
+        "direction": "DOWN",
+        "dialog_before": "Silence Bridge gives my flying Pokémon endless open skies!",
+        "dialog_after": "Grounded safely!",
+        "reward_money": 780,
+        "party": [
+            {"species": "Pidgeotto", "level": 28},
+            {"species": "Doduo", "level": 29}
+        ]
+    },
+    {
+        "id": "juggler_nate",
+        "name": "Juggler Nate",
+        "map": "Fuchsia Gym",
+        "x": 6, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Fuchsia Gym is protected by invisible walls and toxic ninjas!",
+        "dialog_after": "Dropped the ball!",
+        "reward_money": 880,
+        "party": [
+            {"species": "Drowzee", "level": 34},
+            {"species": "Hypno", "level": 36}
+        ]
+    },
+    {
+        "id": "gym_leader_koga",
+        "name": "Leader Koga",
+        "map": "Fuchsia Gym",
+        "x": 6, "y": 3,
+        "direction": "DOWN",
+        "dialog_before": "Fwahahaha! A mere child challenges the Poisonous Ninja Master? Witness our ancient techniques and toxic venom!",
+        "dialog_after": "Humph! You have proven your worth. You have earned the Soul Badge!",
+        "reward_badge": "Soul Badge",
+        "reward_money": 4200,
+        "party": [
+            {"species": "Koffing", "level": 37},
+            {"species": "Muk", "level": 39},
+            {"species": "Venomoth", "level": 40},
+            {"species": "Weezing", "level": 42}
+        ]
+    },
+    # Victory Road & Indigo Plateau
+    {
+        "id": "cooltrainer_sam",
+        "name": "Cooltrainer Sam",
+        "map": "Victory Road",
+        "x": 10, "y": 12,
+        "direction": "DOWN",
+        "dialog_before": "Only the strongest trainers who conquered all 8 Kanto Gyms can pass Victory Road!",
+        "dialog_after": "You truly have the heart of a Champion!",
+        "reward_money": 1500,
+        "party": [
+            {"species": "Sandslash", "level": 43},
+            {"species": "Kingler", "level": 44},
+            {"species": "Charizard", "level": 46}
+        ]
+    },
+    {
+        "id": "cooltrainer_brooke",
+        "name": "Cooltrainer Brooke",
+        "map": "Victory Road",
+        "x": 22, "y": 12,
+        "direction": "LEFT",
+        "dialog_before": "The Indigo Plateau League Champion awaits at the summit! Can you defeat me first?",
+        "dialog_after": "Incredible strength!",
+        "reward_money": 1600,
+        "party": [
+            {"species": "Cloyster", "level": 44},
+            {"species": "Raichu", "level": 45},
+            {"species": "Blastoise", "level": 47}
+        ]
+    },
+    {
+        "id": "champion_blue",
+        "name": "Champion Blue",
+        "map": "Indigo Plateau",
+        "x": 13, "y": 6,
+        "direction": "DOWN",
+        "dialog_before": "Hey! I was waiting for you! I conquered the Elite Four and became the Pokémon League Champion! Let's see who is the greatest trainer in all of Kanto!",
+        "dialog_after": "NO! That can't be! My ultimate team was defeated... You truly are the Pokémon League Champion!",
+        "reward_badge": "League Champion Trophy",
+        "reward_money": 9900,
+        "party": [
+            {"species": "Pidgeot", "level": 55},
+            {"species": "Alakazam", "level": 56},
+            {"species": "Rhydon", "level": 56},
+            {"species": "Arcanine", "level": 57},
+            {"species": "Exeggutor", "level": 57},
+            {"species": "Charizard", "level": 60}
+        ]
     }
 ]
+
 

@@ -23,10 +23,12 @@ class GraphicsManager:
     def __init__(self):
         self._ensure_asset_dirs()
         self.cached_pokemon_sprites = {}
+        self.cached_trainer_portraits = {}
         self.cached_tiles = {}
         self.player_sprites = {}
         self.boat_sprites = {}
         self.item_sprites = {}
+        self.prop_overlays = {}
         self.fonts = {}
         self.init_fonts()
         self.init_tiles()
@@ -382,7 +384,545 @@ class GraphicsManager:
 
         return pygame.transform.scale(surf, size)
 
+    def get_trainer_portrait(self, identifier, size=(96, 96), is_talking=False):
+        """
+        Generates and caches rich, high-resolution procedural pixel-art character portraits
+        for all trainers, Gym Leaders, Team Rocket, and story NPCs.
+        """
+        if isinstance(identifier, dict):
+            raw_id = identifier.get("id") or identifier.get("name") or "trainer"
+        elif identifier:
+            raw_id = str(identifier)
+        else:
+            raw_id = "trainer"
+
+        norm_id = raw_id.lower()
+        key = (norm_id, size, is_talking)
+        if key in self.cached_trainer_portraits:
+            return self.cached_trainer_portraits[key]
+
+        # Canvas Resolution: 96x96
+        W, H = 96, 96
+        surf = pygame.Surface((W, H), pygame.SRCALPHA)
+        cx, cy = W // 2, H // 2
+
+        # -------------------------------------------------------------
+        # Determine Character Role / Class Attributes
+        # -------------------------------------------------------------
+        # Default Palettes
+        bg_gradient_top = (45, 55, 80)
+        bg_gradient_bot = (20, 25, 40)
+        border_col = (180, 195, 220)
+        border_highlight = (240, 245, 255)
+        skin_col = (255, 218, 185) # Warm peach
+        hair_col = (75, 45, 30) # Brown
+        shirt_col = (220, 60, 50)
+        vest_col = None
+        hat_col = None
+        has_glasses = False
+        has_rocket_r = False
+        is_female = False
+        is_brock = False
+        is_misty = False
+        is_blue = False
+        is_rocket = False
+        is_nurse = False
+        is_oak = False
+        is_bill = False
+        is_hiker = False
+        is_bug_catcher = False
+        is_blackbelt = False
+        is_channeler = False
+        is_engineer = False
+        is_fisherman = False
+        is_item = False
+        is_sign = False
+
+        if "brock" in norm_id:
+            is_brock = True
+            bg_gradient_top = (130, 120, 105)
+            bg_gradient_bot = (60, 55, 50)
+            border_col = (220, 180, 50) # Gym Leader Gold
+            border_highlight = (255, 235, 120)
+            skin_col = (215, 165, 120) # Tan
+            hair_col = (55, 35, 25)
+            shirt_col = (45, 105, 55) # Green vest
+            vest_col = (165, 120, 65) # Tan vest
+
+        elif "misty" in norm_id:
+            is_misty = True
+            is_female = True
+            bg_gradient_top = (60, 160, 235)
+            bg_gradient_bot = (20, 80, 160)
+            border_col = (220, 180, 50) # Gym Leader Gold
+            border_highlight = (255, 235, 120)
+            skin_col = (255, 225, 205)
+            hair_col = (240, 100, 30) # Bright orange
+            shirt_col = (255, 230, 60) # Yellow top
+
+        elif "blue" in norm_id or "rival" in norm_id:
+            is_blue = True
+            bg_gradient_top = (65, 75, 140)
+            bg_gradient_bot = (25, 30, 75)
+            border_col = (80, 200, 255) # Electric Cyan
+            border_highlight = (190, 240, 255)
+            skin_col = (255, 220, 185)
+            hair_col = (140, 70, 30) # Auburn brown
+            shirt_col = (65, 45, 95) # Dark purple long sleeve
+
+        elif "rocket" in norm_id:
+            is_rocket = True
+            has_rocket_r = True
+            bg_gradient_top = (50, 50, 60)
+            bg_gradient_bot = (20, 20, 25)
+            border_col = (220, 40, 40) # Team Rocket Red
+            border_highlight = (255, 100, 100)
+            skin_col = (245, 215, 195)
+            hair_col = (35, 35, 45)
+            shirt_col = (25, 25, 30)
+            hat_col = (25, 25, 30)
+
+        elif "youngster" in norm_id:
+            bg_gradient_top = (70, 140, 220)
+            bg_gradient_bot = (30, 70, 140)
+            border_col = (240, 180, 50)
+            border_highlight = (255, 235, 150)
+            skin_col = (255, 220, 185)
+            hair_col = (90, 55, 35)
+            shirt_col = (240, 190, 40)
+            hat_col = (220, 50, 40)
+
+        elif "bug" in norm_id:
+            is_bug_catcher = True
+            bg_gradient_top = (70, 150, 65)
+            bg_gradient_bot = (25, 75, 30)
+            border_col = (130, 210, 80)
+            border_highlight = (200, 255, 160)
+            skin_col = (255, 220, 185)
+            hair_col = (100, 65, 35)
+            shirt_col = (245, 245, 245)
+            vest_col = (65, 135, 55)
+            hat_col = (225, 195, 120) # Straw hat
+
+        elif "lass" in norm_id or "picnicker" in norm_id:
+            is_female = True
+            bg_gradient_top = (235, 130, 165)
+            bg_gradient_bot = (140, 50, 95)
+            border_col = (255, 180, 210)
+            border_highlight = (255, 235, 245)
+            skin_col = (255, 225, 205)
+            hair_col = (120, 60, 40)
+            shirt_col = (255, 120, 160)
+
+        elif "camper" in norm_id:
+            bg_gradient_top = (110, 145, 95)
+            bg_gradient_bot = (45, 75, 45)
+            border_col = (180, 205, 140)
+            border_highlight = (235, 245, 210)
+            skin_col = (255, 215, 180)
+            hair_col = (85, 50, 30)
+            shirt_col = (195, 175, 125) # Khaki
+            hat_col = (85, 130, 75)
+
+        elif "hiker" in norm_id:
+            is_hiker = True
+            bg_gradient_top = (165, 105, 60)
+            bg_gradient_bot = (85, 45, 25)
+            border_col = (220, 150, 90)
+            border_highlight = (255, 210, 160)
+            skin_col = (225, 175, 130) # Rugged tan
+            hair_col = (65, 40, 25)
+            shirt_col = (235, 120, 35) # Orange vest
+            hat_col = (185, 160, 115) # Safari hat
+
+        elif "blackbelt" in norm_id or "karate" in norm_id:
+            is_blackbelt = True
+            bg_gradient_top = (180, 50, 45)
+            bg_gradient_bot = (75, 20, 20)
+            border_col = (240, 90, 80)
+            border_highlight = (255, 180, 170)
+            skin_col = (235, 185, 145)
+            hair_col = (30, 30, 35)
+            shirt_col = (245, 245, 250) # White gi
+
+        elif "swimmer" in norm_id or "fisherman" in norm_id:
+            is_fisherman = True
+            bg_gradient_top = (50, 140, 195)
+            bg_gradient_bot = (20, 65, 115)
+            border_col = (100, 195, 245)
+            border_highlight = (205, 240, 255)
+            skin_col = (240, 195, 155)
+            hair_col = (80, 50, 35)
+            shirt_col = (45, 115, 185)
+            hat_col = (175, 155, 115) # Bucket hat
+
+        elif "scientist" in norm_id or "nerd" in norm_id:
+            has_glasses = True
+            bg_gradient_top = (75, 115, 155)
+            bg_gradient_bot = (30, 55, 80)
+            border_col = (140, 190, 235)
+            border_highlight = (220, 240, 255)
+            skin_col = (250, 220, 195)
+            hair_col = (85, 55, 40)
+            shirt_col = (245, 248, 255) # Lab coat
+
+        elif "firebreather" in norm_id:
+            bg_gradient_top = (215, 75, 30)
+            bg_gradient_bot = (95, 25, 15)
+            border_col = (255, 140, 50)
+            border_highlight = (255, 220, 120)
+            skin_col = (235, 180, 140)
+            hair_col = (220, 45, 20) # Fiery red
+            shirt_col = (35, 35, 40) # Leather vest
+
+        elif "channeler" in norm_id:
+            is_channeler = True
+            is_female = True
+            bg_gradient_top = (110, 60, 160)
+            bg_gradient_bot = (45, 20, 75)
+            border_col = (195, 130, 245)
+            border_highlight = (240, 210, 255)
+            skin_col = (240, 220, 230) # Ghostly pale
+            hair_col = (75, 45, 105)
+            shirt_col = (95, 55, 135) # Spirit robes
+            hat_col = (85, 45, 125) # Veil
+
+        elif "engineer" in norm_id:
+            is_engineer = True
+            bg_gradient_top = (185, 155, 45)
+            bg_gradient_bot = (65, 55, 20)
+            border_col = (245, 215, 60)
+            border_highlight = (255, 245, 160)
+            skin_col = (230, 185, 145)
+            hair_col = (60, 45, 35)
+            shirt_col = (235, 125, 35) # Orange overalls
+            hat_col = (245, 210, 30) # Yellow hardhat
+
+        elif "joy" in norm_id or "nurse" in norm_id or "healer" in norm_id:
+            is_nurse = True
+            is_female = True
+            bg_gradient_top = (255, 190, 215)
+            bg_gradient_bot = (190, 100, 140)
+            border_col = (255, 150, 190)
+            border_highlight = (255, 230, 245)
+            skin_col = (255, 228, 215)
+            hair_col = (255, 130, 175) # Pink hair
+            shirt_col = (255, 245, 250)
+
+        elif "oak" in norm_id:
+            is_oak = True
+            bg_gradient_top = (145, 80, 65)
+            bg_gradient_bot = (65, 35, 30)
+            border_col = (225, 165, 115)
+            border_highlight = (255, 235, 205)
+            skin_col = (245, 215, 185)
+            hair_col = (175, 180, 190) # Distinguished gray
+            shirt_col = (190, 45, 45) # Red polo with lab coat
+
+        elif "bill" in norm_id:
+            is_bill = True
+            bg_gradient_top = (45, 155, 175)
+            bg_gradient_bot = (20, 75, 95)
+            border_col = (80, 225, 245)
+            border_highlight = (200, 255, 255)
+            skin_col = (255, 220, 190)
+            hair_col = (30, 185, 215) # Cyan hair
+            shirt_col = (235, 210, 65)
+
+        elif "mom" in norm_id:
+            is_female = True
+            bg_gradient_top = (245, 185, 145)
+            bg_gradient_bot = (165, 95, 65)
+            border_col = (245, 195, 155)
+            border_highlight = (255, 240, 225)
+            skin_col = (255, 225, 200)
+            hair_col = (135, 75, 45)
+            shirt_col = (240, 130, 155) # Pink cardigan
+
+        elif "clerk" in norm_id or "mart" in norm_id:
+            bg_gradient_top = (60, 120, 210)
+            bg_gradient_bot = (25, 60, 130)
+            border_col = (245, 205, 50)
+            border_highlight = (255, 240, 150)
+            skin_col = (255, 220, 185)
+            hair_col = (75, 45, 30)
+            shirt_col = (50, 105, 200)
+            hat_col = (50, 105, 200)
+
+        elif "item" in norm_id or "ball" in norm_id:
+            is_item = True
+            bg_gradient_top = (45, 75, 135)
+            bg_gradient_bot = (15, 30, 65)
+            border_col = (235, 70, 70)
+            border_highlight = (255, 180, 180)
+
+        elif "sign" in norm_id or "notice" in norm_id:
+            is_sign = True
+            bg_gradient_top = (145, 100, 55)
+            bg_gradient_bot = (75, 45, 20)
+            border_col = (205, 160, 100)
+            border_highlight = (245, 220, 180)
+
+        # -------------------------------------------------------------
+        # 1. Background Card & Metallic Bevel Border Frame
+        # -------------------------------------------------------------
+        card_rect = pygame.Rect(4, 4, W - 8, H - 8)
+        # Vertical gradient background
+        for y in range(card_rect.top, card_rect.bottom):
+            prog = (y - card_rect.top) / max(1, card_rect.height)
+            r_c = int(bg_gradient_top[0] * (1 - prog) + bg_gradient_bot[0] * prog)
+            g_c = int(bg_gradient_top[1] * (1 - prog) + bg_gradient_bot[1] * prog)
+            b_c = int(bg_gradient_top[2] * (1 - prog) + bg_gradient_bot[2] * prog)
+            pygame.draw.line(surf, (r_c, g_c, b_c), (card_rect.left, y), (card_rect.right, y))
+
+        # -------------------------------------------------------------
+        # Special Item / Sign Board Renderers
+        # -------------------------------------------------------------
+        if is_item:
+            # Draw Giant Glowing Item Ball in Center
+            pygame.draw.circle(surf, (255, 230, 120, 80), (cx, cy), 32)
+            # Upper half red
+            pygame.draw.arc(surf, (230, 45, 45), (cx - 24, cy - 24, 48, 48), 0, 3.14, 24)
+            pygame.draw.rect(surf, (230, 45, 45), (cx - 24, cy - 12, 48, 12))
+            # Lower half white
+            pygame.draw.arc(surf, (240, 245, 255), (cx - 24, cy - 24, 48, 48), 3.14, 6.28, 24)
+            pygame.draw.rect(surf, (240, 245, 255), (cx - 24, cy, 48, 12))
+            # Black center dividing band
+            pygame.draw.line(surf, (40, 40, 45), (cx - 24, cy), (cx + 24, cy), 5)
+            # Center button
+            pygame.draw.circle(surf, (40, 40, 45), (cx, cy), 9)
+            pygame.draw.circle(surf, WHITE, (cx, cy), 6)
+            pygame.draw.circle(surf, (200, 210, 225), (cx, cy), 3)
+            # Gloss shine glint
+            pygame.draw.circle(surf, WHITE, (cx - 12, cy - 12), 4)
+
+        elif is_sign:
+            # Wooden Plank Notice Sign
+            pygame.draw.rect(surf, (160, 110, 60), (14, 18, W - 28, H - 36), border_radius=6)
+            pygame.draw.rect(surf, (120, 75, 35), (14, 18, W - 28, H - 36), 2, border_radius=6)
+            pygame.draw.line(surf, (135, 85, 45), (18, 38), (W - 18, 38), 2)
+            pygame.draw.line(surf, (135, 85, 45), (18, 58), (W - 18, 58), 2)
+            # Corner brass rivets
+            for rx, ry in [(18, 22), (W - 22, 22), (18, H - 26), (W - 22, H - 26)]:
+                pygame.draw.circle(surf, (240, 200, 80), (rx, ry), 2)
+            # Center icon: Info / Note symbol
+            pygame.draw.circle(surf, (255, 245, 220), (cx, cy), 14)
+            pygame.draw.rect(surf, (120, 75, 35), (cx - 2, cy - 6, 4, 10))
+            pygame.draw.circle(surf, (120, 75, 35), (cx, cy - 8), 2)
+
+        # -------------------------------------------------------------
+        # Character Bust Rendering (Torso, Head, Face, Hair, Headgear)
+        # -------------------------------------------------------------
+        else:
+            # 1. Torso / Shoulders
+            shoulder_y = cy + 16
+            pygame.draw.ellipse(surf, shirt_col, (cx - 28, shoulder_y, 56, 36))
+            pygame.draw.rect(surf, shirt_col, (cx - 28, shoulder_y + 12, 56, 24))
+
+            # Lab Coat overlay for Scientist / Oak
+            if has_glasses or is_oak:
+                pygame.draw.polygon(surf, WHITE, [(cx - 28, shoulder_y + 10), (cx - 10, shoulder_y + 4), (cx - 12, H - 6), (cx - 28, H - 6)])
+                pygame.draw.polygon(surf, WHITE, [(cx + 28, shoulder_y + 10), (cx + 10, shoulder_y + 4), (cx + 12, H - 6), (cx + 28, H - 6)])
+                pygame.draw.line(surf, (200, 210, 225), (cx - 10, shoulder_y + 4), (cx - 12, H - 6), 2)
+                pygame.draw.line(surf, (200, 210, 225), (cx + 10, shoulder_y + 4), (cx + 12, H - 6), 2)
+
+            # Vest Overlay (Brock, Hiker, Bug Catcher)
+            if vest_col:
+                pygame.draw.polygon(surf, vest_col, [(cx - 26, shoulder_y + 8), (cx - 8, shoulder_y + 4), (cx - 10, H - 6), (cx - 26, H - 6)])
+                pygame.draw.polygon(surf, vest_col, [(cx + 26, shoulder_y + 8), (cx + 8, shoulder_y + 4), (cx + 10, H - 6), (cx + 26, H - 6)])
+
+            # Team Rocket Red 'R' on chest
+            if has_rocket_r:
+                pygame.draw.rect(surf, (220, 30, 30), (cx - 8, shoulder_y + 8, 4, 14))
+                pygame.draw.circle(surf, (220, 30, 30), (cx - 4, shoulder_y + 11), 5)
+                pygame.draw.circle(surf, (25, 25, 30), (cx - 4, shoulder_y + 11), 2)
+                pygame.draw.polygon(surf, (220, 30, 30), [(cx - 8, shoulder_y + 14), (cx + 4, shoulder_y + 22), (cx + 7, shoulder_y + 22), (cx - 5, shoulder_y + 14)])
+
+            # 2. Neck
+            pygame.draw.rect(surf, skin_col, (cx - 6, cy + 4, 12, 16))
+
+            # 3. Head & Ears
+            head_y = cy - 8
+            pygame.draw.circle(surf, skin_col, (cx, head_y), 18)
+            # Ears
+            pygame.draw.circle(surf, skin_col, (cx - 18, head_y + 2), 5)
+            pygame.draw.circle(surf, skin_col, (cx + 18, head_y + 2), 5)
+
+            # 4. Long hair back (drawn behind face for female/Misty/Lass)
+            if is_female and not is_channeler:
+                if is_misty:
+                    # High Side Ponytail (Right)
+                    pygame.draw.ellipse(surf, hair_col, (cx + 14, head_y - 26, 20, 26))
+                    pygame.draw.circle(surf, (40, 180, 210), (cx + 16, head_y - 12), 4) # Teal Ribbon
+                else:
+                    # Twin Pigtails
+                    pygame.draw.ellipse(surf, hair_col, (cx - 26, head_y - 10, 14, 26))
+                    pygame.draw.ellipse(surf, hair_col, (cx + 12, head_y - 10, 14, 26))
+                    pygame.draw.circle(surf, (240, 60, 80), (cx - 18, head_y + 2), 3) # Ribbon
+                    pygame.draw.circle(surf, (240, 60, 80), (cx + 18, head_y + 2), 3)
+
+            # 5. Eyes, Eyebrows & Cheeks
+            # Blush
+            pygame.draw.circle(surf, (255, 170, 170), (cx - 11, head_y + 4), 4)
+            pygame.draw.circle(surf, (255, 170, 170), (cx + 11, head_y + 4), 4)
+
+            if is_brock:
+                # Iconic Slanted Closed Eyes
+                pygame.draw.line(surf, (40, 30, 25), (cx - 14, head_y - 2), (cx - 4, head_y - 4), 3)
+                pygame.draw.line(surf, (40, 30, 25), (cx + 4, head_y - 4), (cx + 14, head_y - 2), 3)
+                # Thick determined brows
+                pygame.draw.line(surf, (40, 30, 25), (cx - 15, head_y - 7), (cx - 3, head_y - 9), 3)
+                pygame.draw.line(surf, (40, 30, 25), (cx + 3, head_y - 9), (cx + 15, head_y - 7), 3)
+
+            elif is_channeler:
+                # Glowing Spirit Eyes
+                pygame.draw.circle(surf, (230, 190, 255), (cx - 8, head_y - 2), 4)
+                pygame.draw.circle(surf, (230, 190, 255), (cx + 8, head_y - 2), 4)
+                pygame.draw.circle(surf, WHITE, (cx - 8, head_y - 2), 2)
+                pygame.draw.circle(surf, WHITE, (cx + 8, head_y - 2), 2)
+
+            else:
+                # Open Expressive Eyes
+                eye_col = (40, 120, 210) if is_misty else ((50, 150, 80) if is_blue else (40, 45, 55))
+                pygame.draw.rect(surf, (30, 35, 45), (cx - 12, head_y - 5, 7, 7), border_radius=2)
+                pygame.draw.rect(surf, (30, 35, 45), (cx + 5, head_y - 5, 7, 7), border_radius=2)
+                pygame.draw.rect(surf, eye_col, (cx - 11, head_y - 4, 5, 5), border_radius=1)
+                pygame.draw.rect(surf, eye_col, (cx + 6, head_y - 4, 5, 5), border_radius=1)
+                # Specular Glints
+                pygame.draw.rect(surf, WHITE, (cx - 10, head_y - 4, 2, 2))
+                pygame.draw.rect(surf, WHITE, (cx + 7, head_y - 4, 2, 2))
+                # Eyebrows
+                if is_blue or is_rocket:
+                    # Confident / Menacing smirk brow
+                    pygame.draw.line(surf, (40, 30, 25), (cx - 13, head_y - 8), (cx - 4, head_y - 11), 2)
+                    pygame.draw.line(surf, (40, 30, 25), (cx + 4, head_y - 10), (cx + 13, head_y - 7), 2)
+                else:
+                    pygame.draw.line(surf, (60, 45, 35), (cx - 12, head_y - 9), (cx - 4, head_y - 9), 2)
+                    pygame.draw.line(surf, (60, 45, 35), (cx + 4, head_y - 9), (cx + 12, head_y - 9), 2)
+
+            # Glasses / Spectacles
+            if has_glasses:
+                pygame.draw.rect(surf, (220, 230, 245), (cx - 14, head_y - 7, 11, 9), 2, border_radius=2)
+                pygame.draw.rect(surf, (220, 230, 245), (cx + 3, head_y - 7, 11, 9), 2, border_radius=2)
+                pygame.draw.line(surf, (220, 230, 245), (cx - 3, head_y - 3), (cx + 3, head_y - 3), 2)
+                # Glint
+                pygame.draw.line(surf, WHITE, (cx - 12, head_y - 5), (cx - 8, head_y - 5), 1)
+                pygame.draw.line(surf, WHITE, (cx + 5, head_y - 5), (cx + 9, head_y - 5), 1)
+
+            # Nose
+            pygame.draw.rect(surf, (225, 175, 140), (cx - 1, head_y, 2, 3))
+
+            # Mouth (Talking / Idle Animation)
+            if is_talking:
+                # Open speaking mouth
+                pygame.draw.ellipse(surf, (170, 40, 40), (cx - 5, head_y + 6, 10, 6))
+                pygame.draw.ellipse(surf, WHITE, (cx - 3, head_y + 6, 6, 2))
+            else:
+                if is_blue or is_rocket:
+                    # Smug / wicked smirk
+                    pygame.draw.arc(surf, (150, 40, 40), (cx - 4, head_y + 3, 9, 6), 3.14, 5.8, 2)
+                else:
+                    # Friendly smile
+                    pygame.draw.arc(surf, (150, 40, 40), (cx - 5, head_y + 4, 10, 6), 3.14, 0, 2)
+
+            # Hiker Beard / Stubble
+            if is_hiker:
+                pygame.draw.arc(surf, (65, 40, 25), (cx - 12, head_y - 2, 24, 18), 3.14, 0, 4)
+                pygame.draw.rect(surf, (65, 40, 25), (cx - 6, head_y + 10, 12, 5), border_radius=2)
+
+            # 6. Hair & Headgear Front
+            if is_brock:
+                # Spiky Peak Hair
+                pts = [
+                    (cx - 20, head_y - 8), (cx - 24, head_y - 22), (cx - 14, head_y - 18),
+                    (cx - 12, head_y - 28), (cx - 2, head_y - 20), (cx, head_y - 30),
+                    (cx + 8, head_y - 20), (cx + 14, head_y - 28), (cx + 16, head_y - 18),
+                    (cx + 24, head_y - 22), (cx + 20, head_y - 8)
+                ]
+                pygame.draw.polygon(surf, hair_col, pts)
+                pygame.draw.rect(surf, hair_col, (cx - 16, head_y - 16, 32, 10))
+
+            elif is_blue:
+                # Tall Stylized Spiky Auburn Hair
+                pts = [
+                    (cx - 18, head_y - 6), (cx - 26, head_y - 20), (cx - 14, head_y - 16),
+                    (cx - 16, head_y - 32), (cx - 4, head_y - 22), (cx + 4, head_y - 34),
+                    (cx + 12, head_y - 22), (cx + 24, head_y - 28), (cx + 18, head_y - 14),
+                    (cx + 24, head_y - 10), (cx + 18, head_y - 4)
+                ]
+                pygame.draw.polygon(surf, hair_col, pts)
+                pygame.draw.rect(surf, hair_col, (cx - 16, head_y - 16, 32, 10))
+
+            elif is_rocket:
+                # Black Beret with Red 'R'
+                pygame.draw.ellipse(surf, hat_col, (cx - 22, head_y - 28, 44, 20))
+                pygame.draw.circle(surf, (220, 30, 30), (cx - 4, head_y - 18), 5)
+                # Front hair fringe
+                pygame.draw.polygon(surf, hair_col, [(cx - 16, head_y - 12), (cx - 8, head_y - 6), (cx - 4, head_y - 12)])
+
+            elif is_nurse:
+                # Nurse Cap with Cross
+                pygame.draw.ellipse(surf, hair_col, (cx - 20, head_y - 22, 14, 14)) # Twin hair loop left
+                pygame.draw.ellipse(surf, hair_col, (cx + 6, head_y - 22, 14, 14)) # Twin hair loop right
+                pygame.draw.rect(surf, WHITE, (cx - 14, head_y - 24, 28, 12), border_radius=4)
+                pygame.draw.line(surf, (255, 100, 140), (cx, head_y - 22), (cx, head_y - 14), 3) # Cross vert
+                pygame.draw.line(surf, (255, 100, 140), (cx - 4, head_y - 18), (cx + 4, head_y - 18), 3) # Cross horiz
+
+            elif is_bug_catcher:
+                # Wide Straw Sun Hat
+                pygame.draw.ellipse(surf, (215, 185, 105), (cx - 26, head_y - 20, 52, 16))
+                pygame.draw.ellipse(surf, (185, 155, 80), (cx - 16, head_y - 28, 32, 18))
+                pygame.draw.rect(surf, (60, 140, 55), (cx - 16, head_y - 18, 32, 4)) # Green Ribbon
+
+            elif is_blackbelt:
+                # Martial Arts Headband
+                pygame.draw.circle(surf, hair_col, (cx, head_y - 14), 16)
+                pygame.draw.rect(surf, WHITE, (cx - 18, head_y - 14, 36, 6))
+                pygame.draw.polygon(surf, WHITE, [(cx + 16, head_y - 12), (cx + 24, head_y - 4), (cx + 20, head_y - 2)])
+
+            elif is_channeler:
+                # Ghost Veil
+                pygame.draw.ellipse(surf, hat_col, (cx - 20, head_y - 28, 40, 36))
+                pygame.draw.ellipse(surf, (140, 80, 190), (cx - 16, head_y - 24, 32, 28), 2)
+
+            elif is_engineer:
+                # Yellow Hardhat
+                pygame.draw.ellipse(surf, hat_col, (cx - 22, head_y - 28, 44, 22))
+                pygame.draw.rect(surf, (220, 180, 20), (cx - 20, head_y - 18, 40, 5), border_radius=2)
+                pygame.draw.circle(surf, WHITE, (cx, head_y - 22), 4) # Lamp
+
+            elif is_hiker or is_fisherman:
+                # Bucket / Hiking Hat
+                pygame.draw.ellipse(surf, hat_col, (cx - 24, head_y - 20, 48, 16))
+                pygame.draw.ellipse(surf, (155, 135, 95), (cx - 16, head_y - 26, 32, 16))
+
+            elif hat_col:
+                # Baseball Cap
+                pygame.draw.ellipse(surf, hat_col, (cx - 20, head_y - 26, 40, 20))
+                pygame.draw.rect(surf, WHITE, (cx - 16, head_y - 18, 32, 5), border_radius=2)
+
+            else:
+                # Styled Hair
+                pygame.draw.circle(surf, hair_col, (cx, head_y - 14), 16)
+                # Front fringe bangs
+                pygame.draw.polygon(surf, hair_col, [(cx - 16, head_y - 14), (cx - 8, head_y - 6), (cx - 4, head_y - 12)])
+                pygame.draw.polygon(surf, hair_col, [(cx + 4, head_y - 12), (cx + 10, head_y - 6), (cx + 16, head_y - 14)])
+
+        # -------------------------------------------------------------
+        # 3. Outer Metallic Bevel Card Border
+        # -------------------------------------------------------------
+        pygame.draw.rect(surf, (30, 35, 45), (4, 4, W - 8, H - 8), 3, border_radius=8)
+        pygame.draw.rect(surf, border_col, (6, 6, W - 12, H - 12), 2, border_radius=6)
+        pygame.draw.line(surf, border_highlight, (10, 8), (W - 10, 8), 2)
+        pygame.draw.line(surf, border_highlight, (8, 10), (8, H - 10), 2)
+
+        # Scale to requested size and cache
+        final_surf = pygame.transform.scale(surf, size)
+        self.cached_trainer_portraits[key] = final_surf
+        return final_surf
+
     def init_player_sprites(self):
+
         """Generates default 4-directional 3-frame animated walking sprites for the trainer."""
         self.player_sprites = self.generate_player_sprites()
 
@@ -486,8 +1026,8 @@ class GraphicsManager:
             self.boat_sprites[dir_code] = surf
 
     def init_item_sprites(self):
-        """Generates icons for Pokeballs, Potions, Badges, etc."""
-        # Pokeball
+        """Generates crisp pixel-art icons for all items in the game."""
+        # 1. Poke Ball
         pb = pygame.Surface((24, 24), pygame.SRCALPHA)
         pygame.draw.circle(pb, (220, 40, 40), (12, 12), 10) # Top red
         pygame.draw.arc(pb, WHITE, (2, 2, 20, 20), 3.14, 0, 10) # Bottom white
@@ -497,7 +1037,7 @@ class GraphicsManager:
         pygame.draw.circle(pb, WHITE, (12, 12), 2)
         self.item_sprites["Poke Ball"] = pb
         
-        # Great Ball (Blue with red accents)
+        # 2. Great Ball (Blue with red accents)
         gb = pygame.Surface((24, 24), pygame.SRCALPHA)
         pygame.draw.circle(gb, (40, 100, 220), (12, 12), 10)
         pygame.draw.circle(gb, WHITE, (12, 17), 5)
@@ -508,7 +1048,7 @@ class GraphicsManager:
         pygame.draw.circle(gb, WHITE, (12, 12), 2)
         self.item_sprites["Great Ball"] = gb
 
-        # Ultra Ball (Black with yellow H)
+        # 3. Ultra Ball (Black with yellow H)
         ub = pygame.Surface((24, 24), pygame.SRCALPHA)
         pygame.draw.circle(ub, (40, 40, 50), (12, 12), 10)
         pygame.draw.circle(ub, WHITE, (12, 17), 5)
@@ -518,14 +1058,134 @@ class GraphicsManager:
         pygame.draw.circle(ub, WHITE, (12, 12), 2)
         self.item_sprites["Ultra Ball"] = ub
 
-        # Potion Spray
-        pot = pygame.Surface((24, 24), pygame.SRCALPHA)
-        pygame.draw.rect(pot, (160, 80, 200), (7, 10, 10, 11), border_radius=3)
-        pygame.draw.rect(pot, (230, 230, 240), (9, 5, 6, 6))
-        pygame.draw.rect(pot, (100, 100, 110), (13, 3, 5, 3))
-        self.item_sprites["Potion"] = pot
-        self.item_sprites["Super Potion"] = pot
-        self.item_sprites["Max Potion"] = pot
+        # 4. Potions (Purple, Orange, Blue)
+        def _make_potion_spray(body_col, cap_col=(230, 230, 240)):
+            s = pygame.Surface((24, 24), pygame.SRCALPHA)
+            pygame.draw.rect(s, body_col, (7, 9, 10, 12), border_radius=3)
+            pygame.draw.rect(s, cap_col, (9, 5, 6, 5))
+            pygame.draw.rect(s, (100, 100, 110), (13, 3, 5, 3))
+            pygame.draw.line(s, (255, 255, 255, 140), (8, 10), (8, 18), 1)
+            return s
+
+        self.item_sprites["Potion"] = _make_potion_spray((160, 80, 200)) # Purple
+        self.item_sprites["Super Potion"] = _make_potion_spray((240, 130, 30)) # Orange
+        self.item_sprites["Max Potion"] = _make_potion_spray((40, 140, 240)) # Royal Blue
+
+        # 5. Revive (Golden Yellow Diamond Crystal)
+        rev = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.polygon(rev, (245, 190, 40), [(12, 2), (22, 12), (12, 22), (2, 12)])
+        pygame.draw.polygon(rev, (255, 240, 120), [(12, 5), (19, 12), (12, 19), (5, 12)])
+        pygame.draw.polygon(rev, (210, 140, 20), [(12, 12), (22, 12), (12, 22)])
+        pygame.draw.polygon(rev, (255, 255, 220), [(12, 5), (15, 10), (12, 12), (9, 10)])
+        self.item_sprites["Revive"] = rev
+
+        # 6. Status Medicines
+        # Antidote (Green serum bottle)
+        ant = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.rect(ant, (40, 180, 80), (7, 8, 10, 13), border_radius=3)
+        pygame.draw.rect(ant, (220, 220, 230), (9, 4, 6, 5))
+        pygame.draw.circle(ant, (20, 120, 50), (12, 14), 2)
+        self.item_sprites["Antidote"] = ant
+
+        # Paralyze Heal (Yellow spray)
+        ph = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.rect(ph, (240, 210, 40), (7, 9, 10, 12), border_radius=3)
+        pygame.draw.rect(ph, (230, 230, 240), (9, 5, 6, 5))
+        pygame.draw.line(ph, (180, 120, 20), (11, 11), (13, 15), 2)
+        self.item_sprites["Paralyze Heal"] = ph
+
+        # Awakening (Blue smelling bottle)
+        awk = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.rect(awk, (60, 140, 220), (7, 8, 10, 13), border_radius=3)
+        pygame.draw.rect(awk, (220, 220, 230), (9, 4, 6, 5))
+        pygame.draw.line(awk, WHITE, (9, 12), (15, 12), 2)
+        self.item_sprites["Awakening"] = awk
+
+        # Burn Heal (Crimson salve jar)
+        bh = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.rect(bh, (220, 60, 50), (6, 9, 12, 11), border_radius=3)
+        pygame.draw.rect(bh, (240, 200, 60), (7, 6, 10, 4), border_radius=1)
+        pygame.draw.circle(bh, (255, 200, 100), (12, 14), 2)
+        self.item_sprites["Burn Heal"] = bh
+
+        # 7. Rare Candy (Wrapped sweet with blue ribbon)
+        rc = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.circle(rc, (80, 160, 240), (12, 12), 7)
+        pygame.draw.polygon(rc, (50, 110, 200), [(4, 12), (1, 8), (1, 16)])
+        pygame.draw.polygon(rc, (50, 110, 200), [(20, 12), (23, 8), (23, 16)])
+        pygame.draw.arc(rc, WHITE, (7, 7, 10, 10), 0.5, 3.5, 2)
+        self.item_sprites["Rare Candy"] = rc
+
+        # 8. Evolution Stones
+        # Moon Stone (Pale crescent moon in cosmic black stone)
+        ms = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(ms, (55, 60, 80), (3, 3, 18, 18))
+        pygame.draw.circle(ms, (230, 235, 255), (11, 11), 6)
+        pygame.draw.circle(ms, (55, 60, 80), (13, 10), 5)
+        pygame.draw.circle(ms, (255, 255, 255, 180), (16, 7), 1)
+        self.item_sprites["Moon Stone"] = ms
+
+        # Fire Stone (Warm orange stone with flame core)
+        fs = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(fs, (230, 95, 25), (3, 3, 18, 18))
+        pygame.draw.polygon(fs, (255, 215, 60), [(12, 6), (16, 14), (13, 17), (11, 17), (8, 14)])
+        pygame.draw.polygon(fs, (255, 255, 200), [(12, 10), (14, 14), (12, 16), (10, 14)])
+        self.item_sprites["Fire Stone"] = fs
+
+        # Water Stone (Deep blue drop gem)
+        ws = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(ws, (30, 100, 200), (3, 3, 18, 18))
+        pygame.draw.polygon(ws, (100, 210, 255), [(12, 5), (17, 14), (12, 18), (7, 14)])
+        pygame.draw.circle(ws, WHITE, (11, 11), 2)
+        self.item_sprites["Water Stone"] = ws
+
+        # Thunder Stone (Yellow electric stone)
+        ts = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(ts, (215, 180, 20), (3, 3, 18, 18))
+        pygame.draw.lines(ts, (255, 255, 255), False, [(15, 6), (11, 11), (14, 11), (9, 18)], 2)
+        self.item_sprites["Thunder Stone"] = ts
+
+        # Leaf Stone (Verdant green leaf stone)
+        ls = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(ls, (40, 160, 70), (3, 3, 18, 18))
+        pygame.draw.ellipse(ls, (130, 230, 120), (7, 7, 10, 10))
+        pygame.draw.line(ls, (30, 110, 50), (9, 9), (15, 15), 2)
+        self.item_sprites["Leaf Stone"] = ls
+
+        # 9. Nugget (Gold Ingot)
+        nug = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.polygon(nug, (245, 195, 30), [(4, 9), (9, 5), (19, 5), (15, 9)])
+        pygame.draw.polygon(nug, (220, 160, 20), [(15, 9), (19, 5), (19, 15), (15, 19)])
+        pygame.draw.polygon(nug, (255, 225, 70), [(4, 9), (15, 9), (15, 19), (4, 19)])
+        pygame.draw.polygon(nug, (255, 245, 170), [(6, 10), (13, 10), (13, 13), (6, 13)])
+        self.item_sprites["Nugget"] = nug
+
+        # 10. Escape Rope
+        er = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.circle(er, (180, 130, 70), (12, 12), 8, 3)
+        pygame.draw.line(er, (140, 95, 45), (15, 15), (20, 20), 3)
+        self.item_sprites["Escape Rope"] = er
+
+        # 11. Move Reroll Disk (CD with laser rainbow sheen)
+        mrd = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.circle(mrd, (70, 80, 100), (12, 12), 10)
+        pygame.draw.circle(mrd, (150, 190, 230), (12, 12), 9)
+        pygame.draw.arc(mrd, (255, 120, 200), (4, 4, 16, 16), 0.5, 2.0, 2)
+        pygame.draw.arc(mrd, (80, 230, 255), (4, 4, 16, 16), 3.5, 5.0, 2)
+        pygame.draw.circle(mrd, WHITE, (12, 12), 3)
+        pygame.draw.circle(mrd, (40, 45, 60), (12, 12), 2)
+        self.item_sprites["Move Reroll Disk"] = mrd
+
+    def get_item_sprite(self, item_name, size=(32, 32)):
+        """Returns a scaled surface of the item's sprite icon."""
+        base_surf = self.item_sprites.get(item_name)
+        if not base_surf:
+            # Clean generic fallback icon
+            base_surf = pygame.Surface((24, 24), pygame.SRCALPHA)
+            pygame.draw.circle(base_surf, (160, 170, 185), (12, 12), 9)
+            pygame.draw.circle(base_surf, WHITE, (12, 12), 7)
+            pygame.draw.circle(base_surf, (100, 110, 130), (12, 12), 3)
+        return pygame.transform.scale(base_surf, size)
 
     def init_tiles(self):
         """Generates beautiful crisp procedural pixel-art tiles."""
@@ -871,6 +1531,216 @@ class GraphicsManager:
         pygame.draw.line(canyon_rock, (110, 45, 25), (0, 10), (T, 10), 2)
         pygame.draw.line(canyon_rock, (200, 105, 70), (0, 18), (T, 18), 2)
         self.cached_tiles["canyon_rock"] = canyon_rock
+
+        # ==========================================
+        # 23. WALK-THROUGH ENCOUNTER PROPS
+        # ==========================================
+        # A. Wildflower Meadow ('F' / '*')
+        flower_meadow = grass.copy()
+        # Stems and leafy foliage
+        pygame.draw.line(flower_meadow, (35, 110, 30), (8, 14), (8, 22), 2)
+        pygame.draw.line(flower_meadow, (35, 110, 30), (22, 10), (22, 18), 2)
+        pygame.draw.line(flower_meadow, (35, 110, 30), (15, 20), (15, 28), 2)
+        # Red Bloom
+        pygame.draw.circle(flower_meadow, (240, 50, 60), (8, 12), 4)
+        pygame.draw.circle(flower_meadow, (255, 230, 60), (8, 12), 2)
+        # Sky Blue Bloom
+        pygame.draw.circle(flower_meadow, (60, 165, 245), (22, 9), 4)
+        pygame.draw.circle(flower_meadow, WHITE, (22, 9), 2)
+        # Gold Bloom
+        pygame.draw.circle(flower_meadow, (250, 205, 40), (15, 20), 4)
+        pygame.draw.circle(flower_meadow, (230, 100, 20), (15, 20), 2)
+        # Cherry Pink mini-blooms
+        pygame.draw.circle(flower_meadow, (255, 120, 190), (25, 24), 3)
+        pygame.draw.circle(flower_meadow, WHITE, (25, 24), 1)
+        pygame.draw.circle(flower_meadow, (255, 120, 190), (5, 25), 3)
+        pygame.draw.circle(flower_meadow, WHITE, (5, 25), 1)
+        self.cached_tiles["flower_meadow"] = flower_meadow
+
+        # B. Autumn Leaf Pile ('L')
+        leaf_pile = grass.copy()
+        # Scattered autumn leaves
+        # Orange maple leaf
+        pygame.draw.polygon(leaf_pile, (230, 115, 35), [(8, 6), (12, 12), (10, 16), (4, 14), (4, 8)])
+        pygame.draw.line(leaf_pile, (170, 70, 20), (8, 8), (10, 16), 1)
+        # Crimson oak leaf
+        pygame.draw.polygon(leaf_pile, (200, 45, 40), [(22, 14), (26, 8), (28, 14), (24, 20), (20, 16)])
+        pygame.draw.line(leaf_pile, (140, 25, 20), (24, 10), (22, 18), 1)
+        # Golden aspen leaf
+        pygame.draw.polygon(leaf_pile, (240, 195, 45), [(14, 18), (18, 14), (20, 22), (16, 26), (12, 22)])
+        pygame.draw.line(leaf_pile, (180, 130, 25), (16, 16), (16, 24), 1)
+        # Russet small leaves
+        pygame.draw.ellipse(leaf_pile, (145, 75, 35), (4, 22, 7, 5))
+        pygame.draw.ellipse(leaf_pile, (225, 140, 50), (22, 24, 6, 4))
+        self.cached_tiles["leaf_pile"] = leaf_pile
+
+        # C. Cave Rubble / Crags ('r')
+        cave_rubble = cave_floor.copy()
+        # Large jagged stone
+        pygame.draw.polygon(cave_rubble, (125, 115, 110), [(6, 10), (14, 6), (18, 12), (12, 18), (4, 14)])
+        pygame.draw.polygon(cave_rubble, (160, 150, 145), [(7, 9), (13, 7), (16, 11), (12, 12)])
+        pygame.draw.polygon(cave_rubble, (55, 48, 45), [(4, 14), (12, 18), (10, 20), (3, 16)])
+        # Medium rock
+        pygame.draw.polygon(cave_rubble, (110, 100, 95), [(20, 16), (27, 13), (29, 21), (22, 25)])
+        pygame.draw.polygon(cave_rubble, (145, 135, 130), [(21, 15), (26, 14), (27, 19)])
+        # Small gravel & quartz chips
+        pygame.draw.circle(cave_rubble, (215, 215, 225), (9, 24), 2)
+        pygame.draw.circle(cave_rubble, (215, 215, 225), (22, 8), 2)
+        pygame.draw.circle(cave_rubble, (80, 70, 65), (16, 26), 2)
+        self.cached_tiles["cave_rubble"] = cave_rubble
+
+        # D. Snow Drift ('x')
+        snow_drift = pygame.Surface((T, T))
+        snow_drift.fill((232, 246, 255)) # Soft powder snow
+        # Gentle cyan drift curves
+        pygame.draw.ellipse(snow_drift, (190, 225, 248), (2, 8, 28, 14))
+        pygame.draw.ellipse(snow_drift, (248, 252, 255), (4, 6, 24, 12))
+        pygame.draw.ellipse(snow_drift, (180, 218, 245), (6, 18, 22, 12))
+        pygame.draw.ellipse(snow_drift, (255, 255, 255), (8, 16, 18, 10))
+        # Glistening frost sparkles
+        pygame.draw.circle(snow_drift, (255, 255, 255), (10, 10), 2)
+        pygame.draw.line(snow_drift, (130, 205, 255), (10, 8), (10, 12), 1)
+        pygame.draw.line(snow_drift, (130, 205, 255), (8, 10), (12, 10), 1)
+        pygame.draw.circle(snow_drift, (255, 255, 255), (22, 20), 2)
+        self.cached_tiles["snow_drift"] = snow_drift
+
+        # E. Haunted Mist / Spirit Fog ('m')
+        spooky_mist = lavender_ground.copy()
+        mist_layer = pygame.Surface((T, T), pygame.SRCALPHA)
+        # Swirling ethereal violet bands
+        pygame.draw.ellipse(mist_layer, (160, 110, 210, 130), (2, 4, 28, 12))
+        pygame.draw.ellipse(mist_layer, (210, 160, 255, 160), (6, 6, 20, 8))
+        pygame.draw.ellipse(mist_layer, (140, 90, 190, 140), (4, 16, 26, 12))
+        pygame.draw.ellipse(mist_layer, (200, 150, 250, 170), (8, 18, 18, 8))
+        # Glowing spirit orbs
+        pygame.draw.circle(mist_layer, (240, 210, 255, 220), (12, 10), 2)
+        pygame.draw.circle(mist_layer, (240, 210, 255, 220), (22, 22), 2)
+        spooky_mist.blit(mist_layer, (0, 0))
+        self.cached_tiles["spooky_mist"] = spooky_mist
+
+        # F. Volcanic Ash & Embers ('a')
+        volcanic_ash = pygame.Surface((T, T))
+        volcanic_ash.fill((52, 45, 50)) # Charcoal dark basalt
+        # Ash soot mounds
+        pygame.draw.ellipse(volcanic_ash, (78, 68, 74), (2, 6, 18, 10))
+        pygame.draw.ellipse(volcanic_ash, (70, 62, 66), (14, 16, 16, 12))
+        # Glowing volcanic embers
+        pygame.draw.circle(volcanic_ash, (255, 60, 20), (8, 10), 3)
+        pygame.draw.circle(volcanic_ash, (255, 200, 50), (8, 10), 1)
+        pygame.draw.circle(volcanic_ash, (255, 80, 20), (22, 20), 3)
+        pygame.draw.circle(volcanic_ash, (255, 220, 80), (22, 20), 1)
+        pygame.draw.circle(volcanic_ash, (240, 40, 10), (16, 14), 2)
+        self.cached_tiles["volcanic_ash"] = volcanic_ash
+
+        # G. Swamp Marsh / Mud Bog ('u')
+        swamp_marsh = pygame.Surface((T, T))
+        swamp_marsh.fill((58, 105, 90)) # Deep murky marsh water
+        # Mud banks
+        pygame.draw.ellipse(swamp_marsh, (98, 76, 48), (0, 0, 16, 12))
+        pygame.draw.ellipse(swamp_marsh, (98, 76, 48), (14, 18, 18, 14))
+        # Water ripples
+        pygame.draw.arc(swamp_marsh, (110, 175, 155), (4, 12, 14, 6), 0, 3.14, 1)
+        pygame.draw.arc(swamp_marsh, (110, 175, 155), (16, 8, 12, 5), 0, 3.14, 1)
+        # Lily pad
+        pygame.draw.ellipse(swamp_marsh, (45, 155, 65), (6, 18, 9, 6))
+        pygame.draw.circle(swamp_marsh, (255, 140, 180), (10, 20), 2) # Lily flower
+        # Cattail reeds
+        pygame.draw.line(swamp_marsh, (35, 110, 45), (25, 6), (25, 16), 2)
+        pygame.draw.rect(swamp_marsh, (120, 65, 25), (24, 4, 3, 6), border_radius=1)
+        self.cached_tiles["swamp_marsh"] = swamp_marsh
+
+        # H. Electric Surge Grid ('e')
+        electric_surge = pygame.Surface((T, T))
+        electric_surge.fill((55, 62, 75)) # Dark industrial conduit metal
+        pygame.draw.rect(electric_surge, (85, 95, 115), (0, 0, T, T), 1)
+        # Glowing circuit grid lines
+        pygame.draw.line(electric_surge, (40, 190, 240), (0, 16), (T, 16), 2)
+        pygame.draw.line(electric_surge, (40, 190, 240), (16, 0), (16, T), 2)
+        # Central energy capacitor
+        pygame.draw.rect(electric_surge, (30, 35, 45), (10, 10, 12, 12), border_radius=2)
+        pygame.draw.circle(electric_surge, (255, 235, 60), (16, 16), 4) # Electric core
+        pygame.draw.circle(electric_surge, WHITE, (16, 16), 2)
+        # Electric spark lightning bolts
+        pygame.draw.lines(electric_surge, (255, 240, 80), False, [(6, 6), (10, 10), (8, 14), (12, 16)], 2)
+        pygame.draw.lines(electric_surge, (120, 240, 255), False, [(26, 26), (22, 22), (24, 18), (20, 16)], 2)
+        self.cached_tiles["electric_surge"] = electric_surge
+
+        # ==========================================
+        # 24. IMMERSIVE LOWER-BODY FOOT OVERLAYS
+        # ==========================================
+        # Rendered over the lower portion of the player when standing in walk-through props
+
+        # Grass overlay
+        ol_grass = pygame.Surface((T, T), pygame.SRCALPHA)
+        for x in [4, 10, 16, 22, 28]:
+            pygame.draw.polygon(ol_grass, (45, 130, 40), [(x - 2, T), (x, T - 12), (x + 2, T)])
+            pygame.draw.polygon(ol_grass, (75, 175, 60), [(x - 1, T), (x, T - 10), (x + 1, T)])
+        self.prop_overlays['G'] = ol_grass
+
+        # Flower meadow overlay
+        ol_flower = pygame.Surface((T, T), pygame.SRCALPHA)
+        for x, col in [(6, (240, 50, 60)), (14, (60, 165, 245)), (22, (250, 205, 40)), (28, (255, 120, 190))]:
+            pygame.draw.line(ol_flower, (35, 110, 30), (x, T), (x, T - 10), 2)
+            pygame.draw.circle(ol_flower, col, (x, T - 10), 4)
+            pygame.draw.circle(ol_flower, WHITE, (x, T - 10), 1)
+        self.prop_overlays['F'] = ol_flower
+        self.prop_overlays['*'] = ol_flower
+
+        # Autumn leaves overlay
+        ol_leaf = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.polygon(ol_leaf, (230, 115, 35), [(4, T - 2), (8, T - 10), (12, T - 2)])
+        pygame.draw.polygon(ol_leaf, (200, 45, 40), [(14, T - 2), (18, T - 8), (22, T - 2)])
+        pygame.draw.polygon(ol_leaf, (240, 195, 45), [(22, T - 2), (26, T - 9), (30, T - 2)])
+        self.prop_overlays['L'] = ol_leaf
+
+        # Cave rubble overlay
+        ol_rubble = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.polygon(ol_rubble, (130, 120, 115), [(4, T), (8, T - 8), (14, T)])
+        pygame.draw.polygon(ol_rubble, (110, 100, 95), [(18, T), (24, T - 7), (29, T)])
+        pygame.draw.circle(ol_rubble, (215, 215, 225), (16, T - 4), 2)
+        self.prop_overlays['r'] = ol_rubble
+
+        # Snow drift overlay (snow covering boots up to shins)
+        ol_snow = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.ellipse(ol_snow, (190, 225, 248), (2, T - 14, 28, 14))
+        pygame.draw.ellipse(ol_snow, (255, 255, 255), (4, T - 12, 24, 12))
+        pygame.draw.circle(ol_snow, (130, 205, 255), (10, T - 8), 1)
+        pygame.draw.circle(ol_snow, (130, 205, 255), (22, T - 8), 1)
+        self.prop_overlays['x'] = ol_snow
+
+        # Haunted mist overlay (wisps drifting around lower body)
+        ol_mist = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.ellipse(ol_mist, (160, 110, 210, 140), (2, T - 18, 28, 14))
+        pygame.draw.ellipse(ol_mist, (210, 160, 255, 170), (6, T - 14, 20, 10))
+        pygame.draw.circle(ol_mist, (240, 210, 255, 220), (12, T - 12), 2)
+        pygame.draw.circle(ol_mist, (240, 210, 255, 220), (20, T - 10), 2)
+        self.prop_overlays['m'] = ol_mist
+
+        # Volcanic ash overlay
+        ol_ash = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.ellipse(ol_ash, (78, 68, 74), (2, T - 10, 28, 10))
+        pygame.draw.circle(ol_ash, (255, 60, 20), (8, T - 6), 3)
+        pygame.draw.circle(ol_ash, (255, 200, 50), (8, T - 6), 1)
+        pygame.draw.circle(ol_ash, (255, 80, 20), (22, T - 5), 3)
+        pygame.draw.circle(ol_ash, (255, 220, 80), (22, T - 5), 1)
+        self.prop_overlays['a'] = ol_ash
+
+        # Swamp marsh overlay (mud & water splash)
+        ol_marsh = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.ellipse(ol_marsh, (58, 105, 90, 180), (2, T - 12, 28, 12))
+        pygame.draw.arc(ol_marsh, (120, 185, 170), (4, T - 10, 14, 6), 0, 3.14, 2)
+        pygame.draw.arc(ol_marsh, (120, 185, 170), (16, T - 8, 12, 5), 0, 3.14, 2)
+        pygame.draw.circle(ol_marsh, (45, 155, 65), (8, T - 6), 3)
+        self.prop_overlays['u'] = ol_marsh
+
+        # Electric surge grid overlay (static arcs around boots)
+        ol_spark = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.lines(ol_spark, (255, 240, 80), False, [(6, T - 2), (10, T - 8), (8, T - 12), (12, T - 14)], 2)
+        pygame.draw.lines(ol_spark, (120, 240, 255), False, [(26, T - 2), (22, T - 8), (24, T - 12), (20, T - 14)], 2)
+        pygame.draw.circle(ol_spark, (255, 255, 255), (12, T - 14), 2)
+        pygame.draw.circle(ol_spark, (255, 255, 255), (20, T - 14), 2)
+        self.prop_overlays['e'] = ol_spark
+
 
 
     def draw_hp_bar(self, surf, x, y, width, height, current_hp, max_hp, label="HP"):

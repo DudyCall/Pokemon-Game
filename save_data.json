@@ -1,6 +1,6 @@
 {
   "slot": 1,
-  "timestamp": "2026-08-31 18:58",
+  "timestamp": "2026-09-01 00:39",
   "player": {
     "name": "Red",
     "gender": "Boy",
@@ -23,12 +23,12 @@
       "exp": 512,
       "status": null,
       "ivs": {
-        "hp": 24,
+        "hp": 22,
         "atk": 19,
-        "def": 28,
-        "spatk": 22,
-        "spdef": 16,
-        "spd": 19
+        "def": 29,
+        "spatk": 25,
+        "spdef": 22,
+        "spd": 13
       },
       "moves": [
         {
@@ -110,5 +110,6 @@
   "defeated_trainers": [],
   "collected_items": [],
   "badges": [],
-  "explored_tiles": {}
+  "explored_tiles": {},
+  "quests": {}
 }

@@ -101,6 +101,8 @@ class GameState:
     TRAINER_CARD = "TRAINER_CARD"
     SAVE = "SAVE"
     PC_BOX = "PC_BOX"
+    MOVE_RELEARN = "MOVE_RELEARN"
+    QUEST_LOG = "QUEST_LOG"
 
 # Trainer Customization Presets
 OUTFIT_THEMES = {
@@ -140,3 +142,18 @@ KEY_CONFIRM = [pygame.K_z, pygame.K_RETURN, pygame.K_SPACE]
 KEY_CANCEL = [pygame.K_x, pygame.K_ESCAPE]
 KEY_MENU = [pygame.K_c, pygame.K_m, pygame.K_TAB]
 KEY_QUICKSAVE = [pygame.K_F5, pygame.K_k]
+
+# Walk-Through Wild Encounter Props
+ENCOUNTER_PROP_TILES = {
+    'G': {"name": "Tall Grass", "sfx": "rustle", "minimap_color": (45, 135, 40), "desc": "Wild grass habitat"},
+    'F': {"name": "Wildflower Meadow", "sfx": "flower_step", "minimap_color": (245, 110, 180), "desc": "Blooming flower meadow"},
+    '*': {"name": "Wildflower Patch", "sfx": "flower_step", "minimap_color": (245, 110, 180), "desc": "Blooming flower patch"},
+    'L': {"name": "Autumn Leaf Pile", "sfx": "leaves_step", "minimap_color": (225, 130, 45), "desc": "Crisp rustling fallen leaves"},
+    'r': {"name": "Cave Rubble", "sfx": "rubble_step", "minimap_color": (150, 125, 105), "desc": "Fractured rocks and mineral gravel"},
+    'x': {"name": "Snow Drift", "sfx": "snow_step", "minimap_color": (220, 245, 255), "desc": "Deep powdery snow drift"},
+    'm': {"name": "Haunted Mist", "sfx": "mist_step", "minimap_color": (165, 105, 215), "desc": "Swirling spiritual mist wisps"},
+    'a': {"name": "Volcanic Ash", "sfx": "ash_step", "minimap_color": (195, 60, 50), "desc": "Warm volcanic ash with embers"},
+    'u': {"name": "Swamp Marsh", "sfx": "mud_step", "minimap_color": (70, 140, 115), "desc": "Murky marsh water and mud"},
+    'e': {"name": "Electric Surge Grid", "sfx": "spark_step", "minimap_color": (245, 220, 50), "desc": "Charged electrical static conduit"}
+}
+

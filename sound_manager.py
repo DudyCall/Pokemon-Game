@@ -198,9 +198,63 @@ class SoundManager:
         # 17. Grass rustle step
         s = self._noise_burst(0.06, volume=0.25, decay_exp=4.0)
         self.sounds["rustle"] = self._create_wav(s, SR)
-        
+
+        # 18. Flower meadow step (Soft floral chime & rustle)
+        s_rustle = self._noise_burst(0.05, volume=0.15, decay_exp=4.0)
+        s_chime = self._melody_samples([(1046, 0.03), (1318, 0.04)], volume=0.18, SR=SR)
+        comb_len = min(len(s_rustle), len(s_chime))
+        combined = [s_rustle[i] + s_chime[i] for i in range(comb_len)]
+        self.sounds["flower_step"] = self._create_wav(combined, SR)
+
+        # 19. Autumn leaves step (Crispy textured leaf crunch)
+        s = self._noise_burst(0.08, volume=0.28, decay_exp=3.2)
+        self.sounds["leaves_step"] = self._create_wav(s, SR)
+
+        # 20. Cave rubble step (Gravelly stone crunch)
+        s_noise = self._noise_burst(0.07, volume=0.32, decay_exp=2.8)
+        s_low = self._freq_sweep(180, 70, 0.07, volume=0.3, wave_type="triangle")
+        comb_len = min(len(s_noise), len(s_low))
+        combined = [s_noise[i] + s_low[i] for i in range(comb_len)]
+        self.sounds["rubble_step"] = self._create_wav(combined, SR)
+
+        # 21. Snow drift step (Soft muffled powder snow)
+        s_snow = self._noise_burst(0.09, volume=0.18, decay_exp=5.0)
+        s_tone = self._freq_sweep(240, 140, 0.09, volume=0.2, wave_type="sine")
+        comb_len = min(len(s_snow), len(s_tone))
+        combined = [s_snow[i] + s_tone[i] for i in range(comb_len)]
+        self.sounds["snow_step"] = self._create_wav(combined, SR)
+
+        # 22. Haunted mist step (Ethereal ghostly whisper)
+        s = self._freq_sweep(650, 420, 0.12, volume=0.22, wave_type="sine")
+        self.sounds["mist_step"] = self._create_wav(s, SR)
+
+        # 23. Volcanic ash step (Soot crunch with ember crackle)
+        s_ash = self._noise_burst(0.07, volume=0.26, decay_exp=3.5)
+        s_crackle = self._freq_sweep(500, 150, 0.07, volume=0.25, wave_type="square")
+        comb_len = min(len(s_ash), len(s_crackle))
+        combined = [s_ash[i] + s_crackle[i] for i in range(comb_len)]
+        self.sounds["ash_step"] = self._create_wav(combined, SR)
+
+        # 24. Swamp marsh step (Mud squish / splash)
+        s = self._freq_sweep(220, 580, 0.08, volume=0.3, wave_type="triangle")
+        s_splash = self._noise_burst(0.08, volume=0.22, decay_exp=4.0)
+        comb_len = min(len(s), len(s_splash))
+        combined = [s[i] + s_splash[i] for i in range(comb_len)]
+        self.sounds["mud_step"] = self._create_wav(combined, SR)
+
+        # 25. Electric surge grid step (Static zap / crackle)
+        s_spark = []
+        for i in range(int(0.07 * SR)):
+            t = i / SR
+            f = 600 + 300 * math.sin(2.0 * math.pi * 50 * t)
+            val = 0.35 if (i % (SR / f)) < (SR / f * 0.5) else -0.35
+            noise = (random.random() * 2 - 1) * 0.25
+            s_spark.append((val + noise) * (1.0 - t / 0.07))
+        self.sounds["spark_step"] = self._create_wav(s_spark, SR)
+
         # Generate BGM tracks
         self._generate_bgm_tracks(SR)
+
 
     def _melody_samples(self, note_list, volume=0.4, SR=44100):
         notes = []

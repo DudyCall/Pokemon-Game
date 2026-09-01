@@ -4,6 +4,7 @@ Pokédex, Party Summary, PokéMart Shop, and Dialogue boxes.
 """
 import pygame
 import math
+import random
 from constants import (
     SCREEN_WIDTH, SCREEN_HEIGHT, WHITE, BLACK, GRAY, DARK_GRAY, LIGHT_GRAY,
     UI_BG, UI_BORDER_DARK, UI_BORDER_LIGHT, UI_TEXT, UI_TEXT_MUTED,
@@ -197,7 +198,7 @@ class SaveSlotSelectScreen:
       - 'NEW_GAME': User picks a slot to start a new journey.
       - 'SAVE': In-game menu to save into any slot.
     """
-    def __init__(self, mode="LOAD", active_slot=1, player=None, party=None, inventory=None, pokedex=None, world=None, pc_box=None):
+    def __init__(self, mode="LOAD", active_slot=1, player=None, party=None, inventory=None, pokedex=None, world=None, pc_box=None, quest_mgr=None):
         self.mode = mode # "LOAD", "NEW_GAME", "SAVE"
         self.active_slot = active_slot
         self.player = player
@@ -206,6 +207,7 @@ class SaveSlotSelectScreen:
         self.pokedex = pokedex
         self.world = world
         self.pc_box = pc_box
+        self.quest_mgr = quest_mgr
         self.selected_idx = max(0, min(2, active_slot - 1))
         self.slots = []
         self.refresh_slots()
@@ -243,7 +245,7 @@ class SaveSlotSelectScreen:
                         return ("NEW_GAME", self.target_slot_for_modal)
                     elif self.mode == "SAVE":
                         from save_system import SaveSystem
-                        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.target_slot_for_modal, pc_box=self.pc_box)
+                        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.target_slot_for_modal, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
                         self.refresh_slots()
                         return ("SAVED", self.target_slot_for_modal)
                 else:
@@ -292,7 +294,7 @@ class SaveSlotSelectScreen:
                     self.modal_selected_yes = False
                 else:
                     from save_system import SaveSystem
-                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=chosen_slot, pc_box=self.pc_box)
+                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=chosen_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
                     sound_mgr.play_sfx("confirm")
                     self.refresh_slots()
                     return ("SAVED", chosen_slot)
@@ -411,7 +413,7 @@ class SaveSlotSelectScreen:
             pygame.draw.rect(surf, WHITE, (mx, my, mw, mh), border_radius=10)
 
             # Warning Header
-            warn_title = gfx.fonts["large"].render(f"OVERWRITE SLOT {self.target_slot_for_modal}?", True, (220, 40, 40))
+            warn_title = gfx.fonts["large"].render(f"OVERWRITE SLOT {self.target_slot_for_modal}?", True, (220, 60, 60))
             surf.blit(warn_title, (mx + (mw - warn_title.get_width()) // 2, my + 24))
 
             # Message
@@ -429,20 +431,21 @@ class SaveSlotSelectScreen:
 
                 b_bdr = (220, 60, 60) if (is_btn_sel and i == 0) else ((240, 140, 40) if is_btn_sel else UI_BORDER_LIGHT)
                 b_bg = (255, 230, 230) if (is_btn_sel and i == 0) else ((255, 245, 220) if is_btn_sel else UI_BG)
-                pygame.draw.rect(surf, b_bdr, (btn_x, btn_y, btn_w, btn_h), border_radius=6)
+                pygame.draw.rect(surf, bdr_col if not is_btn_sel else b_bdr, (btn_x, btn_y, btn_w, btn_h), border_radius=6)
                 pygame.draw.rect(surf, b_bg, (btn_x + 1, btn_y + 1, btn_w - 2, btn_h - 2), border_radius=5)
 
                 btxt = gfx.fonts["regular"].render(opt, True, (200, 40, 40) if (is_btn_sel and i == 0) else UI_TEXT)
                 surf.blit(btxt, (btn_x + (btn_w - btxt.get_width()) // 2, btn_y + (btn_h - btxt.get_height()) // 2))
 
 class SaveDialog:
-    def __init__(self, player, party, inventory, pokedex, slot=1, pc_box=None):
+    def __init__(self, player, party, inventory, pokedex, slot=1, pc_box=None, quest_mgr=None):
         self.player = player
         self.party = party
         self.inventory = inventory
         self.pokedex = pokedex
         self.slot = slot
         self.pc_box = pc_box
+        self.quest_mgr = quest_mgr
         self.selected_yes = True
         self.state = "CONFIRM" # "CONFIRM", "SAVING", "SAVED"
         self.timer = 0.0
@@ -474,12 +477,11 @@ class SaveDialog:
         self.timer += dt
         if self.state == "SAVING" and self.timer >= 0.2:
             from save_system import SaveSystem
-            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, world, slot=self.slot, pc_box=self.pc_box)
+            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, world, slot=self.slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
             sound_mgr.play_sfx("confirm")
             self.state = "SAVED"
             self.timer = 0.0
         elif self.state == "SAVED" and self.timer >= 1.2:
-            # Automatically close after 1.2 seconds if not already closed
             return "DONE"
         return None
 
@@ -825,7 +827,7 @@ StarterSelectScreen = TrainerCustomizationScreen
 
 class PauseMenu:
     def __init__(self):
-        self.options = ["POKÉDEX", "POKÉMON", "BAG", "MAP", "PC BOX", "TRAINER", "SAVE", "EXIT"]
+        self.options = ["POKÉDEX", "POKÉMON", "BAG", "QUESTS", "MAP", "PC BOX", "TRAINER", "SAVE", "EXIT"]
         self.selected_idx = 0
 
     def handle_input(self, event):
@@ -848,15 +850,15 @@ class PauseMenu:
 
     def draw(self, surf):
         # Draw on top-right of screen
-        mw, mh = 210, 340
+        mw, mh = 210, 380
         mx = SCREEN_WIDTH - mw - 20
-        my = 20
+        my = 15
         
         pygame.draw.rect(surf, UI_BORDER_DARK, (mx - 2, my - 2, mw + 4, mh + 4), border_radius=10)
         pygame.draw.rect(surf, UI_BG, (mx, my, mw, mh), border_radius=8)
         
         for i, opt in enumerate(self.options):
-            iy = my + 14 + i * 40
+            iy = my + 10 + i * 40
             is_sel = (i == self.selected_idx)
             
             if is_sel:
@@ -1057,12 +1059,385 @@ class PartySummaryScreen:
             elif p.status:
                 gfx.draw_status_badge(surf, p.status, row_x + 105 + len(p.types) * 60, row_y + 95, width=48, height=20)
 
+class BagScreen:
+    """
+    Comprehensive Player Bag & Item Explanation Screen.
+    Allows browsing all acquired items by category (Medicine, Poké Balls, Evolution Stones, etc.),
+    reading detailed explanations of what each item is for, and using items directly on Pokémon.
+    """
+    CATEGORIES = [
+        ("ALL", "ALL ITEMS"),
+        ("medicine", "MEDICINE"),
+        ("ball", "POKÉ BALLS"),
+        ("stone", "STONES"),
+        ("candy", "CANDIES"),
+        ("item", "SPECIAL"),
+        ("valuable", "VALUABLES")
+    ]
+
+    def __init__(self, party, inventory, quest_mgr=None):
+        self.party = party
+        self.inventory = inventory
+        self.quest_mgr = quest_mgr
+        self.category_idx = 0
+        self.selected_idx = 0
+        self.scroll_offset = 0
+        self.mode = "BAG" # "BAG" or "USE_TARGET"
+        self.target_pkmn_idx = 0
+        self.message = "Browse items to view their purpose and usage. [Z]: Use  [X]: Exit"
+        self.success_timer = 0.0
+
+    def update(self, dt):
+        if self.success_timer > 0:
+            self.success_timer -= dt
+
+    def get_current_category(self):
+        return self.CATEGORIES[self.category_idx][0]
+
+    def get_filtered_items(self):
+        cat = self.get_current_category()
+        return self.inventory.get_items_list(category_filter=cat)
+
+    def _adjust_scroll(self, total_items):
+        if self.selected_idx < self.scroll_offset:
+            self.scroll_offset = self.selected_idx
+        elif self.selected_idx >= self.scroll_offset + 7:
+            self.scroll_offset = self.selected_idx - 6
+
+    def handle_input(self, event):
+        if event.type != pygame.KEYDOWN:
+            return None
+
+        # Mode 1: Browsing Bag
+        if self.mode == "BAG":
+            items = self.get_filtered_items()
+            
+            # Switch Category Tabs (Left / Right)
+            if any(event.key == k for k in KEY_LEFT):
+                self.category_idx = (self.category_idx - 1) % len(self.CATEGORIES)
+                self.selected_idx = 0
+                self.scroll_offset = 0
+                sound_mgr.play_sfx("select")
+                return None
+            elif any(event.key == k for k in KEY_RIGHT):
+                self.category_idx = (self.category_idx + 1) % len(self.CATEGORIES)
+                self.selected_idx = 0
+                self.scroll_offset = 0
+                sound_mgr.play_sfx("select")
+                return None
+
+            # Navigate Item List (Up / Down)
+            if any(event.key == k for k in KEY_UP):
+                if items:
+                    self.selected_idx = (self.selected_idx - 1) % len(items)
+                    self._adjust_scroll(len(items))
+                    sound_mgr.play_sfx("select")
+                return None
+            elif any(event.key == k for k in KEY_DOWN):
+                if items:
+                    self.selected_idx = (self.selected_idx + 1) % len(items)
+                    self._adjust_scroll(len(items))
+                    sound_mgr.play_sfx("select")
+                return None
+
+            # Exit Bag
+            if any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                return "EXIT"
+
+            # Use Item (Confirm)
+            if any(event.key == k for k in KEY_CONFIRM):
+                if not items or self.selected_idx >= len(items):
+                    return None
+                item_name, count, data = items[self.selected_idx]
+                category = data.get("category", "")
+                
+                # Check if usable on Pokémon
+                is_usable_on_pkmn = (
+                    category in ["medicine", "candy", "stone"] or
+                    data.get("is_move_reroll") or
+                    "heal_hp" in data or
+                    "cure_status" in data or
+                    "revive_hp_percent" in data or
+                    "level_up" in data or
+                    "evolution" in data
+                )
+                
+                if is_usable_on_pkmn:
+                    if not self.party:
+                        self.message = "No Pokémon in party to use item on!"
+                        sound_mgr.play_sfx("cancel")
+                        return None
+                    self.mode = "USE_TARGET"
+                    self.target_pkmn_idx = 0
+                    self.message = f"Use {item_name} on which Pokémon? [Up/Down]: Choose, [Z]: Apply, [X]: Cancel"
+                    sound_mgr.play_sfx("select")
+                    return None
+                elif category == "ball":
+                    self.message = "Poké Balls can only be thrown during wild battles!"
+                    sound_mgr.play_sfx("cancel")
+                    return None
+                elif category == "valuable":
+                    self.message = "Valuable items can be sold at PokéMarts for high prices!"
+                    sound_mgr.play_sfx("cancel")
+                    return None
+                else:
+                    # General item use
+                    ok, msg = self.inventory.use_item(item_name, quest_mgr=self.quest_mgr)
+                    if ok:
+                        sound_mgr.play_sfx("confirm")
+                        self.message = msg
+                        self.success_timer = 3.0
+                        new_items = self.get_filtered_items()
+                        if self.selected_idx >= len(new_items):
+                            self.selected_idx = max(0, len(new_items) - 1)
+                    else:
+                        sound_mgr.play_sfx("cancel")
+                        self.message = msg
+                    return None
+
+        # Mode 2: Selecting Pokémon Target to Apply Item
+        elif self.mode == "USE_TARGET":
+            if any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                self.mode = "BAG"
+                self.message = "Browse items to view their purpose and usage. [Z]: Use  [X]: Exit"
+                return None
+            elif any(event.key == k for k in KEY_UP):
+                self.target_pkmn_idx = (self.target_pkmn_idx - 1) % len(self.party)
+                sound_mgr.play_sfx("select")
+                return None
+            elif any(event.key == k for k in KEY_DOWN):
+                self.target_pkmn_idx = (self.target_pkmn_idx + 1) % len(self.party)
+                sound_mgr.play_sfx("select")
+                return None
+            elif any(event.key == k for k in KEY_CONFIRM):
+                items = self.get_filtered_items()
+                if not items or self.selected_idx >= len(items):
+                    self.mode = "BAG"
+                    return None
+                item_name, count, data = items[self.selected_idx]
+                target_pkmn = self.party[self.target_pkmn_idx]
+                
+                ok, msg = self.inventory.use_item_on_pokemon(item_name, target_pkmn, quest_mgr=self.quest_mgr)
+                if ok:
+                    sound_mgr.play_sfx("heal" if ("heal" in item_name.lower() or "potion" in item_name.lower() or "revive" in item_name.lower()) else "confirm")
+                    self.message = msg
+                    self.success_timer = 3.0
+                    self.mode = "BAG"
+                    new_items = self.get_filtered_items()
+                    if self.selected_idx >= len(new_items):
+                        self.selected_idx = max(0, len(new_items) - 1)
+                else:
+                    sound_mgr.play_sfx("cancel")
+                    self.message = msg
+
+        return None
+
+    def draw(self, surf):
+        surf.fill((235, 240, 248))
+
+        # 1. Top Header
+        head = gfx.fonts["title"].render("TRAINER BAG & ITEM MANUAL", True, (40, 100, 200))
+        money_txt = gfx.fonts["large"].render(f"💰 Money: ${self.inventory.money}", True, (40, 140, 60))
+        surf.blit(head, (30, 14))
+        surf.blit(money_txt, (SCREEN_WIDTH - money_txt.get_width() - 30, 18))
+
+        # 2. Category Filter Tabs Header
+        tab_y = 62
+        tab_w = 100
+        for c_idx, (cat_key, cat_lbl) in enumerate(self.CATEGORIES):
+            tx = 30 + c_idx * (tab_w + 6)
+            is_active = (c_idx == self.category_idx)
+            tbdr = (220, 100, 20) if is_active else (190, 200, 215)
+            tbg = (255, 235, 180) if is_active else ((250, 252, 255) if c_idx % 2 == 0 else WHITE)
+            pygame.draw.rect(surf, tbdr, (tx, tab_y, tab_w, 28), border_radius=6)
+            pygame.draw.rect(surf, tbg, (tx + 1, tab_y + 1, tab_w - 2, 26), border_radius=5)
+            
+            c_txt = gfx.fonts["small"].render(cat_lbl, True, (200, 60, 0) if is_active else UI_TEXT_MUTED)
+            surf.blit(c_txt, (tx + (tab_w - c_txt.get_width()) // 2, tab_y + 6))
+
+        # 3. Left Panel (Item List)
+        lx, ly, lw, lh = 30, 96, 360, 380
+        pygame.draw.rect(surf, (30, 40, 60), (lx - 2, ly - 2, lw + 4, lh + 4), border_radius=10)
+        pygame.draw.rect(surf, WHITE, (lx, ly, lw, lh), border_radius=8)
+
+        items = self.get_filtered_items()
+        if not items:
+            empty_msg = gfx.fonts["regular"].render("No items in this pocket!", True, UI_TEXT_MUTED)
+            surf.blit(empty_msg, (lx + (lw - empty_msg.get_width()) // 2, ly + 160))
+        else:
+            visible_items = items[self.scroll_offset : self.scroll_offset + 7]
+            for rel_idx, (name, count, data) in enumerate(visible_items):
+                actual_idx = self.scroll_offset + rel_idx
+                is_sel = (actual_idx == self.selected_idx)
+                iy = ly + 10 + rel_idx * 52
+
+                bdr = (240, 120, 20) if is_sel else (225, 230, 240)
+                bg = (255, 238, 200) if is_sel else ((250, 252, 255) if rel_idx % 2 == 0 else WHITE)
+                pygame.draw.rect(surf, bdr, (lx + 8, iy, lw - 16, 46), 2 if is_sel else 1, border_radius=8)
+                pygame.draw.rect(surf, bg, (lx + 9, iy + 1, lw - 18, 44), border_radius=7)
+
+                # Icon
+                icon = gfx.get_item_sprite(name, (32, 32))
+                surf.blit(icon, (lx + 16, iy + 7))
+
+                # Name
+                name_txt = gfx.fonts["regular"].render(name, True, (200, 60, 0) if is_sel else UI_TEXT)
+                surf.blit(name_txt, (lx + 56, iy + 6))
+
+                # Category mini tag & Count
+                cat_tag = data.get("category", "item").upper()
+                c_lbl = gfx.fonts["small"].render(cat_tag, True, UI_TEXT_MUTED)
+                surf.blit(c_lbl, (lx + 56, iy + 26))
+
+                count_pill = gfx.fonts["regular"].render(f"x{count}", True, (30, 130, 50))
+                surf.blit(count_pill, (lx + lw - count_pill.get_width() - 20, iy + 12))
+
+            # Scroll indicator
+            if len(items) > 7:
+                scr_info = gfx.fonts["small"].render(f"▲ ▼ ({self.selected_idx + 1}/{len(items)})", True, (200, 80, 0))
+                surf.blit(scr_info, (lx + lw - scr_info.get_width() - 14, ly + lh - 22))
+
+        # 4. Right Panel: Explanation & Purpose Card OR Party Selection Overlay
+        rx, ry, rw, rh = 405, 96, 365, 380
+        pygame.draw.rect(surf, (30, 40, 60), (rx - 2, ry - 2, rw + 4, rh + 4), border_radius=10)
+        pygame.draw.rect(surf, WHITE, (rx, ry, rw, rh), border_radius=8)
+
+        if self.mode == "USE_TARGET":
+            # Party Target Selection Overlay
+            ovr_head = gfx.fonts["regular"].render("SELECT TARGET POKÉMON", True, (220, 60, 20))
+            surf.blit(ovr_head, (rx + (rw - ovr_head.get_width()) // 2, ry + 12))
+
+            for p_idx, p in enumerate(self.party):
+                py_row = ry + 40 + p_idx * 54
+                is_p_sel = (p_idx == self.target_pkmn_idx)
+                pbdr = (240, 100, 20) if is_p_sel else (220, 225, 235)
+                pbg = (255, 235, 190) if is_p_sel else ((250, 252, 255) if p_idx % 2 == 0 else WHITE)
+                
+                pygame.draw.rect(surf, pbdr, (rx + 10, py_row, rw - 20, 48), 2 if is_p_sel else 1, border_radius=8)
+                pygame.draw.rect(surf, pbg, (rx + 11, py_row + 1, rw - 22, 46), border_radius=7)
+
+                # Mini Sprite
+                p_spr = gfx.get_pokemon_sprite(p.species, is_back=False, size=(42, 42))
+                surf.blit(p_spr, (rx + 14, py_row + 3))
+
+                # Name & Lv
+                p_lbl = gfx.fonts["small"].render(f"{p.nickname} Lv.{p.level}", True, (200, 60, 0) if is_p_sel else UI_TEXT)
+                surf.blit(p_lbl, (rx + 62, py_row + 6))
+
+                # HP Bar
+                gfx.draw_hp_bar(surf, rx + 62, py_row + 26, 160, 8, p.current_hp, p.max_hp)
+                hp_txt = gfx.fonts["small"].render(f"{p.current_hp}/{p.max_hp}", True, UI_TEXT_MUTED)
+                surf.blit(hp_txt, (rx + 230, py_row + 24))
+
+                # Status
+                if p.is_fainted():
+                    gfx.draw_status_badge(surf, "Fainted", rx + rw - 70, py_row + 6, width=48, height=18)
+                elif p.status:
+                    gfx.draw_status_badge(surf, p.status, rx + rw - 60, py_row + 6, width=38, height=18)
+
+            tip = gfx.fonts["small"].render("[Z]: Apply Item   [X]: Cancel", True, (40, 100, 200))
+            surf.blit(tip, (rx + (rw - tip.get_width()) // 2, ry + rh - 22))
+
+        else:
+            # Item Detail & Comprehensive Explanation
+            if items and 0 <= self.selected_idx < len(items):
+                curr_name, curr_cnt, curr_data = items[self.selected_idx]
+
+                # Top item header strip
+                spr = gfx.get_item_sprite(curr_name, (52, 52))
+                pygame.draw.rect(surf, (244, 247, 252), (rx + 14, ry + 14, 60, 60), border_radius=8)
+                pygame.draw.rect(surf, (215, 225, 240), (rx + 14, ry + 14, 60, 60), 1, border_radius=8)
+                surf.blit(spr, (rx + 18, ry + 18))
+
+                name_txt = gfx.fonts["medium"].render(curr_name, True, (30, 45, 80))
+                surf.blit(name_txt, (rx + 84, ry + 16))
+
+                cat_name = curr_data.get("category", "item").upper()
+                c_pill = gfx.fonts["small"].render(f"CATEGORY: {cat_name}", True, (200, 80, 0))
+                surf.blit(c_pill, (rx + 84, ry + 42))
+
+                val_str = f"In Bag: {curr_cnt}  |  Mart Value: ${curr_data.get('price', 0)}"
+                v_txt = gfx.fonts["small"].render(val_str, True, (40, 140, 60))
+                surf.blit(v_txt, (rx + 84, ry + 60))
+
+                # Section 1: PURPOSE & WHAT IT IS FOR
+                p_box_y = ry + 88
+                pygame.draw.rect(surf, (248, 250, 255), (rx + 12, p_box_y, rw - 24, 130), border_radius=8)
+                pygame.draw.rect(surf, (220, 230, 245), (rx + 12, p_box_y, rw - 24, 130), 1, border_radius=8)
+                
+                p_head = gfx.fonts["small"].render("📖 PURPOSE & EFFECT:", True, (40, 80, 180))
+                surf.blit(p_head, (rx + 20, p_box_y + 8))
+
+                desc_words = curr_data.get("desc", "").split(" ")
+                lines, cur = [], ""
+                for w in desc_words:
+                    t = cur + (" " if cur else "") + w
+                    if gfx.fonts["regular"].size(t)[0] < rw - 50:
+                        cur = t
+                    else:
+                        lines.append(cur)
+                        cur = w
+                if cur:
+                    lines.append(cur)
+                for l_idx, l_str in enumerate(lines[:4]):
+                    surf.blit(gfx.fonts["regular"].render(l_str, True, UI_TEXT), (rx + 20, p_box_y + 32 + l_idx * 22))
+
+                # Section 2: USAGE INSTRUCTIONS
+                u_box_y = ry + 228
+                pygame.draw.rect(surf, (255, 250, 242), (rx + 12, u_box_y, rw - 24, 105), border_radius=8)
+                pygame.draw.rect(surf, (250, 225, 195), (rx + 12, u_box_y, rw - 24, 105), 1, border_radius=8)
+
+                u_head = gfx.fonts["small"].render("⚡ HOW & WHERE TO USE:", True, (210, 80, 20))
+                surf.blit(u_head, (rx + 20, u_box_y + 8))
+
+                usage_words = curr_data.get("usage", "Select and use from Bag or in Battle.").split(" ")
+                ulines, ucur = [], ""
+                for w in usage_words:
+                    ut = ucur + (" " if ucur else "") + w
+                    if gfx.fonts["regular"].size(ut)[0] < rw - 50:
+                        ucur = ut
+                    else:
+                        ulines.append(ucur)
+                        ucur = w
+                if ucur:
+                    ulines.append(ucur)
+                for ul_idx, ul_str in enumerate(ulines[:3]):
+                    surf.blit(gfx.fonts["regular"].render(ul_str, True, (80, 70, 60)), (rx + 20, u_box_y + 32 + ul_idx * 22))
+
+                # Bottom Action Cue
+                cue = gfx.fonts["small"].render("Press [Z] to Use on Pokémon   [X]: Back", True, (40, 120, 220))
+                surf.blit(cue, (rx + (rw - cue.get_width()) // 2, ry + 348))
+
+        # 5. Bottom Message Box
+        bx, by, bw, bh = 30, 492, SCREEN_WIDTH - 60, 78
+        pygame.draw.rect(surf, (30, 40, 60), (bx - 2, by - 2, bw + 4, bh + 4), border_radius=8)
+        pygame.draw.rect(surf, UI_BG, (bx, by, bw, bh), border_radius=6)
+
+        msg_c = (40, 140, 60) if self.success_timer > 0 else UI_TEXT
+        surf.blit(gfx.fonts["regular"].render(self.message, True, msg_c), (bx + 20, by + 26))
+
+
 class ShopScreen:
     def __init__(self, inventory):
         self.inventory = inventory
-        self.items_for_sale = ["Poke Ball", "Great Ball", "Ultra Ball", "Potion", "Super Potion", "Revive", "Antidote"]
+        self.items_for_sale = [
+            "Poke Ball", "Great Ball", "Ultra Ball",
+            "Potion", "Super Potion", "Max Potion", "Revive",
+            "Antidote", "Paralyze Heal", "Awakening", "Burn Heal",
+            "Rare Candy", "Escape Rope", "Move Reroll Disk",
+            "Moon Stone", "Fire Stone", "Water Stone", "Thunder Stone", "Leaf Stone"
+        ]
         self.selected_idx = 0
+        self.scroll_offset = 0
         self.message = "Welcome to PokéMart! What would you like to buy?"
+
+    def _adjust_scroll(self):
+        if self.selected_idx < self.scroll_offset:
+            self.scroll_offset = self.selected_idx
+        elif self.selected_idx >= self.scroll_offset + 7:
+            self.scroll_offset = self.selected_idx - 6
 
     def handle_input(self, event):
         if event.type != pygame.KEYDOWN:
@@ -1070,9 +1445,11 @@ class ShopScreen:
             
         if any(event.key == k for k in KEY_UP):
             self.selected_idx = (self.selected_idx - 1) % len(self.items_for_sale)
+            self._adjust_scroll()
             sound_mgr.play_sfx("select")
         elif any(event.key == k for k in KEY_DOWN):
             self.selected_idx = (self.selected_idx + 1) % len(self.items_for_sale)
+            self._adjust_scroll()
             sound_mgr.play_sfx("select")
         elif any(event.key == k for k in KEY_CANCEL):
             sound_mgr.play_sfx("cancel")
@@ -1092,56 +1469,97 @@ class ShopScreen:
 
     def draw(self, surf):
         surf.fill((235, 240, 248))
-        head = gfx.fonts["title"].render("POKÉMART", True, (40, 120, 220))
-        money_txt = gfx.fonts["large"].render(f"Money: ${self.inventory.money}", True, (40, 140, 60))
+        head = gfx.fonts["title"].render("POKÉMART & ITEM CATALOGUE", True, (40, 120, 220))
+        money_txt = gfx.fonts["large"].render(f"💰 Money: ${self.inventory.money}", True, (40, 140, 60))
         surf.blit(head, (30, 20))
         surf.blit(money_txt, (SCREEN_WIDTH - money_txt.get_width() - 30, 25))
 
-        # Items List
-        lx, ly, lw, lh = 30, 90, 420, 380
+        # Items List (Left Box)
+        lx, ly, lw, lh = 30, 85, 380, 390
         pygame.draw.rect(surf, UI_BORDER_DARK, (lx - 2, ly - 2, lw + 4, lh + 4), border_radius=8)
         pygame.draw.rect(surf, WHITE, (lx, ly, lw, lh), border_radius=6)
 
-        for i, name in enumerate(self.items_for_sale):
-            is_sel = (i == self.selected_idx)
-            iy = ly + 15 + i * 48
+        visible_items = self.items_for_sale[self.scroll_offset : self.scroll_offset + 7]
+        for rel_idx, name in enumerate(visible_items):
+            actual_idx = self.scroll_offset + rel_idx
+            is_sel = (actual_idx == self.selected_idx)
+            iy = ly + 10 + rel_idx * 52
             price = ITEMS[name]["price"]
             
-            if is_sel:
-                pygame.draw.rect(surf, (255, 235, 180), (lx + 6, iy - 4, lw - 12, 40), border_radius=6)
-                pygame.draw.rect(surf, (240, 140, 40), (lx + 6, iy - 4, lw - 12, 40), 2, border_radius=6)
-                
+            bdr = (240, 140, 40) if is_sel else (225, 230, 240)
+            bg = (255, 235, 180) if is_sel else ((250, 252, 255) if rel_idx % 2 == 0 else WHITE)
+            pygame.draw.rect(surf, bdr, (lx + 6, iy, lw - 12, 46), 2 if is_sel else 1, border_radius=6)
+            pygame.draw.rect(surf, bg, (lx + 7, iy + 1, lw - 14, 44), border_radius=5)
+            
+            # Icon
+            icon = gfx.get_item_sprite(name, (30, 30))
+            surf.blit(icon, (lx + 14, iy + 8))
+
             itxt = gfx.fonts["regular"].render(name, True, (200, 80, 0) if is_sel else UI_TEXT)
             ptxt = gfx.fonts["regular"].render(f"${price}", True, (40, 140, 60))
-            surf.blit(itxt, (lx + 20, iy + 4))
-            surf.blit(ptxt, (lx + lw - ptxt.get_width() - 20, iy + 4))
+            surf.blit(itxt, (lx + 52, iy + 12))
+            surf.blit(ptxt, (lx + lw - ptxt.get_width() - 16, iy + 12))
 
-        # Right Detail Box
-        rx, ry, rw, rh = 470, 90, 300, 380
+        # Scroll indicator
+        if len(self.items_for_sale) > 7:
+            scr_info = gfx.fonts["small"].render(f"▲ ▼ ({self.selected_idx + 1}/{len(self.items_for_sale)})", True, (200, 80, 0))
+            surf.blit(scr_info, (lx + lw - scr_info.get_width() - 14, ly + lh - 20))
+
+        # Right Detail & Explanation Box
+        rx, ry, rw, rh = 430, 85, 340, 390
         curr_name = self.items_for_sale[self.selected_idx]
         data = ITEMS[curr_name]
         pygame.draw.rect(surf, UI_BORDER_DARK, (rx - 2, ry - 2, rw + 4, rh + 4), border_radius=8)
         pygame.draw.rect(surf, WHITE, (rx, ry, rw, rh), border_radius=6)
 
-        surf.blit(gfx.fonts["large"].render(curr_name, True, UI_TEXT), (rx + 20, ry + 20))
-        surf.blit(gfx.fonts["regular"].render(f"In Bag: {self.inventory.get_count(curr_name)}", True, UI_TEXT_MUTED), (rx + 20, ry + 60))
+        # Header with icon
+        spr = gfx.get_item_sprite(curr_name, (48, 48))
+        surf.blit(spr, (rx + 16, ry + 16))
 
-        # Description
-        words = data["desc"].split(" ")
-        lines = []
-        curr_line = ""
+        surf.blit(gfx.fonts["large"].render(curr_name, True, (30, 50, 90)), (rx + 72, ry + 16))
+        surf.blit(gfx.fonts["small"].render(f"Category: {data.get('category', 'item').upper()}", True, (200, 80, 0)), (rx + 72, ry + 44))
+        surf.blit(gfx.fonts["small"].render(f"In Bag: {self.inventory.get_count(curr_name)}  |  Price: ${data.get('price', 0)}", True, (40, 140, 60)), (rx + 72, ry + 60))
+
+        # Purpose & Description
+        pygame.draw.rect(surf, (246, 249, 255), (rx + 12, ry + 86, rw - 24, 140), border_radius=6)
+        surf.blit(gfx.fonts["small"].render("📖 PURPOSE & EFFECT:", True, (40, 80, 180)), (rx + 20, ry + 94))
+
+        words = data.get("desc", "").split(" ")
+        lines, cur = [], ""
         for w in words:
-            test = curr_line + (" " if curr_line else "") + w
-            if gfx.fonts["regular"].size(test)[0] < rw - 40:
-                curr_line = test
+            test = cur + (" " if cur else "") + w
+            if gfx.fonts["regular"].size(test)[0] < rw - 50:
+                cur = test
             else:
-                lines.append(curr_line)
-                curr_line = w
-        if curr_line:
-            lines.append(curr_line)
-        for l_idx, line_str in enumerate(lines):
+                lines.append(cur)
+                cur = w
+        if cur:
+            lines.append(cur)
+        for l_idx, line_str in enumerate(lines[:5]):
             ltxt = gfx.fonts["regular"].render(line_str, True, UI_TEXT)
-            surf.blit(ltxt, (rx + 20, ry + 110 + l_idx * 26))
+            surf.blit(ltxt, (rx + 20, ry + 118 + l_idx * 22))
+
+        # Usage
+        pygame.draw.rect(surf, (255, 250, 242), (rx + 12, ry + 236, rw - 24, 100), border_radius=6)
+        surf.blit(gfx.fonts["small"].render("⚡ HOW TO USE:", True, (210, 80, 20)), (rx + 20, ry + 244))
+
+        uwords = data.get("usage", "Select to purchase.").split(" ")
+        ulines, ucur = [], ""
+        for w in uwords:
+            utest = ucur + (" " if ucur else "") + w
+            if gfx.fonts["regular"].size(utest)[0] < rw - 50:
+                ucur = utest
+            else:
+                ulines.append(ucur)
+                ucur = w
+        if ucur:
+            ulines.append(ucur)
+        for ul_idx, uline_str in enumerate(ulines[:3]):
+            ultxt = gfx.fonts["regular"].render(uline_str, True, (80, 70, 60))
+            surf.blit(ultxt, (rx + 20, ry + 268 + ul_idx * 22))
+
+        cue = gfx.fonts["small"].render("Press [Z] to Buy  [X]: Exit", True, (40, 120, 220))
+        surf.blit(cue, (rx + (rw - cue.get_width()) // 2, ry + 354))
 
         # Bottom message box
         bx, by, bw, bh = 30, 490, SCREEN_WIDTH - 60, 80
@@ -1149,16 +1567,419 @@ class ShopScreen:
         pygame.draw.rect(surf, UI_BG, (bx, by, bw, bh), border_radius=6)
         surf.blit(gfx.fonts["regular"].render(self.message, True, UI_TEXT), (bx + 20, by + 28))
 
+
+class MoveRerollScreen:
+    """
+    Interactive Pokémon Move Master & Reroll Tutor Screen.
+    Allows inspecting party Pokémon, viewing their active moves with stats and descriptions,
+    and rerolling or choosing new techniques from species learnsets for 3,000 coins.
+    """
+    def __init__(self, party, inventory):
+        self.party = party
+        self.inventory = inventory
+        self.selected_pkmn_idx = 0
+        self.mode = "MENU" # "MENU", "REPLACE_SLOT", "CATALOGUE"
+        self.menu_idx = 0 # 0: REROLL RANDOM ($3,000), 1: BROWSE CATALOGUE ($3,000), 2: CANCEL
+        self.selected_slot = 0 # 0-3 for current moves
+        self.catalogue_idx = 0
+        self.catalogue_scroll = 0
+        self.pending_move = None
+        self.cost = 3000
+        self.message = "Choose a Pokémon to reroll or learn a new move for 3,000 coins!"
+        self.success_timer = 0.0
+
+    def update(self, dt):
+        if self.success_timer > 0:
+            self.success_timer -= dt
+
+    def get_active_pokemon(self):
+        if self.party and 0 <= self.selected_pkmn_idx < len(self.party):
+            return self.party[self.selected_pkmn_idx]
+        return None
+
+    def handle_input(self, event):
+        if event.type != pygame.KEYDOWN:
+            return None
+
+        pkmn = self.get_active_pokemon()
+        if not pkmn:
+            if any(event.key == k for k in KEY_CANCEL + KEY_CONFIRM):
+                return "EXIT"
+            return None
+
+        # Mode 1: Main Menu & Party Selection
+        if self.mode == "MENU":
+            if any(event.key == k for k in KEY_LEFT):
+                self.selected_pkmn_idx = (self.selected_pkmn_idx - 1) % len(self.party)
+                self.catalogue_idx = 0
+                self.catalogue_scroll = 0
+                self.message = f"Selected {self.get_active_pokemon().nickname}. Choose an action below."
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_RIGHT):
+                self.selected_pkmn_idx = (self.selected_pkmn_idx + 1) % len(self.party)
+                self.catalogue_idx = 0
+                self.catalogue_scroll = 0
+                self.message = f"Selected {self.get_active_pokemon().nickname}. Choose an action below."
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_UP):
+                self.menu_idx = (self.menu_idx - 1) % 3
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_DOWN):
+                self.menu_idx = (self.menu_idx + 1) % 3
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                return "EXIT"
+            elif any(event.key == k for k in KEY_CONFIRM):
+                if self.menu_idx == 0: # Random Reroll ($3,000)
+                    if self.inventory.money < self.cost:
+                        sound_mgr.play_sfx("cancel")
+                        self.message = f"You need {self.cost} coins! Current Balance: ${self.inventory.money}"
+                        return None
+                    candidates = pkmn.get_rerollable_moves()
+                    if not candidates:
+                        sound_mgr.play_sfx("cancel")
+                        self.message = f"{pkmn.nickname} already knows all available moves!"
+                        return None
+                    self.pending_move = random.choice(candidates)
+                    if len(pkmn.moves) < 4:
+                        self.inventory.money -= self.cost
+                        ok, new_m, old_m, msg = pkmn.reroll_move(specific_move=self.pending_move)
+                        sound_mgr.play_sfx("confirm")
+                        self.message = f"Success! {pkmn.nickname} learned {new_m} for ${self.cost}!"
+                        self.success_timer = 3.0
+                    else:
+                        sound_mgr.play_sfx("select")
+                        self.mode = "REPLACE_SLOT"
+                        self.selected_slot = 0
+                        self.message = f"Rolled '{self.pending_move}'! Select which move to replace:"
+                elif self.menu_idx == 1: # Browse Catalogue ($3,000)
+                    candidates = pkmn.get_rerollable_moves()
+                    if not candidates:
+                        sound_mgr.play_sfx("cancel")
+                        self.message = f"{pkmn.nickname} already knows all available moves!"
+                        return None
+                    sound_mgr.play_sfx("select")
+                    self.mode = "CATALOGUE"
+                    self.catalogue_idx = 0
+                    self.catalogue_scroll = 0
+                    self.message = f"Browse {pkmn.nickname}'s compatible techniques. [Z]: Teach for ${self.cost}"
+                elif self.menu_idx == 2: # Cancel
+                    sound_mgr.play_sfx("cancel")
+                    return "EXIT"
+
+        # Mode 2: Selecting Slot to Overwrite (0-3)
+        elif self.mode == "REPLACE_SLOT":
+            if any(event.key == k for k in KEY_UP):
+                self.selected_slot = (self.selected_slot - 1) % len(pkmn.moves)
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_DOWN):
+                self.selected_slot = (self.selected_slot + 1) % len(pkmn.moves)
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                self.mode = "MENU"
+                self.pending_move = None
+                self.message = "Reroll cancelled."
+            elif any(event.key == k for k in KEY_CONFIRM):
+                if self.inventory.money < self.cost:
+                    sound_mgr.play_sfx("cancel")
+                    self.message = f"You need {self.cost} coins! Current Balance: ${self.inventory.money}"
+                    self.mode = "MENU"
+                    return None
+                self.inventory.money -= self.cost
+                ok, new_m, old_m, msg = pkmn.reroll_move(replace_idx=self.selected_slot, specific_move=self.pending_move)
+                sound_mgr.play_sfx("confirm")
+                self.message = f"Success! {pkmn.nickname} forgot {old_m} and learned {new_m}!"
+                self.success_timer = 3.0
+                self.mode = "MENU"
+                self.pending_move = None
+
+        # Mode 3: Browse Technique Catalogue
+        elif self.mode == "CATALOGUE":
+            candidates = pkmn.get_rerollable_moves()
+            if not candidates:
+                self.mode = "MENU"
+                return None
+            if any(event.key == k for k in KEY_UP):
+                self.catalogue_idx = (self.catalogue_idx - 1) % len(candidates)
+                self._adjust_catalogue_scroll(len(candidates))
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_DOWN):
+                self.catalogue_idx = (self.catalogue_idx + 1) % len(candidates)
+                self._adjust_catalogue_scroll(len(candidates))
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                self.mode = "MENU"
+                self.message = "Choose an action below."
+            elif any(event.key == k for k in KEY_CONFIRM):
+                if self.inventory.money < self.cost:
+                    sound_mgr.play_sfx("cancel")
+                    self.message = f"You need {self.cost} coins to teach this move! Balance: ${self.inventory.money}"
+                    return None
+                chosen_move = candidates[self.catalogue_idx]
+                self.pending_move = chosen_move
+                if len(pkmn.moves) < 4:
+                    self.inventory.money -= self.cost
+                    ok, new_m, old_m, msg = pkmn.reroll_move(specific_move=self.pending_move)
+                    sound_mgr.play_sfx("confirm")
+                    self.message = f"Success! {pkmn.nickname} learned {new_m} for ${self.cost}!"
+                    self.success_timer = 3.0
+                    self.mode = "MENU"
+                    self.pending_move = None
+                else:
+                    sound_mgr.play_sfx("select")
+                    self.mode = "REPLACE_SLOT"
+                    self.selected_slot = 0
+                    self.message = f"Teaching '{self.pending_move}'! Select which current move to replace:"
+
+        return None
+
+    def _adjust_catalogue_scroll(self, total_items):
+        if self.catalogue_idx < self.catalogue_scroll:
+            self.catalogue_scroll = self.catalogue_idx
+        elif self.catalogue_idx >= self.catalogue_scroll + 5:
+            self.catalogue_scroll = self.catalogue_idx - 4
+
+    def draw(self, surf):
+        surf.fill((235, 240, 248))
+
+        # 1. Top Header
+        head = gfx.fonts["title"].render("MOVE MASTER & REROLL TUTOR", True, (210, 80, 20))
+        surf.blit(head, (30, 16))
+
+        # Balance & Cost Indicators
+        money_txt = gfx.fonts["regular"].render(f"💰 Money: ${self.inventory.money}", True, (30, 140, 50))
+        cost_txt = gfx.fonts["regular"].render("⚡ Cost: $3,000", True, (200, 120, 20))
+        surf.blit(money_txt, (SCREEN_WIDTH - 380, 20))
+        surf.blit(cost_txt, (SCREEN_WIDTH - 180, 20))
+
+        pkmn = self.get_active_pokemon()
+        if not pkmn:
+            no_pkmn = gfx.fonts["large"].render("No Pokémon in Party!", True, UI_TEXT_MUTED)
+            surf.blit(no_pkmn, (SCREEN_WIDTH // 2 - no_pkmn.get_width() // 2, 280))
+            return
+
+        # 2. Left Panel: Pokémon Card & Party Carousel
+        lx, ly, lw, lh = 30, 68, 240, 412
+        pygame.draw.rect(surf, (30, 40, 60), (lx - 2, ly - 2, lw + 4, lh + 4), border_radius=10)
+        pygame.draw.rect(surf, WHITE, (lx, ly, lw, lh), border_radius=8)
+
+        # Party Navigation Header
+        p_nav = f"◄  {pkmn.nickname} ({self.selected_pkmn_idx + 1}/{len(self.party)})  ►"
+        p_nav_txt = gfx.fonts["regular"].render(p_nav, True, (200, 80, 0))
+        surf.blit(p_nav_txt, (lx + (lw - p_nav_txt.get_width()) // 2, ly + 14))
+
+        # Sprite
+        p_surf = gfx.get_pokemon_sprite(pkmn.species, is_back=False, size=(120, 120))
+        surf.blit(p_surf, (lx + (lw - 120) // 2, ly + 44))
+
+        # Details
+        lvl_txt = gfx.fonts["regular"].render(f"Lv. {pkmn.level} {pkmn.species}", True, UI_TEXT)
+        surf.blit(lvl_txt, (lx + (lw - lvl_txt.get_width()) // 2, ly + 172))
+
+        # Types
+        for t_idx, t_name in enumerate(pkmn.types):
+            tw = 58
+            tx = lx + (lw - len(pkmn.types) * (tw + 6)) // 2 + t_idx * (tw + 6)
+            gfx.draw_type_badge(surf, t_name, tx, ly + 204, width=tw, height=22)
+
+        # HP Bar
+        gfx.draw_hp_bar(surf, lx + 30, ly + 242, lw - 60, 8, pkmn.current_hp, pkmn.max_hp)
+        hp_lbl = gfx.fonts["small"].render(f"HP: {pkmn.current_hp}/{pkmn.max_hp}", True, UI_TEXT_MUTED)
+        surf.blit(hp_lbl, (lx + (lw - hp_lbl.get_width()) // 2, ly + 256))
+
+        # Action Buttons on Left Panel
+        if self.mode == "MENU":
+            btn_labels = ["🎲 RANDOM REROLL ($3,000)", "📖 BROWSE TECHNIQUES", "⬅ RETURN"]
+            for b_idx, b_lbl in enumerate(btn_labels):
+                is_sel = (b_idx == self.menu_idx)
+                by = ly + 285 + b_idx * 38
+                bdr = (240, 140, 40) if is_sel else UI_BORDER_LIGHT
+                bg = (255, 238, 200) if is_sel else (246, 248, 252)
+                pygame.draw.rect(surf, bdr, (lx + 10, by, lw - 20, 32), border_radius=6)
+                pygame.draw.rect(surf, bg, (lx + 11, by + 1, lw - 22, 30), border_radius=5)
+                b_txt = gfx.fonts["small"].render(b_lbl, True, (200, 80, 0) if is_sel else UI_TEXT)
+                surf.blit(b_txt, (lx + (lw - b_txt.get_width()) // 2, by + 7))
+
+        # 3. Center Panel: Current Moves (4 Slots)
+        cx, cy, cw, ch = 285, 68, 245, 412
+        pygame.draw.rect(surf, (30, 40, 60), (cx - 2, cy - 2, cw + 4, ch + 4), border_radius=10)
+        pygame.draw.rect(surf, WHITE, (cx, cy, cw, ch), border_radius=8)
+
+        moves_head = gfx.fonts["regular"].render("CURRENT MOVESET", True, (40, 80, 160))
+        surf.blit(moves_head, (cx + (cw - moves_head.get_width()) // 2, cy + 12))
+
+        for m_idx in range(4):
+            slot_y = cy + 42 + m_idx * 90
+            is_slot_sel = (self.mode == "REPLACE_SLOT" and m_idx == self.selected_slot)
+            
+            card_bdr = (240, 100, 20) if is_slot_sel else (UI_BORDER_LIGHT if m_idx < len(pkmn.moves) else (210, 215, 225))
+            card_bg = (255, 235, 190) if is_slot_sel else ((250, 252, 255) if m_idx < len(pkmn.moves) else (240, 242, 245))
+
+            pygame.draw.rect(surf, card_bdr, (cx + 10, slot_y, cw - 20, 82), 2 if is_slot_sel else 1, border_radius=8)
+            pygame.draw.rect(surf, card_bg, (cx + 11, slot_y + 1, cw - 22, 80), border_radius=7)
+
+            if m_idx < len(pkmn.moves):
+                m_data = pkmn.moves[m_idx]
+                # Move Name
+                m_name_txt = gfx.fonts["medium"].render(m_data["name"], True, (200, 60, 0) if is_slot_sel else UI_TEXT)
+                surf.blit(m_name_txt, (cx + 18, slot_y + 8))
+                
+                # Type Badge & Category
+                gfx.draw_type_badge(surf, m_data.get("type", "Normal"), cx + 18, slot_y + 34, width=54, height=18)
+                cat_txt = gfx.fonts["small"].render(m_data.get("category", "Physical"), True, UI_TEXT_MUTED)
+                surf.blit(cat_txt, (cx + 80, slot_y + 36))
+
+                # Power, Acc, PP
+                pwr = m_data.get("power", 0)
+                pwr_str = f"Pwr: {pwr if pwr > 0 else '--'}"
+                acc_str = f"Acc: {m_data.get('accuracy', 100)}%"
+                pp_str = f"PP: {m_data.get('pp', 0)}/{m_data.get('max_pp', 0)}"
+
+                stat_line = f"{pwr_str}  {acc_str}  {pp_str}"
+                stat_txt = gfx.fonts["small"].render(stat_line, True, UI_TEXT_MUTED)
+                surf.blit(stat_txt, (cx + 18, slot_y + 58))
+                
+                if is_slot_sel:
+                    ovr_txt = gfx.fonts["small"].render("▶ REPLACE THIS ◀", True, (220, 40, 20))
+                    surf.blit(ovr_txt, (cx + cw - ovr_txt.get_width() - 18, slot_y + 10))
+            else:
+                empty_txt = gfx.fonts["regular"].render("- Empty Slot -", True, (160, 165, 175))
+                surf.blit(empty_txt, (cx + (cw - empty_txt.get_width()) // 2, slot_y + 30))
+
+        # 4. Right Panel: Technique Catalogue / Move Detail / Action Box
+        rx, ry, rw, rh = 545, 68, 225, 412
+        pygame.draw.rect(surf, (30, 40, 60), (rx - 2, ry - 2, rw + 4, rh + 4), border_radius=10)
+        pygame.draw.rect(surf, WHITE, (rx, ry, rw, rh), border_radius=8)
+
+        candidates = pkmn.get_rerollable_moves()
+
+        if self.mode == "CATALOGUE":
+            cat_head = gfx.fonts["regular"].render("TECHNIQUE POOL", True, (40, 120, 220))
+            surf.blit(cat_head, (rx + (rw - cat_head.get_width()) // 2, ry + 12))
+
+            visible_cnt = min(5, len(candidates))
+            for i in range(visible_cnt):
+                idx = self.catalogue_scroll + i
+                if idx >= len(candidates):
+                    break
+                m_name = candidates[idx]
+                m_info = MOVES.get(m_name, {})
+                is_cat_sel = (idx == self.catalogue_idx)
+
+                cy_row = ry + 42 + i * 44
+                cbdr = (240, 140, 40) if is_cat_sel else (220, 225, 235)
+                cbg = (255, 235, 180) if is_cat_sel else ((248, 250, 255) if i % 2 == 0 else WHITE)
+
+                pygame.draw.rect(surf, cbdr, (rx + 8, cy_row, rw - 16, 40), 2 if is_cat_sel else 1, border_radius=6)
+                pygame.draw.rect(surf, cbg, (rx + 9, cy_row + 1, rw - 18, 38), border_radius=5)
+
+                mtxt = gfx.fonts["small"].render(m_name, True, (200, 80, 0) if is_cat_sel else UI_TEXT)
+                surf.blit(mtxt, (rx + 14, cy_row + 4))
+
+                m_t = m_info.get("type", "Normal")
+                gfx.draw_type_badge(surf, m_t, rx + 14, cy_row + 20, width=44, height=16)
+
+                pw = m_info.get("power", 0)
+                pw_txt = gfx.fonts["small"].render(f"Pwr:{pw if pw > 0 else '--'}", True, UI_TEXT_MUTED)
+                surf.blit(pw_txt, (rx + rw - pw_txt.get_width() - 14, cy_row + 20))
+
+            # Selected Move Preview at bottom of right card
+            if candidates and 0 <= self.catalogue_idx < len(candidates):
+                sel_m = candidates[self.catalogue_idx]
+                sel_d = MOVES.get(sel_m, {})
+                desc_y = ry + 270
+                pygame.draw.rect(surf, (244, 247, 252), (rx + 8, desc_y, rw - 16, 130), border_radius=6)
+                
+                # Word wrap
+                words = sel_d.get("desc", "").split(" ")
+                lines, cur = [], ""
+                for w in words:
+                    t = cur + (" " if cur else "") + w
+                    if gfx.fonts["small"].size(t)[0] < rw - 32:
+                        cur = t
+                    else:
+                        lines.append(cur)
+                        cur = w
+                if cur:
+                    lines.append(cur)
+                for l_idx, l_str in enumerate(lines[:4]):
+                    surf.blit(gfx.fonts["small"].render(l_str, True, UI_TEXT), (rx + 14, desc_y + 8 + l_idx * 18))
+
+                teach_hint = gfx.fonts["small"].render("Press [Z] to Teach ($3,000)", True, (220, 80, 0))
+                surf.blit(teach_hint, (rx + (rw - teach_hint.get_width()) // 2, desc_y + 104))
+
+        elif self.mode == "REPLACE_SLOT":
+            p_head = gfx.fonts["regular"].render("NEW TECHNIQUE", True, (220, 60, 20))
+            surf.blit(p_head, (rx + (rw - p_head.get_width()) // 2, ry + 16))
+
+            if self.pending_move:
+                p_data = MOVES.get(self.pending_move, {})
+                pn_txt = gfx.fonts["large"].render(self.pending_move, True, (200, 60, 0))
+                surf.blit(pn_txt, (rx + (rw - pn_txt.get_width()) // 2, ry + 50))
+
+                gfx.draw_type_badge(surf, p_data.get("type", "Normal"), rx + 20, ry + 90, width=58, height=22)
+                p_pwr = p_data.get("power", 0)
+                pwr_l = gfx.fonts["regular"].render(f"Power: {p_pwr if p_pwr > 0 else '--'}", True, UI_TEXT)
+                acc_l = gfx.fonts["regular"].render(f"Accuracy: {p_data.get('accuracy', 100)}%", True, UI_TEXT)
+                cat_l = gfx.fonts["regular"].render(f"Category: {p_data.get('category', 'Physical')}", True, UI_TEXT_MUTED)
+                surf.blit(pwr_l, (rx + 20, ry + 125))
+                surf.blit(acc_l, (rx + 20, ry + 155))
+                surf.blit(cat_l, (rx + 20, ry + 185))
+
+                # Instructions
+                inst = gfx.fonts["small"].render("Choose a slot in Center", True, (40, 80, 160))
+                inst2 = gfx.fonts["small"].render("to overwrite with this move!", True, (40, 80, 160))
+                surf.blit(inst, (rx + (rw - inst.get_width()) // 2, ry + 260))
+                surf.blit(inst2, (rx + (rw - inst2.get_width()) // 2, ry + 282))
+
+        else: # MENU mode on right
+            info_head = gfx.fonts["regular"].render("TUTOR GUIDE", True, (40, 120, 220))
+            surf.blit(info_head, (rx + (rw - info_head.get_width()) // 2, ry + 16))
+
+            guide_lines = [
+                "The Move Master can",
+                "teach any technique",
+                "from your species' full",
+                "learnset & elemental",
+                "technique repertoire!",
+                "",
+                "★ Fee: $3,000 per move",
+                "★ Replace any of the 4",
+                "   active move slots",
+                "★ Unlimited rerolls!"
+            ]
+            for g_idx, g_str in enumerate(guide_lines):
+                c = (200, 80, 0) if "★" in g_str else UI_TEXT_MUTED
+                f = gfx.fonts["small"]
+                gtxt = f.render(g_str, True, c)
+                surf.blit(gtxt, (rx + 16, ry + 54 + g_idx * 22))
+
+        # 5. Bottom Message Box
+        bx, by, bw, bh = 30, 492, SCREEN_WIDTH - 60, 78
+        pygame.draw.rect(surf, (30, 40, 60), (bx - 2, by - 2, bw + 4, bh + 4), border_radius=8)
+        pygame.draw.rect(surf, UI_BG, (bx, by, bw, bh), border_radius=6)
+
+        msg_c = (40, 140, 60) if self.success_timer > 0 else UI_TEXT
+        surf.blit(gfx.fonts["regular"].render(self.message, True, msg_c), (bx + 20, by + 26))
+
+
 class DialogueBox:
-    def __init__(self, speaker_name, text, on_complete=None):
+    def __init__(self, speaker_name, text, on_complete=None, portrait_key=None, trainer_data=None):
         self.speaker = speaker_name
         self.full_text = text
         self.visible_chars = 0
         self.speed = 40.0
         self.on_complete = on_complete
         self.finished = False
+        self.portrait_key = portrait_key or (trainer_data.get("id") if isinstance(trainer_data, dict) else speaker_name)
+        self.trainer_data = trainer_data
+        self.timer = 0.0
 
     def update(self, dt):
+        self.timer += dt
         if not self.finished:
             self.visible_chars += self.speed * dt
             if self.visible_chars >= len(self.full_text):
@@ -1172,34 +1993,96 @@ class DialogueBox:
             if not self.finished:
                 self.visible_chars = len(self.full_text)
                 self.finished = True
+                sound_mgr.play_sfx("select")
                 return False
             else:
+                sound_mgr.play_sfx("confirm")
                 if self.on_complete:
                     self.on_complete()
                 return True
         return False
 
     def draw(self, surf):
-        bx, by, bw, bh = 40, 420, SCREEN_WIDTH - 80, 140
-        pygame.draw.rect(surf, UI_BORDER_DARK, (bx - 2, by - 2, bw + 4, bh + 4), border_radius=10)
-        pygame.draw.rect(surf, UI_BG, (bx, by, bw, bh), border_radius=8)
+        # Frame dimensions
+        bx, by, bw, bh = 30, 410, SCREEN_WIDTH - 60, 160
         
-        # Speaker Name Badge
-        if self.speaker:
-            sw = gfx.fonts["regular"].size(self.speaker)[0] + 24
-            pygame.draw.rect(surf, UI_BORDER_DARK, (bx + 16, by - 14, sw, 28), border_radius=6)
-            pygame.draw.rect(surf, (255, 235, 180), (bx + 18, by - 12, sw - 4, 24), border_radius=4)
-            stxt = gfx.fonts["regular"].render(self.speaker, True, (180, 60, 0))
-            surf.blit(stxt, (bx + 28, by - 10))
+        # Dialogue Box Base & Shadow
+        pygame.draw.rect(surf, (20, 24, 35), (bx - 2, by - 2, bw + 4, bh + 4), border_radius=12)
+        pygame.draw.rect(surf, (252, 252, 255), (bx, by, bw, bh), border_radius=10)
+        pygame.draw.rect(surf, UI_BORDER_LIGHT, (bx, by, bw, bh), 2, border_radius=10)
 
-        # Text with wrapping
+        # 1. Portrait Frame (Left Side)
+        has_portrait = bool(self.portrait_key)
+        # Determine if mouth is currently talking (animating between open/closed while streaming text)
+        is_talking = (not self.finished) and (int(self.visible_chars * 3.5) % 2 == 1)
+        
+        text_start_x = bx + 24
+        text_max_w = bw - 48
+        
+        if has_portrait:
+            portrait_size = (110, 110)
+            port_surf = gfx.get_trainer_portrait(self.portrait_key, size=portrait_size, is_talking=is_talking)
+            
+            px = bx + 16
+            py = by + (bh - portrait_size[1]) // 2 + 6
+            
+            # Subtle card drop shadow behind portrait
+            pygame.draw.rect(surf, (30, 36, 48), (px - 3, py - 3, portrait_size[0] + 6, portrait_size[1] + 6), border_radius=10)
+            pygame.draw.rect(surf, (245, 248, 255), (px - 1, py - 1, portrait_size[0] + 2, portrait_size[1] + 2), border_radius=8)
+            surf.blit(port_surf, (px, py))
+            
+            # Adjust text margins
+            text_start_x = px + portrait_size[0] + 22
+            text_max_w = bw - (text_start_x - bx) - 24
+
+        # 2. Speaker Name Tag Badge
+        if self.speaker:
+            # Customize badge colors based on character identity
+            sp_lower = self.speaker.lower()
+            if "leader" in sp_lower or "brock" in sp_lower or "misty" in sp_lower:
+                badge_bg = (255, 245, 210)
+                badge_bdr = (220, 175, 40)
+                badge_txt_c = (190, 110, 10)
+            elif "rocket" in sp_lower:
+                badge_bg = (255, 230, 230)
+                badge_bdr = (220, 40, 40)
+                badge_txt_c = (180, 20, 20)
+            elif "rival" in sp_lower or "blue" in sp_lower:
+                badge_bg = (230, 245, 255)
+                badge_bdr = (60, 170, 240)
+                badge_txt_c = (20, 90, 180)
+            elif "item" in sp_lower:
+                badge_bg = (255, 240, 220)
+                badge_bdr = (240, 100, 40)
+                badge_txt_c = (200, 60, 0)
+            elif "notice" in sp_lower or "sign" in sp_lower:
+                badge_bg = (245, 235, 215)
+                badge_bdr = (160, 110, 60)
+                badge_txt_c = (120, 70, 25)
+            else:
+                badge_bg = (255, 242, 220)
+                badge_bdr = (240, 140, 40)
+                badge_txt_c = (180, 60, 0)
+
+            speaker_display = f"{self.speaker}"
+            sw = gfx.fonts["regular"].size(speaker_display)[0] + 28
+            sx = bx + 20
+            sy = by - 16
+            
+            pygame.draw.rect(surf, (30, 36, 50), (sx - 2, sy - 2, sw + 4, 32), border_radius=7)
+            pygame.draw.rect(surf, badge_bg, (sx, sy, sw, 28), border_radius=6)
+            pygame.draw.rect(surf, badge_bdr, (sx, sy, sw, 28), 2, border_radius=6)
+            stxt = gfx.fonts["regular"].render(speaker_display, True, badge_txt_c)
+            surf.blit(stxt, (sx + 14, sy + 4))
+
+        # 3. Typewriter Text Rendering with Line Wrapping
         disp_text = self.full_text[:int(self.visible_chars)]
         words = disp_text.split(" ")
         lines = []
         curr_line = ""
         for w in words:
             test = curr_line + (" " if curr_line else "") + w
-            if gfx.fonts["medium"].size(test)[0] < bw - 50:
+            if gfx.fonts["medium"].size(test)[0] < text_max_w:
                 curr_line = test
             else:
                 lines.append(curr_line)
@@ -1209,7 +2092,14 @@ class DialogueBox:
 
         for i, l_str in enumerate(lines[:3]):
             ltxt = gfx.fonts["medium"].render(l_str, True, UI_TEXT)
-            surf.blit(ltxt, (bx + 25, by + 28 + i * 32))
+            surf.blit(ltxt, (text_start_x, by + 26 + i * 34))
+
+        # 4. Blinking Continue Arrow Indicator
+        if self.finished:
+            if int(self.timer * 4.0) % 2 == 0:
+                arrow_surf = gfx.fonts["small"].render("[Z / Enter] ▼", True, (220, 90, 20))
+                surf.blit(arrow_surf, (bx + bw - arrow_surf.get_width() - 20, by + bh - 24))
+
 
 class PCBoxScreen:
     """
@@ -1648,27 +2538,42 @@ class TrainerCardScreen:
             ("Earth Badge", "Viridian Gym", "Leader Giovanni (Ground)")
         ]
 
-        # Map Nodes for Region Map
+        # Map Nodes for Comprehensive Kanto Region Map
         self.map_nodes = [
+            {"name": "Indigo Plateau", "x": 130, "y": 70, "desc": "Supreme Pokémon League Headquarters where Champion Blue awaits.", "type": "CITY"},
+            {"name": "Victory Road", "x": 130, "y": 160, "desc": "Epic cavern testing trainers who conquered all 8 Kanto Gyms.", "type": "DUNGEON"},
+            {"name": "Route 22", "x": 130, "y": 280, "desc": "Foothills leading west to the Indigo Plateau League Gate.", "type": "ROUTE"},
+            {"name": "Viridian City", "x": 220, "y": 280, "desc": "The gateway crossroads city with Pokémon Center and Mart.", "type": "CITY"},
+            {"name": "Viridian Forest", "x": 220, "y": 210, "desc": "Deep woods labyrinth teeming with bug Pokémon and Pikachu.", "type": "DUNGEON"},
             {"name": "Pewter City", "x": 220, "y": 140, "desc": "A stone gray city. Home of Leader Brock's Gym & the Museum.", "type": "CITY"},
+            {"name": "Diglett's Cave", "x": 310, "y": 280, "desc": "Underground mountain tunnel dug by wild Diglett connecting Route 11 and Viridian.", "type": "DUNGEON"},
             {"name": "Route 3", "x": 310, "y": 140, "desc": "Mountain canyon foothills leading east to Mt. Moon.", "type": "ROUTE"},
             {"name": "Mt. Moon", "x": 400, "y": 140, "desc": "Subterranean cavern rich in ancient fossils and Moon Stones.", "type": "DUNGEON"},
             {"name": "Route 4", "x": 490, "y": 140, "desc": "Scenic river canyon slopes leading to Cerulean City.", "type": "ROUTE"},
             {"name": "Cerulean City", "x": 580, "y": 140, "desc": "A floral canal metropolis. Home of Leader Misty's Gym.", "type": "CITY"},
-            {"name": "Route 24", "x": 580, "y": 70, "desc": "Nugget Bridge gauntlet leading to Bill's Sea Cottage.", "type": "ROUTE"},
+            {"name": "Cerulean Cave", "x": 580, "y": 70, "desc": "Mysterious subterranean lair of legendary wild Pokémon and Mewtwo.", "type": "DUNGEON"},
+            {"name": "Route 24", "x": 670, "y": 70, "desc": "Nugget Bridge gauntlet leading to Bill's Sea Cottage.", "type": "ROUTE"},
             {"name": "Route 9", "x": 670, "y": 140, "desc": "Rocky badlands canyon trail connecting Cerulean and Lavender.", "type": "ROUTE"},
-            {"name": "Power Plant", "x": 670, "y": 70, "desc": "Industrial electric generating facility teeming with Electric Pokémon.", "type": "DUNGEON"},
-            {"name": "Lavender Town", "x": 670, "y": 240, "desc": "A noble purple town enveloped in mist, home of Pokémon Tower.", "type": "TOWN"},
-            {"name": "Pokémon Tower", "x": 740, "y": 240, "desc": "Sacred haunted spire where spirits of Pokémon rest in peace.", "type": "DUNGEON"},
-            {"name": "Safari Zone", "x": 670, "y": 350, "desc": "Vast golden savanna reserve filled with rare wild Pokémon.", "type": "DUNGEON"},
-            {"name": "Viridian Forest", "x": 220, "y": 210, "desc": "Deep woods labyrinth teeming with bug Pokémon and Pikachu.", "type": "DUNGEON"},
-            {"name": "Route 22", "x": 130, "y": 280, "desc": "Foothills leading west to the Indigo Plateau League Gate.", "type": "ROUTE"},
-            {"name": "Viridian City", "x": 220, "y": 280, "desc": "The gateway crossroads city with Pokémon Center and Mart.", "type": "CITY"},
+            {"name": "Power Plant", "x": 750, "y": 140, "desc": "Industrial electric generating facility teeming with Electric Pokémon.", "type": "DUNGEON"},
+            {"name": "Route 5", "x": 580, "y": 210, "desc": "Grassy highway connecting Cerulean City south to Saffron City.", "type": "ROUTE"},
+            {"name": "Celadon City", "x": 450, "y": 280, "desc": "Bustling rainbow metropolis with Mega Department Store & Erika's Gym.", "type": "CITY"},
+            {"name": "Route 7", "x": 510, "y": 280, "desc": "Road connecting Celadon City east to the Saffron Metropolis.", "type": "ROUTE"},
+            {"name": "Saffron City", "x": 580, "y": 280, "desc": "Golden mega-city crossroad with Silph Co. & Sabrina's Psychic Gym.", "type": "CITY"},
+            {"name": "Route 8", "x": 670, "y": 280, "desc": "Road connecting Saffron City east to Lavender Town.", "type": "ROUTE"},
+            {"name": "Lavender Town", "x": 750, "y": 280, "desc": "A noble purple town enveloped in mist, home of Pokémon Tower.", "type": "TOWN"},
+            {"name": "Pokémon Tower", "x": 750, "y": 210, "desc": "Sacred haunted spire where spirits of Pokémon rest in peace.", "type": "DUNGEON"},
+            {"name": "Route 6", "x": 580, "y": 350, "desc": "Waterway route connecting Saffron City south to Vermilion Harbor.", "type": "ROUTE"},
+            {"name": "Vermilion City", "x": 580, "y": 420, "desc": "Sunset harbor city with Lt. Surge's Gym & the luxury S.S. Anne.", "type": "CITY"},
+            {"name": "S.S. Anne", "x": 580, "y": 490, "desc": "Grand luxury world cruise liner docked at Vermilion Harbor Pier.", "type": "DUNGEON"},
+            {"name": "Route 11", "x": 670, "y": 420, "desc": "East meadow route with Diglett's Cave entrance leading to Route 12.", "type": "ROUTE"},
+            {"name": "Route 12", "x": 750, "y": 420, "desc": "Scenic Silence Bridge over ocean waters connecting to Fuchsia City.", "type": "ROUTE"},
+            {"name": "Fuchsia City", "x": 750, "y": 490, "desc": "Historic ninja town with Koga's Poison Gym & the Safari Zone.", "type": "CITY"},
+            {"name": "Safari Zone", "x": 670, "y": 490, "desc": "Vast golden savanna reserve filled with rare wild Pokémon.", "type": "DUNGEON"},
             {"name": "Route 1", "x": 220, "y": 350, "desc": "Lush grassy path connecting Pallet Town and Viridian City.", "type": "ROUTE"},
             {"name": "Pallet Town", "x": 220, "y": 420, "desc": "A quiet hometown with fresh sea breezes and Prof. Oak's Lab.", "type": "TOWN"},
             {"name": "Route 21", "x": 220, "y": 490, "desc": "Vast ocean sea route south of Pallet Town filled with water Pokémon.", "type": "ROUTE"},
-            {"name": "Seafoam Islands", "x": 220, "y": 520, "desc": "Sub-zero glacial ice caverns situated in the southern sea.", "type": "DUNGEON"},
-            {"name": "Cinnabar Island", "x": 220, "y": 560, "desc": "A fiery volcanic island with Pokémon research laboratories.", "type": "CITY"}
+            {"name": "Seafoam Islands", "x": 220, "y": 530, "desc": "Sub-zero glacial ice caverns situated in the southern sea.", "type": "DUNGEON"},
+            {"name": "Cinnabar Island", "x": 220, "y": 570, "desc": "A fiery volcanic island with Pokémon research laboratories.", "type": "CITY"}
         ]
         self.selected_node_idx = 0
         for idx, node in enumerate(self.map_nodes):
@@ -1819,10 +2724,13 @@ class TrainerCardScreen:
 
             # Draw Region Map Connection Routes
             map_lines = [
-                # Pallet Town -> Route 1 -> Viridian City -> Route 22
+                # Western Corridor: Indigo Plateau -> Victory Road -> Route 22 -> Viridian City
+                ((130, 70), (130, 160)),
+                ((130, 160), (130, 280)),
+                ((130, 280), (220, 280)),
+                # Pallet Town -> Route 1 -> Viridian City
                 ((220, 420), (220, 350)),
                 ((220, 350), (220, 280)),
-                ((220, 280), (130, 280)),
                 # Viridian City -> Viridian Forest -> Pewter City
                 ((220, 280), (220, 210)),
                 ((220, 210), (220, 140)),
@@ -1831,19 +2739,38 @@ class TrainerCardScreen:
                 ((310, 140), (400, 140)),
                 ((400, 140), (490, 140)),
                 ((490, 140), (580, 140)),
-                # Cerulean City -> Route 24
+                # Cerulean City -> Cerulean Cave & Route 24
                 ((580, 140), (580, 70)),
-                # Cerulean City -> Route 9 -> Power Plant / Lavender Town
+                ((580, 140), (670, 70)),
+                # Cerulean City -> Route 9 -> Power Plant -> Lavender Town
                 ((580, 140), (670, 140)),
-                ((670, 140), (670, 70)),
-                ((670, 140), (670, 240)),
-                # Lavender Town -> Pokémon Tower & Safari Zone
-                ((670, 240), (740, 240)),
-                ((670, 240), (670, 350)),
-                # Pallet Town -> Route 21 -> Seafoam Islands -> Cinnabar Island
+                ((670, 140), (750, 140)),
+                ((670, 140), (750, 280)),
+                # Lavender Town -> Pokémon Tower
+                ((750, 280), (750, 210)),
+                # Central Axis: Cerulean -> Route 5 -> Saffron City -> Route 6 -> Vermilion City
+                ((580, 140), (580, 210)),
+                ((580, 210), (580, 280)),
+                ((580, 280), (580, 350)),
+                ((580, 350), (580, 420)),
+                # East-West Axis: Celadon City -> Route 7 -> Saffron City -> Route 8 -> Lavender Town
+                ((450, 280), (510, 280)),
+                ((510, 280), (580, 280)),
+                ((580, 280), (670, 280)),
+                ((670, 280), (750, 280)),
+                # Vermilion City -> S.S. Anne & Route 11 -> Route 12 -> Fuchsia City
+                ((580, 420), (580, 490)),
+                ((580, 420), (670, 420)),
+                ((670, 420), (750, 420)),
+                ((750, 280), (750, 420)),
+                ((750, 420), (750, 490)),
+                ((750, 490), (670, 490)),
+                # Diglett's Cave connecting Route 11 to Pewter / Route 2
+                ((670, 420), (310, 280)),
+                # Southern Sea: Pallet Town -> Route 21 -> Seafoam Islands -> Cinnabar Island
                 ((220, 420), (220, 490)),
-                ((220, 490), (220, 525)),
-                ((220, 525), (220, 560))
+                ((220, 490), (220, 530)),
+                ((220, 530), (220, 570))
             ]
 
             # Scale and offset for left panel card area
@@ -2078,4 +3005,261 @@ class TrainerCardScreen:
         # Bottom Controls Hint
         hint = gfx.fonts["small"].render("Left/Right: Switch Tab  |  Up/Down: Browse Exploration Map  |  [X / Enter]: Return", True, UI_TEXT_MUTED)
         surf.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, 565))
+
+class QuestLogScreen:
+    """
+    Comprehensive Quest Log Screen with Active Missions and Completed Archive tabs,
+    real-time progress tracking, quest giver info, location, backstory, and rewards showcase.
+    """
+    def __init__(self, quest_mgr, player):
+        self.quest_mgr = quest_mgr
+        self.player = player
+        self.active_tab = 0 # 0: ACTIVE, 1: COMPLETED
+        self.selected_idx = 0
+        self.timer = 0.0
+
+    def update(self, dt):
+        self.timer += dt
+
+    def get_current_list(self):
+        from quest_system import QUEST_DEFINITIONS
+        if self.active_tab == 0:
+            q_ids = list(self.quest_mgr.active_quests.keys())
+            return [QUEST_DEFINITIONS[qid] for qid in q_ids if qid in QUEST_DEFINITIONS]
+        else:
+            q_ids = list(self.quest_mgr.completed_quests.keys())
+            return [QUEST_DEFINITIONS[qid] for qid in q_ids if qid in QUEST_DEFINITIONS]
+
+    def handle_input(self, event):
+        if event.type != pygame.KEYDOWN:
+            return None
+
+        curr_list = self.get_current_list()
+        if any(event.key == k for k in KEY_LEFT + KEY_RIGHT):
+            self.active_tab = 1 - self.active_tab
+            self.selected_idx = 0
+            sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_UP):
+            if curr_list:
+                self.selected_idx = (self.selected_idx - 1) % len(curr_list)
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_DOWN):
+            if curr_list:
+                self.selected_idx = (self.selected_idx + 1) % len(curr_list)
+                sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_CANCEL + KEY_MENU):
+            sound_mgr.play_sfx("cancel")
+            return "CLOSE"
+        elif any(event.key == k for k in KEY_CONFIRM):
+            sound_mgr.play_sfx("select")
+
+        return None
+
+    def draw(self, surf):
+        surf.fill(UI_BG)
+
+        # Header Bar
+        pygame.draw.rect(surf, (230, 235, 245), (0, 0, SCREEN_WIDTH, 56))
+        pygame.draw.line(surf, UI_BORDER_LIGHT, (0, 56), (SCREEN_WIDTH, 56), 2)
+
+        title_txt = gfx.fonts["title"].render("KANTO QUEST LOG & MISSIONS", True, (200, 80, 0))
+        surf.blit(title_txt, (28, 14))
+
+        # Tab Buttons
+        active_cnt = len(self.quest_mgr.active_quests)
+        completed_cnt = len(self.quest_mgr.completed_quests)
+        tabs = [f"ACTIVE MISSIONS ({active_cnt})", f"COMPLETED ARCHIVE ({completed_cnt})"]
+
+        for i, t_label in enumerate(tabs):
+            tx = 420 + i * 180
+            ty = 12
+            tw, th = 170, 36
+            is_tab_sel = (i == self.active_tab)
+
+            t_bg = (255, 245, 220) if is_tab_sel else (240, 242, 248)
+            t_bdr = (240, 140, 40) if is_tab_sel else UI_BORDER_LIGHT
+            t_txt_c = (200, 80, 0) if is_tab_sel else UI_TEXT_MUTED
+
+            pygame.draw.rect(surf, t_bdr, (tx, ty, tw, th), border_radius=6)
+            pygame.draw.rect(surf, t_bg, (tx + 1, ty + 1, tw - 2, th - 2), border_radius=5)
+            ttxt = gfx.fonts["small"].render(t_label, True, t_txt_c)
+            surf.blit(ttxt, (tx + (tw - ttxt.get_width()) // 2, ty + 10))
+
+        curr_list = self.get_current_list()
+        if self.selected_idx >= len(curr_list) and curr_list:
+            self.selected_idx = 0
+
+        # Main Layout Container
+        cx, cy, cw, ch = 20, 68, SCREEN_WIDTH - 40, 490
+        pygame.draw.rect(surf, WHITE, (cx, cy, cw, ch), border_radius=10)
+        pygame.draw.rect(surf, UI_BORDER_LIGHT, (cx, cy, cw, ch), 2, border_radius=10)
+
+        # Left Panel: Quest List (width: 320)
+        lx, ly, lw, lh = cx + 10, cy + 10, 320, ch - 20
+        pygame.draw.rect(surf, (248, 250, 255), (lx, ly, lw, lh), border_radius=8)
+        pygame.draw.rect(surf, UI_BORDER_LIGHT, (lx, ly, lw, lh), 1, border_radius=8)
+
+        if not curr_list:
+            if self.active_tab == 0:
+                empty_t1 = gfx.fonts["regular"].render("No Active Quests", True, UI_TEXT)
+                empty_t2 = gfx.fonts["small"].render("Explore Kanto towns & routes", True, UI_TEXT_MUTED)
+                empty_t3 = gfx.fonts["small"].render("to meet NPCs offering quests!", True, UI_TEXT_MUTED)
+                empty_t4 = gfx.fonts["small"].render("(Look for gold [!] markers!)", True, (220, 140, 20))
+                surf.blit(empty_t1, (lx + 20, ly + 60))
+                surf.blit(empty_t2, (lx + 20, ly + 95))
+                surf.blit(empty_t3, (lx + 20, ly + 115))
+                surf.blit(empty_t4, (lx + 20, ly + 145))
+            else:
+                empty_t1 = gfx.fonts["regular"].render("No Completed Quests", True, UI_TEXT)
+                empty_t2 = gfx.fonts["small"].render("Completed quests will be archived", True, UI_TEXT_MUTED)
+                empty_t3 = gfx.fonts["small"].render("here with reward records.", True, UI_TEXT_MUTED)
+                surf.blit(empty_t1, (lx + 20, ly + 60))
+                surf.blit(empty_t2, (lx + 20, ly + 95))
+                surf.blit(empty_t3, (lx + 20, ly + 115))
+        else:
+            for idx, q_data in enumerate(curr_list):
+                qy = ly + 8 + idx * 72
+                is_sel = (idx == self.selected_idx)
+                q_id = q_data["id"]
+                curr_prog = self.quest_mgr.get_progress(q_id)
+                target_cnt = q_data.get("target_count", 1)
+
+                q_bg = (255, 242, 215) if is_sel else ((235, 250, 235) if self.active_tab == 1 else WHITE)
+                q_bdr = (240, 140, 40) if is_sel else ((70, 180, 90) if self.active_tab == 1 else UI_BORDER_LIGHT)
+
+                pygame.draw.rect(surf, q_bdr, (lx + 6, qy, lw - 12, 64), border_radius=6)
+                pygame.draw.rect(surf, q_bg, (lx + 7, qy + 1, lw - 14, 62), border_radius=5)
+
+                # Category Badge
+                obj_t = q_data.get("objective_type", "QUEST")
+                cat_tag = "CATCH" if "CATCH" in obj_t else ("DEFEAT" if "DEFEAT" in obj_t else ("EVOLVE" if "STONE" in obj_t else "SPECIAL"))
+                cat_c = (20, 100, 220) if cat_tag == "CATCH" else ((220, 60, 40) if cat_tag == "DEFEAT" else ((160, 60, 200) if cat_tag == "EVOLVE" else (40, 160, 60)))
+                pygame.draw.rect(surf, cat_c, (lx + 12, qy + 8, 48, 16), border_radius=3)
+                cat_txt = gfx.fonts["small"].render(cat_tag, True, WHITE)
+                surf.blit(cat_txt, (lx + 15, qy + 9))
+
+                # Title
+                q_title = gfx.fonts["small"].render(q_data["title"][:22], True, (200, 80, 0) if is_sel else UI_TEXT)
+                surf.blit(q_title, (lx + 66, qy + 8))
+
+                # Giver Info
+                g_txt = gfx.fonts["small"].render(f"{q_data['giver_name']}", True, UI_TEXT_MUTED)
+                surf.blit(g_txt, (lx + 12, qy + 27))
+
+                # Progress Bar / Status
+                if self.active_tab == 0:
+                    prog_str = f"[{curr_prog}/{target_cnt}]"
+                    prog_txt = gfx.fonts["small"].render(prog_str, True, (40, 140, 60) if curr_prog >= target_cnt else (200, 80, 0))
+                    surf.blit(prog_txt, (lx + lw - 18 - prog_txt.get_width(), qy + 44))
+
+                    # Mini progress bar
+                    pb_w = lw - 80
+                    pb_fill = int(pb_w * min(1.0, curr_prog / max(1, target_cnt)))
+                    pygame.draw.rect(surf, (220, 226, 238), (lx + 12, qy + 48, pb_w, 6), border_radius=3)
+                    pygame.draw.rect(surf, (40, 180, 80), (lx + 12, qy + 48, pb_fill, 6), border_radius=3)
+                else:
+                    done_txt = gfx.fonts["small"].render("✓ COMPLETED", True, (40, 160, 60))
+                    surf.blit(done_txt, (lx + 12, qy + 44))
+
+        # Right Panel: Selected Quest Details Briefing (width: 400)
+        rx, ry, rw, rh = cx + 340, cy + 10, cw - 350, ch - 20
+        pygame.draw.rect(surf, (252, 253, 255), (rx, ry, rw, rh), border_radius=8)
+        pygame.draw.rect(surf, UI_BORDER_LIGHT, (rx, ry, rw, rh), 1, border_radius=8)
+
+        if curr_list and self.selected_idx < len(curr_list):
+            sel_q = curr_list[self.selected_idx]
+            q_id = sel_q["id"]
+            curr_prog = self.quest_mgr.get_progress(q_id)
+            target_cnt = sel_q.get("target_count", 1)
+
+            # Details Header Banner
+            pygame.draw.rect(surf, (255, 240, 210), (rx + 8, ry + 8, rw - 16, 52), border_radius=6)
+            pygame.draw.rect(surf, (240, 180, 80), (rx + 8, ry + 8, rw - 16, 52), 1, border_radius=6)
+
+            d_title = gfx.fonts["regular"].render(sel_q["title"], True, (200, 80, 0))
+            surf.blit(d_title, (rx + 16, ry + 12))
+
+            loc_txt = gfx.fonts["small"].render(f"📍 {sel_q['location']}  |  👤 Giver: {sel_q['giver_name']}", True, (120, 80, 20))
+            surf.blit(loc_txt, (rx + 16, ry + 36))
+
+            # Story Briefing Box
+            by = ry + 68
+            pygame.draw.rect(surf, WHITE, (rx + 8, by, rw - 16, 85), border_radius=6)
+            pygame.draw.rect(surf, UI_BORDER_LIGHT, (rx + 8, by, rw - 16, 85), 1, border_radius=6)
+
+            b_head = gfx.fonts["small"].render("MISSION BRIEFING", True, (20, 70, 160))
+            surf.blit(b_head, (rx + 16, by + 6))
+
+            # Multi-line word wrap for description
+            words = sel_q["description"].split()
+            lines = []
+            curr_line = ""
+            for w in words:
+                test_l = (curr_line + " " + w).strip()
+                if gfx.fonts["small"].size(test_l)[0] < rw - 44:
+                    curr_line = test_l
+                else:
+                    lines.append(curr_line)
+                    curr_line = w
+            if curr_line:
+                lines.append(curr_line)
+
+            for li, line in enumerate(lines[:3]):
+                d_line = gfx.fonts["small"].render(line, True, UI_TEXT)
+                surf.blit(d_line, (rx + 16, by + 26 + li * 18))
+
+            # Objective & Progress Card
+            oy = by + 93
+            pygame.draw.rect(surf, (245, 248, 255), (rx + 8, oy, rw - 16, 88), border_radius=6)
+            pygame.draw.rect(surf, (210, 225, 250), (rx + 8, oy, rw - 16, 88), 1, border_radius=6)
+
+            o_head = gfx.fonts["small"].render("OBJECTIVE STATUS", True, (20, 70, 160))
+            surf.blit(o_head, (rx + 16, oy + 8))
+
+            pct = int(100 * min(1.0, curr_prog / max(1, target_cnt)))
+            status_text = f"COMPLETED (100%)" if self.active_tab == 1 or curr_prog >= target_cnt else f"IN PROGRESS: {curr_prog} / {target_cnt} ({pct}%)"
+            st_col = (40, 160, 60) if self.active_tab == 1 or curr_prog >= target_cnt else (200, 80, 0)
+            st_rend = gfx.fonts["regular"].render(status_text, True, st_col)
+            surf.blit(st_rend, (rx + 16, oy + 28))
+
+            # Big Progress Bar
+            big_pb_w = rw - 36
+            big_pb_fill = int(big_pb_w * min(1.0, curr_prog / max(1, target_cnt)))
+            pygame.draw.rect(surf, (220, 226, 238), (rx + 16, oy + 58, big_pb_w, 14), border_radius=7)
+            pygame.draw.rect(surf, (40, 180, 80), (rx + 16, oy + 58, big_pb_fill, 14), border_radius=7)
+
+            # Rewards Showcase Box
+            wy = oy + 96
+            pygame.draw.rect(surf, (255, 252, 240), (rx + 8, wy, rw - 16, 110), border_radius=6)
+            pygame.draw.rect(surf, (245, 220, 150), (rx + 8, wy, rw - 16, 110), 1, border_radius=6)
+
+            r_head = gfx.fonts["small"].render("REWARDS REPERTORY", True, (200, 80, 0))
+            surf.blit(r_head, (rx + 16, wy + 8))
+
+            rewards = sel_q.get("rewards", {})
+            money = rewards.get("money", 0)
+            m_txt = gfx.fonts["regular"].render(f"+${money} Coins", True, (220, 140, 20))
+            surf.blit(m_txt, (rx + 16, wy + 28))
+
+            for ii, (it_name, it_cnt) in enumerate(rewards.get("items", [])):
+                ix_p = rx + 16 + ii * 180
+                iy_p = wy + 58
+                pygame.draw.rect(surf, WHITE, (ix_p, iy_p, 170, 36), border_radius=4)
+                pygame.draw.rect(surf, (230, 200, 140), (ix_p, iy_p, 170, 36), 1, border_radius=4)
+                
+                # Draw item sprite
+                spr = gfx.get_item_sprite(it_name, (28, 28))
+                surf.blit(spr, (ix_p + 4, iy_p + 4))
+                it_t = gfx.fonts["small"].render(f"{it_cnt}x {it_name}", True, UI_TEXT)
+                surf.blit(it_t, (ix_p + 36, iy_p + 10))
+
+            # Auto-completion footer notice
+            fy = wy + 118
+            auto_t = gfx.fonts["small"].render("⭐ Instant Auto-Completion: Rewards are delivered straight to your Bag!", True, (40, 140, 60))
+            surf.blit(auto_t, (rx + 10, fy))
+
+        # Bottom Controls Hint
+        hint = gfx.fonts["small"].render("Left/Right: Switch Tab  |  Up/Down: Select Quest  |  [X / Enter]: Return", True, UI_TEXT_MUTED)
+        surf.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, 565))
+
 

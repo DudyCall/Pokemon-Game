@@ -1,7 +1,7 @@
 """
 inventory.py - Player inventory and bag management.
 """
-from pokemon_data import ITEMS
+from pokemon_data import ITEMS, POKEMON_SPECIES, STONE_EVOLUTIONS
 
 class Inventory:
     def __init__(self):
@@ -14,6 +14,16 @@ class Inventory:
             "Revive": 1
         }
 
+    def add_money(self, amount):
+        self.money = max(0, self.money + amount)
+        return self.money
+
+    def remove_money(self, amount):
+        if self.money >= amount:
+            self.money -= amount
+            return True
+        return False
+
     def add_item(self, item_name, count=1):
         if item_name in ITEMS:
             self.items[item_name] = self.items.get(item_name, 0) + count
@@ -21,7 +31,7 @@ class Inventory:
         return False
 
     def remove_item(self, item_name, count=1):
-        if self.items.get(item_name, 0) >= count:
+        if item_name in self.items and self.items[item_name] >= count:
             self.items[item_name] -= count
             if self.items[item_name] <= 0:
                 del self.items[item_name]
@@ -32,30 +42,34 @@ class Inventory:
         return self.items.get(item_name, 0)
 
     def get_items_list(self, category_filter=None):
-        """Returns list of (item_name, count, item_data)"""
-        result = []
+        """Returns list of (name, count, item_data) for non-zero items, optionally filtered by category."""
+        res = []
         for name, count in self.items.items():
-            data = ITEMS.get(name, {})
-            if category_filter is None or data.get("category") == category_filter:
-                result.append((name, count, data))
-        return result
+            if count > 0 and name in ITEMS:
+                item_data = ITEMS[name]
+                if category_filter is None or category_filter == "ALL" or item_data.get("category") == category_filter:
+                    res.append((name, count, item_data))
+        return res
 
-    def use_item_on_pokemon(self, item_name, pokemon):
-        """Applies item effect to a target Pokemon. Returns (success, message)"""
-        if item_name not in self.items or self.items[item_name] <= 0:
-            return False, "You don't have any left!"
-            
+    def use_item_on_pokemon(self, item_name, pokemon, quest_mgr=None):
+        """
+        Uses an item on a given Pokemon object.
+        Returns (success: bool, message: str)
+        """
+        if self.get_count(item_name) <= 0:
+            return False, "You don't have any of that item!"
+
         data = ITEMS.get(item_name)
         if not data:
             return False, "Unknown item."
-            
+
         # Revive
         if "revive_hp_percent" in data:
             if not pokemon.is_fainted():
-                return False, f"{pokemon.nickname} doesn't need to be revived!"
-            revive_amount = max(1, int(pokemon.max_hp * (data["revive_hp_percent"] / 100)))
+                return False, f"{pokemon.nickname} is not fainted!"
+            revive_amount = max(1, int(pokemon.max_hp * (data["revive_hp_percent"] / 100.0)))
             pokemon.current_hp = revive_amount
-            pokemon.cure_status()
+            pokemon.status = None
             self.remove_item(item_name, 1)
             return True, f"{pokemon.nickname} was revived with {revive_amount} HP!"
 
@@ -69,10 +83,10 @@ class Inventory:
             self.remove_item(item_name, 1)
             return True, f"{pokemon.nickname} recovered {healed} HP!"
 
-        # Status Cures
+        # Status Cures (Antidote, Paralyze Heal, Awakening, Burn Heal)
         if "cure_status" in data:
             if pokemon.status != data["cure_status"]:
-                return False, f"{pokemon.nickname} is not {data['cure_status'].lower()}ed!"
+                return False, f"{pokemon.nickname} is not afflicted with {data['cure_status']}!"
             pokemon.cure_status()
             self.remove_item(item_name, 1)
             return True, f"{pokemon.nickname}'s {data['cure_status']} was cured!"
@@ -85,6 +99,30 @@ class Inventory:
             events = pokemon.gain_exp(exp_needed)
             self.remove_item(item_name, 1)
             return True, f"{pokemon.nickname} grew to Level {pokemon.level}!"
+
+        # Evolution Stones (Moon Stone, Fire Stone, Water Stone, Thunder Stone, Leaf Stone)
+        if "stone_type" in data:
+            stone_type = data["stone_type"]
+            target_species = STONE_EVOLUTIONS.get(stone_type, {}).get(pokemon.species)
+            if not target_species or target_species not in POKEMON_SPECIES:
+                return False, f"{pokemon.nickname} isn't affected by {item_name}!"
+            old_species = pokemon.species
+            pokemon.species = target_species
+            pokemon.species_data = POKEMON_SPECIES[target_species]
+            pokemon.types = list(pokemon.species_data["types"])
+            pokemon.recalculate_stats()
+            self.remove_item(item_name, 1)
+            if quest_mgr is not None:
+                quest_mgr.on_item_used(item_name, pokemon, self)
+            return True, f"What?! {pokemon.nickname} evolved into {target_species}!"
+
+        # Move Reroll Disk
+        if data.get("is_move_reroll"):
+            ok, new_m, old_m, msg = pokemon.reroll_move()
+            if ok:
+                self.remove_item(item_name, 1)
+                return True, msg
+            return False, msg
 
         return False, "This item cannot be used this way."
 

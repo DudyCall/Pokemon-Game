@@ -78,7 +78,7 @@ class SaveSystem:
         return cls._active_slot
 
     @classmethod
-    def save_game(cls, player, party, inventory, pokedex, world, slot=None, pc_box=None):
+    def save_game(cls, player, party, inventory, pokedex, world, slot=None, pc_box=None, quest_mgr=None):
         cls._ensure_saves_dir()
         target_slot = slot if slot is not None else cls._active_slot
         target_slot = max(1, min(NUM_SAVE_SLOTS, int(target_slot)))
@@ -88,6 +88,7 @@ class SaveSystem:
         collected = list(getattr(world, "collected_items", [])) if world is not None else []
         badges = list(getattr(world, "badges", [])) if world is not None else []
         explored = {k: [list(pt) for pt in v] for k, v in getattr(world, "explored_tiles", {}).items()} if world is not None else {}
+        quests_data = quest_mgr.to_dict() if quest_mgr is not None else {}
         data = {
             "slot": target_slot,
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -111,7 +112,8 @@ class SaveSystem:
             "defeated_trainers": defeated,
             "collected_items": collected,
             "badges": badges,
-            "explored_tiles": explored
+            "explored_tiles": explored,
+            "quests": quests_data
         }
         try:
             slot_path = cls.get_slot_path(target_slot)
@@ -172,6 +174,7 @@ class SaveSystem:
             pc_box = [Pokemon.from_dict(pd) for pd in data.get("pc_box", [])]
             inventory = Inventory.from_dict(data.get("inventory", {}))
             pokedex = Pokedex.from_dict(data.get("pokedex", {}))
+            quests_data = data.get("quests", {})
             if world is not None:
                 world.defeated_trainers = set(data.get("defeated_trainers", []))
                 world.collected_items = set(data.get("collected_items", []))
@@ -186,7 +189,7 @@ class SaveSystem:
                 pc_box.append(Pokemon("Pikachu", level=10))
 
             cls._active_slot = target_slot
-            return (party, inventory, pokedex, pc_box), f"Slot {target_slot} loaded successfully!"
+            return (party, inventory, pokedex, pc_box, quests_data), f"Slot {target_slot} loaded successfully!"
         except Exception as e:
             return None, f"Error loading Slot {target_slot}: {e}"
 

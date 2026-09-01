@@ -10,16 +10,17 @@ from constants import (
 )
 from graphics_manager import gfx
 from sound_manager import sound_mgr
-from pokemon_data import WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS
+from pokemon_data import WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS, get_wild_encounters_for_prop, ITEMS
 from pokemon import Pokemon
 from inventory import Inventory
 from world import World, Player
 from battle_system import BattleSystem
 from save_system import SaveSystem, Pokedex
+from quest_system import QuestManager
 from ui_manager import (
     TitleScreen, StarterSelectScreen, TrainerCustomizationScreen, PauseMenu, PokedexScreen,
     PartySummaryScreen, ShopScreen, DialogueBox, SaveDialog, SaveSlotSelectScreen, PCBoxScreen,
-    TrainerCardScreen
+    TrainerCardScreen, MoveRerollScreen, BagScreen, QuestLogScreen
 )
 from input_manager import InputManager
 
@@ -42,6 +43,7 @@ class Game:
         self.pc_box = []
         self.inventory = Inventory()
         self.pokedex = Pokedex()
+        self.quest_mgr = QuestManager()
         
         # Camera
         self.camera_x = 0
@@ -59,6 +61,9 @@ class Game:
         self.party_screen = None
         self.trainer_card_screen = None
         self.shop_screen = None
+        self.bag_screen = None
+        self.move_reroll_screen = None
+        self.quest_log_screen = None
         self.current_dialogue = None
         self.battle_system = None
         
@@ -105,19 +110,16 @@ class Game:
             name=t_name, gender=t_gender, outfit_theme=t_outfit, hat_style=t_hat, hair_color=t_hair
         )
         self.inventory = Inventory()
+        self.quest_mgr = QuestManager()
         self.world.reveal_area(self.player.current_map, self.player.grid_x, self.player.grid_y)
         self.state = GameState.OVERWORLD
         sound_mgr.play_bgm("town")
         # Save initial game state to selected slot
-        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
         self.show_notification(f"Welcome, {self.player.name}! Received {starter_species}!")
 
-    def start_wild_battle(self, encounter_zone, is_water=False):
-        if is_water and encounter_zone in WILD_WATER_ENCOUNTERS:
-            table = WILD_WATER_ENCOUNTERS[encounter_zone]
-        else:
-            table = WILD_ENCOUNTERS.get(encounter_zone, WILD_ENCOUNTERS.get("Route 1", []))
-            
+    def start_wild_battle(self, encounter_zone, is_water=False, prop_type=None):
+        table = get_wild_encounters_for_prop(encounter_zone, prop_type, is_water=is_water)
         if not table:
             return
             
@@ -141,9 +143,11 @@ class Game:
             is_trainer=False,
             inventory=self.inventory,
             pokedex=self.pokedex,
-            pc_box=self.pc_box
+            pc_box=self.pc_box,
+            quest_mgr=self.quest_mgr
         )
         self.state = GameState.BATTLE
+
 
     def start_trainer_battle(self, trainer_data):
         sound_mgr.play_sfx("wild_encounter")
@@ -153,7 +157,8 @@ class Game:
             is_trainer=True,
             inventory=self.inventory,
             pokedex=self.pokedex,
-            pc_box=self.pc_box
+            pc_box=self.pc_box,
+            quest_mgr=self.quest_mgr
         )
         self.state = GameState.BATTLE
 
@@ -186,11 +191,16 @@ class Game:
                         self.current_save_slot = chosen_slot
                         res, msg = SaveSystem.load_game(self.player, self.world, slot=chosen_slot)
                         if res:
-                            if len(res) == 4:
+                            if len(res) >= 5:
+                                self.party, self.inventory, self.pokedex, self.pc_box, q_data = res[:5]
+                                self.quest_mgr = QuestManager.from_dict(q_data)
+                            elif len(res) == 4:
                                 self.party, self.inventory, self.pokedex, self.pc_box = res
+                                self.quest_mgr = QuestManager()
                             else:
                                 self.party, self.inventory, self.pokedex = res[:3]
                                 self.pc_box = []
+                                self.quest_mgr = QuestManager()
                             self.state = GameState.OVERWORLD
                             sound_mgr.play_bgm("town")
                             self.show_notification(f"Slot {chosen_slot} loaded successfully!")
@@ -215,11 +225,16 @@ class Game:
                             self.current_save_slot = chosen_slot
                             res, msg = SaveSystem.load_game(self.player, self.world, slot=chosen_slot)
                             if res:
-                                if len(res) == 4:
+                                if len(res) >= 5:
+                                    self.party, self.inventory, self.pokedex, self.pc_box, q_data = res[:5]
+                                    self.quest_mgr = QuestManager.from_dict(q_data)
+                                elif len(res) == 4:
                                     self.party, self.inventory, self.pokedex, self.pc_box = res
+                                    self.quest_mgr = QuestManager()
                                 else:
                                     self.party, self.inventory, self.pokedex = res[:3]
                                     self.pc_box = []
+                                    self.quest_mgr = QuestManager()
                                 self.save_slot_screen = None
                                 self.state = GameState.OVERWORLD
                                 sound_mgr.play_bgm("town")
@@ -297,8 +312,11 @@ class Game:
                     self.trainer_card_screen = None
                     self.state = GameState.TRAINER_CARD
                 elif action == "BAG":
-                    self.shop_screen = ShopScreen(self.inventory)
-                    self.state = GameState.SHOP
+                    self.bag_screen = BagScreen(self.party, self.inventory, self.quest_mgr)
+                    self.state = GameState.BAG_MENU
+                elif action in ["QUESTS", "QUEST LOG", "MISSIONS"]:
+                    self.quest_log_screen = QuestLogScreen(self.quest_mgr, self.player)
+                    self.state = GameState.QUEST_LOG
                 elif action in ["MAP", "TOWN MAP"]:
                     self.party_screen = None
                     self.trainer_card_screen = TrainerCardScreen(self.player, self.world, self.inventory, self.pokedex, initial_tab=1)
@@ -322,6 +340,15 @@ class Game:
                         pc_box=self.pc_box
                     )
                     self.state = GameState.SAVE_SLOTS
+                continue
+
+            # Quest Log View State
+            if self.state == GameState.QUEST_LOG:
+                if self.quest_log_screen:
+                    res = self.quest_log_screen.handle_input(event)
+                    if res == "CLOSE":
+                        self.quest_log_screen = None
+                        self.state = GameState.OVERWORLD
                 continue
 
             # PC Box State
@@ -366,10 +393,27 @@ class Game:
                         self.state = GameState.OVERWORLD
                 continue
 
+            # Bag View State
+            if self.state == GameState.BAG_MENU:
+                if self.bag_screen:
+                    res = self.bag_screen.handle_input(event)
+                    if res == "EXIT":
+                        self.bag_screen = None
+                        self.state = GameState.OVERWORLD
+                continue
+
             # Shop View State
             if self.state == GameState.SHOP:
                 if self.shop_screen:
                     res = self.shop_screen.handle_input(event)
+                    if res == "EXIT":
+                        self.state = GameState.OVERWORLD
+                continue
+
+            # Move Reroll & Tutor State
+            if self.state == GameState.MOVE_RELEARN:
+                if self.move_reroll_screen:
+                    res = self.move_reroll_screen.handle_input(event)
                     if res == "EXIT":
                         self.state = GameState.OVERWORLD
                 continue
@@ -412,7 +456,9 @@ class Game:
             sound_mgr.play_sfx("confirm")
             self.show_notification(f"Found {item_cnt}x {item_name}!")
             SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
-            self.current_dialogue = DialogueBox("Item Found", f"{self.player.name} found {item_cnt}x {item_name} and put it in the Bag!", on_complete=None)
+            item_desc = ITEMS.get(item_name, {}).get("desc", "")
+            pickup_text = f"{self.player.name} found {item_cnt}x {item_name} and put it in the Bag!\n\n{item_desc}" if item_desc else f"{self.player.name} found {item_cnt}x {item_name} and put it in the Bag!"
+            self.current_dialogue = DialogueBox("Item Found", pickup_text, on_complete=None, portrait_key="item")
             self.state = GameState.DIALOGUE
             return
 
@@ -420,7 +466,7 @@ class Game:
         sign_msg = self.world.get_sign_at(self.player.current_map, fx, fy)
         if sign_msg:
             sound_mgr.play_sfx("confirm")
-            self.current_dialogue = DialogueBox("Notice", sign_msg, on_complete=None)
+            self.current_dialogue = DialogueBox("Notice", sign_msg, on_complete=None, portrait_key="sign")
             self.state = GameState.DIALOGUE
             return
 
@@ -446,7 +492,12 @@ class Game:
                 SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
                 sound_mgr.play_sfx("heal")
                 healer_name = npc.get("name", "Nurse Joy")
-                self.current_dialogue = DialogueBox(healer_name, f"Your Pokémon are fully healed and your progress was saved to Slot {self.current_save_slot}!", on_complete=None)
+                self.current_dialogue = DialogueBox(
+                    healer_name,
+                    f"Your Pokémon are fully healed and your progress was saved to Slot {self.current_save_slot}!",
+                    on_complete=None,
+                    portrait_key=healer_name
+                )
                 self.state = GameState.DIALOGUE
             elif npc.get("is_shop"):
                 # Open Mart
@@ -462,7 +513,7 @@ class Game:
                     eval_msg = f"Great work, {self.player.name}! You have caught {caught_n} species and seen {seen_n}. Keep exploring new routes and caves!"
                 else:
                     eval_msg = f"You have caught {caught_n} species and seen {seen_n}. Make sure to explore all routes, caves, and waters to find wild Pokémon!"
-                self.current_dialogue = DialogueBox("Prof. Oak", eval_msg, on_complete=None)
+                self.current_dialogue = DialogueBox("Prof. Oak", eval_msg, on_complete=None, portrait_key="Prof. Oak")
                 self.state = GameState.DIALOGUE
             elif npc.get("is_bill"):
                 # Bill Gift (Eevee)
@@ -477,12 +528,39 @@ class Game:
                         dest = "your PC Storage Box"
                     self.pokedex.register_caught("Eevee")
                     SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
-                    self.current_dialogue = DialogueBox("Bill", f"Thanks for visiting my Sea Cottage! Take this rare Eevee! It was sent to {dest}!", on_complete=None)
+                    self.current_dialogue = DialogueBox("Bill", f"Thanks for visiting my Sea Cottage! Take this rare Eevee! It was sent to {dest}!", on_complete=None, portrait_key="Bill")
                 else:
-                    self.current_dialogue = DialogueBox("Bill", "Eevee has many wonderful evolutions with elemental stones! Take good care of it!", on_complete=None)
+                    self.current_dialogue = DialogueBox("Bill", "Eevee has many wonderful evolutions with elemental stones! Take good care of it!", on_complete=None, portrait_key="Bill")
+                self.state = GameState.DIALOGUE
+            elif npc.get("is_move_tutor") or npc.get("name") == "Move Master":
+                # Open Move Reroll & Tutor Screen ($3,000)
+                self.move_reroll_screen = MoveRerollScreen(self.party, self.inventory)
+                self.state = GameState.MOVE_RELEARN
+            elif npc.get("quest_id"):
+                from quest_system import QUEST_DEFINITIONS
+                q_id = npc["quest_id"]
+                q_def = QUEST_DEFINITIONS.get(q_id, {})
+                q_name = q_def.get("title", "Mission")
+                giver_name = npc.get("name", "Quest Giver")
+
+                if self.quest_mgr.is_completed(q_id):
+                    d_text = f"Outstanding job on '{q_name}'!\n\nThank you so much for your help, {self.player.name}!"
+                elif self.quest_mgr.is_active(q_id):
+                    curr_p = self.quest_mgr.get_progress(q_id)
+                    tgt_p = q_def.get("target_count", 1)
+                    d_text = f"Mission in Progress: '{q_name}'\n\n{q_def.get('description', '')}\n\nCurrent Progress: {curr_p} / {tgt_p}\n\n⭐ Rewards deliver automatically the moment you finish!"
+                else:
+                    # Accept quest!
+                    self.quest_mgr.accept_quest(q_id)
+                    self.show_notification(f"Quest Accepted: {q_name}!")
+                    sound_mgr.play_sfx("confirm")
+                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
+                    d_text = f"QUEST ACCEPTED: '{q_name}'!\n\n{npc.get('dialog', '')}\n\n⭐ Auto-Turn-In: Rewards will be delivered directly to your Bag the instant objectives are met!"
+
+                self.current_dialogue = DialogueBox(giver_name, d_text, on_complete=None, portrait_key=giver_name)
                 self.state = GameState.DIALOGUE
             else:
-                self.current_dialogue = DialogueBox(npc.get("name", "NPC"), npc.get("dialog", "Hello!"), on_complete=None)
+                self.current_dialogue = DialogueBox(npc.get("name", "NPC"), npc.get("dialog", "Hello!"), on_complete=None, portrait_key=npc.get("name"))
                 self.state = GameState.DIALOGUE
             return
 
@@ -491,13 +569,28 @@ class Game:
         if trainer:
             sound_mgr.play_sfx("confirm")
             if trainer["id"] in self.world.defeated_trainers:
-                # Already defeated -> talk
-                self.current_dialogue = DialogueBox(trainer["name"], trainer.get("dialog_after", "Good battle!"), on_complete=None)
+                # Already defeated -> talk with portrait
+                self.current_dialogue = DialogueBox(
+                    trainer["name"],
+                    trainer.get("dialog_after", "Good battle!"),
+                    on_complete=None,
+                    portrait_key=trainer.get("id"),
+                    trainer_data=trainer
+                )
                 self.state = GameState.DIALOGUE
             else:
-                # Undefeated -> start battle
-                self.start_trainer_battle(trainer)
+                # Undefeated -> talk before battle with portrait, then start battle on confirm
+                dialog_text = trainer.get("dialog_before", "Let's battle!")
+                self.current_dialogue = DialogueBox(
+                    trainer["name"],
+                    dialog_text,
+                    on_complete=lambda t=trainer: self.start_trainer_battle(t),
+                    portrait_key=trainer.get("id"),
+                    trainer_data=trainer
+                )
+                self.state = GameState.DIALOGUE
             return
+
 
         # 6. Check Door / Warp interaction directly in front of player
         warp = self.world.get_warp_target(self.player.current_map, fx, fy)
@@ -579,11 +672,11 @@ class Game:
                     return
                     
                 # 2. Check Wild Encounter
-                # A: Tall Grass Wild Encounter (14% chance per step)
-                if self.player.in_tall_grass:
+                # A: Walk-Through Prop Wild Encounter (14% chance per step)
+                if self.player.current_prop or self.player.in_tall_grass:
                     zone = self.world.maps[self.player.current_map].get("encounter_zone")
                     if zone and random.random() < 0.14:
-                        self.start_wild_battle(zone, is_water=False)
+                        self.start_wild_battle(zone, is_water=False, prop_type=self.player.current_prop)
                         return
                         
                 # B: Water Sailing Wild Encounter (14% chance per step on water)
@@ -592,12 +685,23 @@ class Game:
                     if zone and random.random() < 0.14:
                         self.start_wild_battle(zone, is_water=True)
                         return
+
                         
                 # 3. Check Trainer Line of Sight
                 spotted_trainer = self.world.check_trainer_line_of_sight(self.player.current_map, self.player.grid_x, self.player.grid_y)
                 if spotted_trainer:
-                    self.start_trainer_battle(spotted_trainer)
+                    sound_mgr.play_sfx("confirm")
+                    dialog_text = spotted_trainer.get("dialog_before", "Let's battle!")
+                    self.current_dialogue = DialogueBox(
+                        spotted_trainer["name"],
+                        dialog_text,
+                        on_complete=lambda t=spotted_trainer: self.start_trainer_battle(t),
+                        portrait_key=spotted_trainer.get("id"),
+                        trainer_data=spotted_trainer
+                    )
+                    self.state = GameState.DIALOGUE
                     return
+
 
             # Smooth Camera Tracking centered on player
             map_w, map_h = self.world.get_map_dimensions(self.player.current_map)
@@ -608,8 +712,19 @@ class Game:
             self.camera_x = max(0, min(map_w - SCREEN_WIDTH, target_cam_x)) if map_w > SCREEN_WIDTH else (map_w - SCREEN_WIDTH) // 2
             self.camera_y = max(0, min(map_h - SCREEN_HEIGHT, target_cam_y)) if map_h > SCREEN_HEIGHT else (map_h - SCREEN_HEIGHT) // 2
 
+        # Check Quest Notifications
+        if self.quest_mgr:
+            for notif in self.quest_mgr.pop_notifications():
+                sound_mgr.play_sfx("level_up")
+                self.show_notification(notif, duration=4.5)
+                # Auto save on quest completion
+                SaveSystem.save_game(
+                    self.player, self.party, self.inventory, self.pokedex, self.world,
+                    slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                )
+
         # Save Slot Select Screen State update
-        elif self.state == GameState.SAVE_SLOTS and self.save_slot_screen:
+        if self.state == GameState.SAVE_SLOTS and self.save_slot_screen:
             self.save_slot_screen.update(dt)
 
         # Trainer Customization State update
@@ -619,6 +734,18 @@ class Game:
         # PC Box State update
         elif self.state == GameState.PC_BOX and self.pc_box_screen:
             self.pc_box_screen.update(dt)
+
+        # Move Reroll & Tutor State update
+        elif self.state == GameState.MOVE_RELEARN and self.move_reroll_screen:
+            self.move_reroll_screen.update(dt)
+
+        # Bag Inventory State update
+        elif self.state == GameState.BAG_MENU and self.bag_screen:
+            self.bag_screen.update(dt)
+
+        # Quest Log State update
+        elif self.state == GameState.QUEST_LOG and self.quest_log_screen:
+            self.quest_log_screen.update(dt)
 
         # Dialogue State update
         elif self.state == GameState.DIALOGUE:
@@ -650,7 +777,7 @@ class Game:
                         # Save game progress immediately so defeated trainers and badges stay saved
                         SaveSystem.save_game(
                             self.player, self.party, self.inventory, self.pokedex, self.world,
-                            slot=self.current_save_slot, pc_box=self.pc_box
+                            slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
                         )
                     self.battle_system = None
                     self.state = GameState.OVERWORLD
@@ -692,7 +819,7 @@ class Game:
 
         # 6. Overworld & Sub-Menus & Save
         elif self.state in [GameState.OVERWORLD, GameState.PARTY_MENU, GameState.DIALOGUE, GameState.SAVE]:
-            self.world.draw(self.screen, self.player.current_map, self.camera_x, self.camera_y)
+            self.world.draw(self.screen, self.player.current_map, self.camera_x, self.camera_y, quest_mgr=self.quest_mgr)
             self.player.draw(self.screen, self.camera_x, self.camera_y)
             
             # Interactive Fog-of-War Minimap in the upper-left corner
@@ -721,11 +848,23 @@ class Game:
             elif self.party_screen:
                 self.party_screen.draw(self.screen)
 
-        # 9. Shop Screen
+        # 9. Bag Inventory & Item Manual Screen
+        elif self.state == GameState.BAG_MENU and self.bag_screen:
+            self.bag_screen.draw(self.screen)
+
+        # 10. Quest Log Screen
+        elif self.state == GameState.QUEST_LOG and self.quest_log_screen:
+            self.quest_log_screen.draw(self.screen)
+
+        # 11. Shop Screen
         elif self.state == GameState.SHOP and self.shop_screen:
             self.shop_screen.draw(self.screen)
 
-        # 10. Battle Screen
+        # 12. Move Master & Reroll Tutor Screen
+        elif self.state == GameState.MOVE_RELEARN and self.move_reroll_screen:
+            self.move_reroll_screen.draw(self.screen)
+
+        # 13. Battle Screen
         elif self.state == GameState.BATTLE and self.battle_system:
             self.battle_system.draw(self.screen)
 

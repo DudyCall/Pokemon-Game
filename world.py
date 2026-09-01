@@ -7,7 +7,7 @@ import random
 import pygame
 from constants import (
     SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, Direction,
-    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, WHITE, BLACK
+    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, WHITE, BLACK, ENCOUNTER_PROP_TILES
 )
 from graphics_manager import gfx
 from sound_manager import sound_mgr
@@ -16,8 +16,16 @@ from pokemon_data import WILD_ENCOUNTERS, TRAINERS
 # Tile Legend for Map Grids:
 # . = Grass
 # G = Tall Grass (Wild Pokemon encounter)
+# F = Wildflower Meadow (Wild Pokemon encounter)
+# L = Autumn Leaf Pile (Wild Pokemon encounter)
+# r = Cave Rubble / Crags (Wild Pokemon encounter)
+# x = Deep Snow Drift (Wild Pokemon encounter)
+# m = Haunted Spirit Mist (Wild Pokemon encounter)
+# a = Volcanic Ash & Embers (Wild Pokemon encounter)
+# u = Swamp Marsh / Mud Bog (Wild Pokemon encounter)
+# e = Electric Surge Grid (Wild Pokemon encounter)
 # # = Tree / Forest border (Solid obstacle)
-# ~ = Water / Ocean (Solid obstacle)
+# ~ = Water / Ocean (Solid obstacle / Sailing)
 # p = Path / Dirt road
 # s = Sand / Shore
 # b = Wood Bridge / Pier
@@ -25,7 +33,7 @@ from pokemon_data import WILD_ENCOUNTERS, TRAINERS
 # _ = Indoor / Cave Floor
 # O = Cave Entrance / Arch
 # f = Fence (Solid obstacle)
-# * = Red Flower
+# * = Red Flower Patch (Wild Pokemon encounter)
 # R = PokeCenter Red Roof (Solid obstacle)
 # B = Mart Blue Roof (Solid obstacle)
 # W = Building Wall (Solid obstacle)
@@ -48,12 +56,12 @@ MAP_PALLET_TOWN = [
     "#..WW..p....p..WWWW..#",
     "#..WD..p....p..WWWD..#",
     "#......pppppp........#",
-    "#..**..p....p..**....#",
-    "#..o...p....p........#",
+    "#..FF..p....p..**....#",
+    "#..o...p....p..FF....#",
     "#..ff..p....p..ff....#",
     "#......pppppp........#",
     "#..S.....pp.....S....#",
-    "#........pp..........#",
+    "#..FF....pp....FF....#",
     "#..ssssssssssssssss..#",
     "#..ssssssbbssssssss..#",
     "#..~~~~~~bb~~~~~~~~..#",
@@ -62,31 +70,32 @@ MAP_PALLET_TOWN = [
     "#########..###########",
 ]
 
+
 MAP_ROUTE_1 = [
     "########....##########",
     "#........pp..........#",
-    "#..GGGG..pp..GGGG....#",
-    "#..GGGG..pp..GGGG....#",
-    "#..GGGG..pp..GGGG....#",
+    "#..GGGG..pp..FFFF....#",
+    "#..GGGG..pp..FFFF....#",
+    "#..LLLL..pp..LLLL....#",
     "#........pp..........#",
     "#..ffff..pp..ffff....#",
     "#..S.....pp..........#",
-    "#..GGGG..pp..GGGG....#",
-    "#..GGGG..pp..GGGG....#",
+    "#..FFFF..pp..GGGG....#",
+    "#..FFFF..pp..GGGG....#",
     "#........pp..........#",
-    "#..GGGG..pp..GGGG....#",
-    "#..GGGG..pp..GGGG....#",
+    "#..LLLL..pp..FFFF....#",
+    "#..LLLL..pp..FFFF....#",
     "#........pp..........#",
     "#..ffff..pp..ffff....#",
     "#........pp..........#",
-    "#..GGGG..pp..GGGG....#",
-    "#..GGGG..pp..GGGG....#",
+    "#..GGGG..pp..LLLL....#",
+    "#..GGGG..pp..LLLL....#",
     "#........pp..........#",
     "#..ffff..pp..........#",
     "#........pp..GGGG....#",
     "#..o.....pp..GGGG....#",
-    "#..GGGG..pp..GGGG....#",
-    "#..GGGG..pp..........#",
+    "#..FFFF..pp..LLLL....#",
+    "#..FFFF..pp..........#",
     "#........pp..........#",
     "########....##########",
 ]
@@ -101,8 +110,8 @@ MAP_VIRIDIAN_CITY = [
     "#..S.........pp.........S..#",
     "#..pppppppppppppppppppppp..#",
     "#..p........pppp........p..#",
-    "#..p..GGGG..pppp..GGGG..p..#",
-    "#..p..GGGG..pppp..GGGG..p..#",
+    "#..p..FFFF..pppp..LLLL..p..#",
+    "#..p..FFFF..pppp..LLLL..p..#",
     "...p........pppp........p..#",
     "...pppppppppppppppppppppp..#",
     "...p........pppp........p..#",
@@ -112,7 +121,7 @@ MAP_VIRIDIAN_CITY = [
     "#..p........pppp........p..#",
     "#..pppppppppppppppppppppp..#",
     "#..p........pppp........p..#",
-    "#..p..****..pppp..****..p..#",
+    "#..p..FFFF..pppp..FFFF..p..#",
     "#..pppppppppppppppppppppp..#",
     "#............pp............#",
     "############....############",
@@ -122,19 +131,19 @@ MAP_ROUTE_22 = [
     "############################",
     "#..^^^^^^^^^^^^^^^^^^^^^^..#",
     "#..^....................^..#",
-    "#..^..GGGG........GGGG..^..#",
-    "#..^..GGGG..~~~~..GGGG..^..#",
-    "#..^........~~~~........^..#",
+    "#..^..GGGG........rrrr..^..#",
+    "#..^..GGGG..~~~~..rrrr..^..#",
+    "#..^..uuuu..~~~~..uuuu..^..#",
     "#..^..WWWW..~~~~..o.....^..#",
     "#..^..WWWD..~~~~........^..#",
     "#..^..S.....pppppppppppppppp",
     "#..^........p..........p....",
-    "#..^..GGGG..p..~~~~....p....",
-    "#..^..GGGG..p..~~~~....p...#",
+    "#..^..rrrr..p..~~~~....p....",
+    "#..^..rrrr..p..~~~~....p...#",
     "#..^..o.....pppppppppppp...#",
     "#..^........p..........p...#",
-    "#..^..GGGG..p..GGGG.....^..#",
-    "#..^..GGGG..p..GGGG.....^..#",
+    "#..^..uuuu..p..GGGG.....^..#",
+    "#..^..uuuu..p..GGGG.....^..#",
     "#..^^^^^^^^^^^^^^^^^^^^^^..#",
     "############################",
 ]
@@ -142,34 +151,34 @@ MAP_ROUTE_22 = [
 MAP_VIRIDIAN_FOREST = [
     "################....############",
     "#..............................#",
-    "#..GGGG..####..GGGG..####..GG..#",
-    "#..GGGG..####..GGGG..####..GG..#",
+    "#..GGGG..####..LLLL..####..FF..#",
+    "#..GGGG..####..LLLL..####..FF..#",
     "#..pp....####..pp....####..pp..#",
     "#..pp..........pp..........pp..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..pp..........pp..........pp..#",
-    "#..GG..####....GG..####....GG..#",
-    "#..GG..####..o.GG..####....GG..#",
+    "#..FF..####....uuuu####....LL..#",
+    "#..FF..####..o.uuuu####....LL..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..pp..........pp..........pp..#",
-    "#..GGGG..####..GGGG..####..GG..#",
-    "#..GGGG..####..GGGG..####..GG..#",
+    "#..LLLL..####..FFFF..####..GG..#",
+    "#..LLLL..####..FFFF..####..GG..#",
     "#..pp....####..pp....####..pp..#",
     "#..pp..........pp..........pp..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..pp..........pp..........pp..#",
-    "#..GG..####....GG..####....GG..#",
-    "#..GG..####....GG..####..o.GG..#",
+    "#..uuuu####....LLLL####....FF..#",
+    "#..uuuu####....LLLL####..o.FF..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..pp..........pp..........pp..#",
-    "#..GGGG..####..GGGG..####..GG..#",
-    "#..GGGG..####..GGGG..####..GG..#",
+    "#..FFFF..####..GGGG..####..LL..#",
+    "#..FFFF..####..GGGG..####..LL..#",
     "#..pp....####..pp....####..pp..#",
     "#..pp..........pp..........pp..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..o...........pp..........S...#",
-    "#..GGGG..GGGG..pp..GGGG..GGGG..#",
-    "#..GGGG..GGGG..pp..GGGG..GGGG..#",
+    "#..LLLL..GGGG..pp..FFFF..uuuu..#",
+    "#..LLLL..GGGG..pp..FFFF..uuuu..#",
     "#..............pp..............#",
     "################....############",
 ]
@@ -190,11 +199,11 @@ MAP_PEWTER_CITY = [
     "#..p..S.....pppp..S.....p.......",
     "#..pppppppppppppppppppppppppppp.",
     "#..p........pppp........p.......",
-    "#..p..****..pppp..****..p......#",
+    "#..p..FFFF..pppp..FFFF..p......#",
     "#..pppppppppppppppppppppp......#",
     "#..p........pppp........p......#",
-    "#..p..GGGG..pppp..GGGG..p......#",
-    "#..p..GGGG..pppp..GGGG..p......#",
+    "#..p..rrrr..pppp..rrrr..p......#",
+    "#..p..rrrr..pppp..rrrr..p......#",
     "#..pppppppppppppppppppppp......#",
     "#............pp................#",
     "#............pp................#",
@@ -206,18 +215,18 @@ MAP_ROUTE_3 = [
     "#..........................p...#",
     "#..^^^^^^^^^^^^^^^^^^^^^^..p...#",
     "#..^....................^..p...#",
-    "#..^..GGGG..^^^^..GGGG..^..p...#",
-    "#..^..GGGG..^^^^..GGGG..^..p...#",
+    "#..^..rrrr..^^^^..LLLL..^..p...#",
+    "#..^..rrrr..^^^^..LLLL..^..p...#",
     "#..^........^^^^........^..p...#",
     "...ppppppppppppppppppppppppp...#",
     "...p........^^^^........p......#",
-    "...p..GGGG..^^^^..GGGG..p......#",
-    "#..p..GGGG..^^^^..GGGG..p..o...#",
+    "...p..GGGG..^^^^..rrrr..p......#",
+    "#..p..GGGG..^^^^..rrrr..p..o...#",
     "...p........^^^^........p......#",
     "...pppppppppppppppppppppp......#",
     "...S........^^^^........S......#",
-    "#..GGGG..GGGG..GGGG..GGGG......#",
-    "#..GGGG..GGGG..GGGG..GGGG......#",
+    "#..LLLL..rrrr..GGGG..rrrr......#",
+    "#..LLLL..rrrr..GGGG..rrrr......#",
     "#..............................#",
     "################################",
 ]
@@ -226,20 +235,20 @@ MAP_MT_MOON = [
     "################################",
     "#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#",
     "#^_.......^^^^^^^^........____O#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..rrrr.^^^^^^^^.eeee..._^^^^#",
     "#^_.._o__.^^^^^^^^._o__..._^^^^#",
-    "#^_..____..........____..._^^^^#",
+    "#^_..rrrr..........eeee..._^^^^#",
     "#^_......................._^^^^#",
     "#^_____________________________#",
     "#^_.......^^^^^^^^........_^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..eeee.^^^^^^^^.rrrr..._^^^^#",
+    "#^_..eeee.^^^^^^^^.rrrr..._^^^^#",
     "#^_..____.^^^^^^^^.____..._^^^^#",
     "#^_____________________________#",
     "#^_......................._^^^^#",
     "#^_.......^^^^^^^^........_^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..rrrr.^^^^^^^^.eeee..._^^^^#",
+    "#^_..rrrr.^^^^^^^^.eeee..._^^^^#",
     "#^_..____.^^^^^^^^.____..._^^^^#",
     "#^_____________________________#",
     "#^_.......^^^^^^^^..o....._^^^^#",
@@ -257,19 +266,19 @@ MAP_ROUTE_4 = [
     "#..pppppppppppppppppppppppp.",
     "#..p..~~~~~~~~~~~~~~~~~~~...",
     "#..p..~~~~~~~~~~~~~~~~~~~...",
-    "#..p..GGGG..^^^^..GGGG..p..#",
-    "#..p..GGGG..^^^^..GGGG..p..#",
+    "#..p..rrrr..^^^^..uuuu..p..#",
+    "#..p..rrrr..^^^^..uuuu..p..#",
     "#..pppppppppppppppppppppp..#",
     "#..S........^^^^........S..#",
-    "#..GGGG..o..^^^^..GGGG.....#",
-    "#..GGGG.....^^^^..GGGG.....#",
+    "#..uuuu..o..^^^^..rrrr.....#",
+    "#..uuuu.....^^^^..rrrr.....#",
     "#..........................#",
     "#..........................#",
     "############################",
 ]
 
 MAP_CERULEAN_CITY = [
-    "############....################",
+    "####O#######....################",
     "#............pp................#",
     "#..RRRR......pp......BBBB......#",
     "#..RRRR......pp......BBBB......#",
@@ -284,15 +293,15 @@ MAP_CERULEAN_CITY = [
     "...ppppppppppppppppppppppppppppp",
     "...p..S.....pppp..S.....pppppppp",
     "#..p........pppp........p......#",
-    "#..p..~~~~..pppp..~~~~..p......#",
-    "#..p..~~~~..pppp..~~~~..p......#",
+    "#..p..uuuu..pppp..uuuu..p......#",
+    "#..p..uuuu..pppp..uuuu..p......#",
     "#..pppppppppppppppppppppp......#",
     "#..p........pppp........p......#",
-    "#..p..****..pppp..****..p......#",
+    "#..p..FFFF..pppp..FFFF..p......#",
     "#..pppppppppppppppppppppp......#",
     "#............pp................#",
     "#............pp................#",
-    "################################",
+    "############....################",
 ]
 
 MAP_ROUTE_9 = [
@@ -300,24 +309,24 @@ MAP_ROUTE_9 = [
     "#.................p............#",
     "#..^^^^^^^^^^^^^..p..^^^^^^^^..#",
     "#..^...........^..p..^......^..#",
-    "#..^..GGGG..^..^..p..^..GG..^..#",
-    "#..^..GGGG..^..^..p..^..GG..^..#",
+    "#..^..rrrr..^..^..p..^..LL..^..#",
+    "#..^..rrrr..^..^..p..^..LL..^..#",
     "#..^........^..^..p..^......^..#",
     "#..^^^^^^^^^^..^..p..^^^^^^^^..#",
     "...pppppppppppppppppppppppppppp.",
     "...p...........p...........p....",
-    "...p..GGGG.....p..GGGG.....p....",
-    "#..p..GGGG..^..p..GGGG..^..p...#",
+    "...p..LLLL.....p..rrrr.....p....",
+    "#..p..LLLL..^..p..rrrr..^..p...#",
     "#..p........^..p........^..p...#",
     "#..ppppppppppppppppppppppppp...#",
     "#..S........^..o........^..S...#",
-    "#..GGGG..GGGG..GGGG..GGGG......#",
-    "#..GGGG..GGGG..GGGG..GGGG......#",
+    "#..rrrr..LLLL..rrrr..LLLL......#",
+    "#..rrrr..LLLL..rrrr..LLLL......#",
     "################################",
 ]
 
 MAP_LAVENDER_TOWN = [
-    "############################",
+    "############....############",
     "#............pp............#",
     "#..RRRR......pp......BBBB..#",
     "#..RRRR......pp......BBBB..#",
@@ -335,8 +344,8 @@ MAP_LAVENDER_TOWN = [
     "#..p..YYYY..pppp..YYYY..p..#",
     "#..p........pppp........p..#",
     "#..pppppppppppppppppppppp..#",
-    "#..p..GGGG..pppp..GGGG..p..#",
-    "#..p..GGGG..pppp..GGGG..p..#",
+    "#..p..mmmm..pppp..FFFF..p..#",
+    "#..p..mmmm..pppp..FFFF..p..#",
     "#..p..o.....pppp...o....p..#",
     "#..pppppppppppppppppppppp..#",
     "#............pp............#",
@@ -347,20 +356,20 @@ MAP_POKEMON_TOWER = [
     "############################",
     "#^^^^^^^^^^^^^^^^^^^^^^^^^^#",
     "#^_.......YYYYYYYY........_#",
-    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..mmmm.YYYYYYYY.mmmm..._#",
     "#^_.._o__.YYYYYYYY._o__..._#",
-    "#^_..____..........____..._#",
+    "#^_..mmmm..........mmmm..._#",
     "#^_......................._#",
     "#^_________________________#",
     "#^_.......YYYYYYYY........_#",
-    "#^_..____.YYYYYYYY.____..._#",
-    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..mmmm.YYYYYYYY.mmmm..._#",
+    "#^_..mmmm.YYYYYYYY.mmmm..._#",
     "#^_..____.YYYYYYYY.____..._#",
     "#^_________________________#",
     "#^_......................._#",
     "#^_.......YYYYYYYY........_#",
-    "#^_..____.YYYYYYYY.____..._#",
-    "#^_..____.YYYYYYYY.____..._#",
+    "#^_..mmmm.YYYYYYYY.mmmm..._#",
+    "#^_..mmmm.YYYYYYYY.mmmm..._#",
     "#^_..____.YYYYYYYY.____..._#",
     "#^_________________________#",
     "#^_.......YYYYYYYY..o....._#",
@@ -374,20 +383,20 @@ MAP_POWER_PLANT = [
     "################################",
     "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
     "#W_.......HHHHHHHH........____W#",
-    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..eeee.HHHHHHHH.eeee..._WWWW#",
     "#W_.._o__.HHHHHHHH._o__..._WWWW#",
-    "#W_..____..........____..._WWWW#",
+    "#W_..eeee..........eeee..._WWWW#",
     "#W_......................._WWWW#",
     "#W_____________________________#",
     "#W_.......HHHHHHHH........_WWWW#",
-    "#W_..____.HHHHHHHH.____..._WWWW#",
-    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..eeee.HHHHHHHH.eeee..._WWWW#",
+    "#W_..eeee.HHHHHHHH.eeee..._WWWW#",
     "#W_..____.HHHHHHHH.____..._WWWW#",
     "#W_____________________________#",
     "#W_......................._WWWW#",
     "#W_.......HHHHHHHH........_WWWW#",
-    "#W_..____.HHHHHHHH.____..._WWWW#",
-    "#W_..____.HHHHHHHH.____..._WWWW#",
+    "#W_..eeee.HHHHHHHH.eeee..._WWWW#",
+    "#W_..eeee.HHHHHHHH.eeee..._WWWW#",
     "#W_..____.HHHHHHHH.____..._WWWW#",
     "#W_____________________________#",
     "#W_.......HHHHHHHH..o....._WWWW#",
@@ -400,12 +409,12 @@ MAP_POWER_PLANT = [
 MAP_SAFARI_ZONE = [
     "##############....##############",
     "#..............pp..............#",
-    "#..GGGG..####..pp..####..GGGG..#",
-    "#..GGGG..####..pp..####..GGGG..#",
+    "#..GGGG..####..pp..####..FFFF..#",
+    "#..GGGG..####..pp..####..FFFF..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........p..~~..p........p..#",
-    "#..p..GGGG..p..~~..p..GGGG..p..#",
-    "#..p..GGGG..p..~~..p..GGGG..p..#",
+    "#..p..LLLL..p..~~..p..uuuu..p..#",
+    "#..p..LLLL..p..~~..p..uuuu..p..#",
     "#..p........pppppppp........p..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........p..bb..p........p..#",
@@ -414,8 +423,8 @@ MAP_SAFARI_ZONE = [
     "#..p........p..~~..p........p..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........p......p........p..#",
-    "#..p..GGGG..p..o...p..GGGG..p..#",
-    "#..p..GGGG..p......p..GGGG..p..#",
+    "#..p..FFFF..p..o...p..LLLL..p..#",
+    "#..p..FFFF..p......p..LLLL..p..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........p..~~..p........p..#",
     "#..p..####..p..~~..p..####..p..#",
@@ -423,12 +432,12 @@ MAP_SAFARI_ZONE = [
     "#..p........p..bb..p........p..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........p......p........p..#",
-    "#..p..GGGG..p..o...p..GGGG..p..#",
-    "#..p..GGGG..p......p..GGGG..p..#",
+    "#..p..uuuu..p..o...p..GGGG..p..#",
+    "#..p..uuuu..p......p..GGGG..p..#",
     "#..pppppppppppppppppppppppppp..#",
     "#..S...........pp..........S...#",
-    "#..GGGG..GGGG..pp..GGGG..GGGG..#",
-    "#..GGGG..GGGG..pp..GGGG..GGGG..#",
+    "#..FFFF..LLLL..pp..uuuu..GGGG..#",
+    "#..FFFF..LLLL..pp..uuuu..GGGG..#",
     "################################",
 ]
 
@@ -436,20 +445,20 @@ MAP_SEAFOAM_ISLANDS = [
     "################################",
     "#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#",
     "#^_.......^^^^^^^^........____O#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..xxxx.^^^^^^^^.xxxx..._^^^^#",
     "#^_.._o__.^^^^^^^^._o__..._^^^^#",
-    "#^_..____..........____..._^^^^#",
+    "#^_..xxxx..........xxxx..._^^^^#",
     "#^_......................._^^^^#",
     "#^_____________________________#",
     "#^_.......^^^^^^^^........_^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..rrrr.^^^^^^^^.rrrr..._^^^^#",
+    "#^_..rrrr.^^^^^^^^.rrrr..._^^^^#",
     "#^_..____.^^^^^^^^.____..._^^^^#",
     "#^_____________________________#",
     "#^_......................._^^^^#",
     "#^_.......^^^^^^^^........_^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
-    "#^_..____.^^^^^^^^.____..._^^^^#",
+    "#^_..xxxx.^^^^^^^^.xxxx..._^^^^#",
+    "#^_..xxxx.^^^^^^^^.xxxx..._^^^^#",
     "#^_..____.^^^^^^^^.____..._^^^^#",
     "#^_____________________________#",
     "#^_.......^^^^^^^^..o....._^^^^#",
@@ -470,13 +479,13 @@ MAP_ROUTE_24 = [
     "#..~~~~~~bb~~~~~p......#",
     "#..~~~~~~bb~~~~~pppp...#",
     "#..~~~~~~bb~~~~~p......#",
-    "#..~~~~~~bb~~~~~p..GG..#",
-    "#..~~~~~~bb~~~~~p..GG..#",
+    "#..~~~~~~bb~~~~~p..FF..#",
+    "#..~~~~~~bb~~~~~p..FF..#",
     "#..~~~~~~bb~~~~~p......#",
     "#..~~~~~~bb~~~~~pppp...#",
     "#..~~~~~~bb~~~~~p......#",
-    "#..~~~~~~bb~~~~~p..GG..#",
-    "#..~~~~~~bb~~~~~p..GG..#",
+    "#..~~~~~~bb~~~~~p..uu..#",
+    "#..~~~~~~bb~~~~~p..uu..#",
     "#..~~~~~~bb~~~~~p......#",
     "#..~~~~~~bb~~~~~pppp...#",
     "#..~~~~~~bb~~~~~p......#",
@@ -541,14 +550,468 @@ MAP_CINNABAR_ISLAND = [
     "#..p......pppp........p..#",
     "#..pppppppppppppppppppp..#",
     "#..p......pppp........p..#",
-    "#..p..GGGGpppp..GGGG..p..#",
-    "#..p..GGGGpppp..GGGG..p..#",
+    "#..p..aaaapppp..rrrr..p..#",
+    "#..p..aaaapppp..rrrr..p..#",
     "#..p..o...pppp...o....p..#",
     "#..pppppppppppppppppppp..#",
     "#..ssssssssssssssssssss..#",
     "#..ssssssssssssssssssss..#",
     "##########################",
 ]
+
+MAP_ROUTE_5 = [
+    "##########....############",
+    "#.........pppp...........#",
+    "#..GGGG...pppp...FFFF....#",
+    "#..GGGG...pppp...FFFF....#",
+    "#..LLLL...pppp...LLLL....#",
+    "#.........pppp...........#",
+    "#..ffff...pppp...ffff....#",
+    "#..S......pppp...........#",
+    "#..FFFF...pppp...GGGG....#",
+    "#..FFFF...pppp...GGGG....#",
+    "#.........pppp...........#",
+    "#..LLLL...pppp...FFFF....#",
+    "#..LLLL...pppp...FFFF....#",
+    "#.........pppp...........#",
+    "#..ffff...pppp...ffff....#",
+    "#.........pppp...........#",
+    "#..GGGG...pppp...LLLL....#",
+    "#..GGGG...pppp...LLLL....#",
+    "#.........pppp...........#",
+    "#..ffff...pppp...........#",
+    "#..o......pppp...GGGG....#",
+    "#..FFFF...pppp...LLLL....#",
+    "#.........pppp...........#",
+    "##########....############",
+]
+
+MAP_ROUTE_6 = [
+    "##########....############",
+    "#.........pppp...........#",
+    "#..GGGG...pppp...GGGG....#",
+    "#..GGGG...pppp...GGGG....#",
+    "#.........pppp...........#",
+    "#..~~~~~~~bbbb~~~~~~~~...#",
+    "#..~~~~~~~bbbb~~~~~~~~...#",
+    "#..~~~~~~~bbbb~~~~~~~~...#",
+    "#.........pppp...........#",
+    "#..uuuu...pppp...uuuu....#",
+    "#..uuuu...pppp...uuuu....#",
+    "#..S......pppp...........#",
+    "#..GGGG...pppp...GGGG....#",
+    "#..GGGG...pppp...GGGG....#",
+    "#.........pppp...........#",
+    "#..ffff...pppp...ffff....#",
+    "#.........pppp...........#",
+    "#..LLLL...pppp...LLLL....#",
+    "#..LLLL...pppp...LLLL....#",
+    "#.........pppp...o.......#",
+    "#..GGGG...pppp...GGGG....#",
+    "#..GGGG...pppp...GGGG....#",
+    "#.........pppp...........#",
+    "##########....############",
+]
+
+MAP_VERMILION_CITY = [
+    "############....################",
+    "#...........pppp...............#",
+    "#..RRRR.....pppp.....BBBB......#",
+    "#..RRRR.....pppp.....BBBB......#",
+    "#..WWWD.....pppp.....WWWD......#",
+    "#...........pppp...............#",
+    "#..S........pppp.....S.........#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........pppp............p..#",
+    "#..p..WWWW..pppp..WWWW......p..#",
+    "#..p..WWWW..pppp..WWWW......p..#",
+    "#..p..WWWD..pppp..WWWD......pppp",
+    "#..p........pppp............pppp",
+    "#..ppppppppppppppppppppppppppppp",
+    "#..p........pppp............pppp",
+    "#..p..FFFF..pppp..FFFF......p..#",
+    "#..p..FFFF..pppp..FFFF......p..#",
+    "#..p..o.....pppp...o........p..#",
+    "#..sssssssssbbbbsssssssssssss..#",
+    "#..~~~~~~~~~bbbb~~~~~~~~~~~~~..#",
+    "#..~~~~~~~~~bbbb~~~~~~~~~~~~~..#",
+    "#..~~~~~~~~~bbbb~~~~~~~~~~~~~..#",
+    "#..~~~~~~~~~bbbb~~~~~~~~~~~~~..#",
+    "############....################",
+]
+
+MAP_VERMILION_GYM = [
+    "############",
+    "#Y...ee...Y#",
+    "#Y...ee...Y#",
+    "#....JJ....#",
+    "#....JJ....#",
+    "#..ee..ee..#",
+    "#....JJ....#",
+    "#....JJ....#",
+    "#.....D....#",
+    "############",
+]
+
+MAP_SS_ANNE = [
+    "############################",
+    "#~~bbbbbbbbbbbbbbbbbbbbbb~~#",
+    "#~~bWWWWWWWWWWWWWWWWWWWWb~~#",
+    "#~~bW..D....D....D....DWb~~#",
+    "#~~bW..................Wb~~#",
+    "#~~bWWWWWWWWWWWWWWWWWWWWb~~#",
+    "#~~bbbbbbbbbbbbbbbbbbbbbb~~#",
+    "#~~b.._...._...._...._..b~~#",
+    "#~~b.._...._...._...._..b~~#",
+    "#~~bbbbbbbbbbbbbbbbbbbbbb~~#",
+    "#~~b...o............o...b~~#",
+    "#~~bbbbbbbbbbbbbbbbbbbbbb~~#",
+    "#~~b~~~~~~~~~~~~~~~~~~~~b~~#",
+    "#~~bbbbbbbbbbbbbbbbbbbbbb~~#",
+    "#..........bbbb............#",
+    "#..........bbbb............#",
+    "#..........bbbb............#",
+    "#..........bbbb............#",
+    "#..........bbbb............#",
+    "###########....#############",
+]
+
+MAP_ROUTE_11 = [
+    "################################",
+    "#..............................#",
+    "#..ffff..ffff..ffff..ffff..ff..#",
+    "#..GGGG..GGGG..GGGG..GGGG..GG..#",
+    "#..GGGG..GGGG..GGGG..GGGG..GG..#",
+    "#..LLLL..LLLL..LLLL..LLLL..LL..#",
+    "#..............................#",
+    "#..S...................O...S...#",
+    "pppppppppppppppppppppppppppppppp",
+    "pppppppppppppppppppppppppppppppp",
+    "pppppppppppppppppppppppppppppppp",
+    "pppppppppppppppppppppppppppppppp",
+    "#..............................#",
+    "#..GGGG..GGGG..GGGG..GGGG..GG..#",
+    "#..GGGG..GGGG..GGGG..GGGG..GG..#",
+    "#..o.....FFFF..o.....FFFF..o...#",
+    "#..FFFF..FFFF..FFFF..FFFF..FF..#",
+    "################################",
+]
+
+MAP_DIGLETTS_CAVE = [
+    "^^^^^^^^^^^^....^^^^^^^^",
+    "^...........____.......^",
+    "^..^^^^^^...____..^^^^^^",
+    "^..^rrrr^...____..^rrrr^",
+    "^..^rrrr^...____..^rrrr^",
+    "^...........____.......^",
+    "^..^^^^^^...____..^^^^^^",
+    "^..^rrrr^...____..^rrrr^",
+    "^..^rrrr^...____..^rrrr^",
+    "^...........____.......^",
+    "^..^^^^^^...____..^^^^^^",
+    "^..^rrrr^...____..^rrrr^",
+    "^..^rrrr^...____..^rrrr^",
+    "^...........____.......^",
+    "^..^^^^^^...____..^^^^^^",
+    "^..^rrrr^...____..^rrrr^",
+    "^..^rrrr^...____..^rrrr^",
+    "^...........____.......^",
+    "^..^^^^^^...____..^^^^^^",
+    "^..^rrrr^...____..^rrrr^",
+    "^..^rrrr^...____..^rrrr^",
+    "^..o........____...o...^",
+    "^...........____.......^",
+    "^^^^^^^^^^^^....^^^^^^^^",
+]
+
+MAP_ROUTE_7 = [
+    "########################",
+    "#......................#",
+    "#..GGGG..GGGG..GGGG....#",
+    "#..GGGG..GGGG..GGGG....#",
+    "#..LLLL..LLLL..LLLL....#",
+    "#......................#",
+    "#..ffff..ffff..ffff....#",
+    "pppppppppppppppppppppppp",
+    "pppppppppppppppppppppppp",
+    "pppppppppppppppppppppppp",
+    "#..S................S..#",
+    "#..FFFF..FFFF..FFFF....#",
+    "#..FFFF..FFFF..FFFF....#",
+    "#..o.....LLLL...o......#",
+    "#......................#",
+    "########################",
+]
+
+MAP_ROUTE_8 = [
+    "################################",
+    "#..............................#",
+    "#..GGGG..GGGG..GGGG..GGGG..GG..#",
+    "#..GGGG..GGGG..GGGG..GGGG..GG..#",
+    "#..LLLL..LLLL..LLLL..LLLL..LL..#",
+    "#..............................#",
+    "#..ffff..ffff..ffff..ffff..ff..#",
+    "pppppppppppppppppppppppppppppppp",
+    "pppppppppppppppppppppppppppppppp",
+    "pppppppppppppppppppppppppppppppp",
+    "pppppppppppppppppppppppppppppppp",
+    "#..S.......................S...#",
+    "#..FFFF..FFFF..FFFF..FFFF..FF..#",
+    "#..FFFF..FFFF..FFFF..FFFF..FF..#",
+    "#..o.....LLLL..o.....LLLL..o...#",
+    "################################",
+]
+
+MAP_CELADON_CITY = [
+    "################################",
+    "#..............................#",
+    "#..RRRR.....WWWWWWWW.....BBBB..#",
+    "#..RRRR.....WWWWWWWD.....BBBB..#",
+    "#..WWWD.....WWWWWWWW.....WWWD..#",
+    "#...........pppppppp...........#",
+    "#..S........pppppppp.....S.....#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p........pppppppp........p..#",
+    "#..p..WWWW..pppppppp..WWWW..p..#",
+    "#..p..WWWW..pppppppp..WWWW..pppp",
+    "#..p..WWWD..pppppppp..WWWD..pppp",
+    "#..p........pppppppp........pppp",
+    "#..ppppppppppppppppppppppppppppp",
+    "#..p........pppppppp........p..#",
+    "#..p..FFFF..pppppppp..FFFF..p..#",
+    "#..p..FFFF..pppppppp..FFFF..p..#",
+    "#..p..WWWW..pppppppp..WWWW..p..#",
+    "#..p..WWWD..pppppppp..WWWD..p..#",
+    "#..p..o.....pppppppp...o....p..#",
+    "#..p..~~~~~~bbbbbbbb~~~~~~..p..#",
+    "#..p..~~~~~~bbbbbbbb~~~~~~..p..#",
+    "#..............................#",
+    "################################",
+]
+
+MAP_CELADON_GYM = [
+    "############",
+    "#Y...FF...Y#",
+    "#Y...FF...Y#",
+    "#....JJ....#",
+    "#....JJ....#",
+    "#..**..**..#",
+    "#....JJ....#",
+    "#....JJ....#",
+    "#.....D....#",
+    "############",
+]
+
+MAP_SAFFRON_CITY = [
+    "##############....##############",
+    "#.............pppp.............#",
+    "#..RRRR.......pppp.......BBBB..#",
+    "#..RRRR.......pppp.......BBBB..#",
+    "#..WWWD.......pppp.......WWWD..#",
+    "#.............pppp.............#",
+    "#..S..........pppp.......S.....#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p..........pppp..........p..#",
+    "#..p..WWWW....pppp....WWWW..p..#",
+    "#..p..WWWW....pppp....WWWW..p..#",
+    "#..p..WWWD....pppp....WWWD..p..#",
+    "#..p..........pppp..........p..#",
+    "#..p..WWWWWWWWWWWWWWWWWWWW..p..#",
+    "pppp..WWWWWWWWWWWWWWWWWWWW..pppp",
+    "pppp..WWWWWWWWWWWDWWWWWWWW..pppp",
+    "pppp..WWWWWWWWWWWWWWWWWWWW..pppp",
+    "pppp..........pppp..........pppp",
+    "#..p..........pppp..........p..#",
+    "#..p..WWWW....pppp....WWWW..p..#",
+    "#..p..WWWW....pppp....WWWW..p..#",
+    "#..p..WWWD....pppp....WWWD..p..#",
+    "#..p..........pppp..........p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#..p..........pppp..........p..#",
+    "#..p..FFFF....pppp....FFFF..p..#",
+    "#..p..FFFF....pppp....FFFF..p..#",
+    "#..p..o.......pppp.....o....p..#",
+    "#..pppppppppppppppppppppppppp..#",
+    "#.............pppp.............#",
+    "#.............pppp.............#",
+    "##############....##############",
+]
+
+MAP_SAFFRON_GYM = [
+    "##############",
+    "#Y....mm....Y#",
+    "#Y....mm....Y#",
+    "#.....JJ.....#",
+    "#.....JJ.....#",
+    "#..mm....mm..#",
+    "#..mm....mm..#",
+    "#.....JJ.....#",
+    "#.....JJ.....#",
+    "#.....JJ.....#",
+    "#......D.....#",
+    "##############",
+]
+
+MAP_ROUTE_12 = [
+    "########....########",
+    "#.......bbbb.......#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~ssssbbssss~~..#",
+    "#..~~ssoobbooss~~..#",
+    "#..~~ssssbbssss~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~ssssbbssss~~..#",
+    "#..~~ssFFbbFFss~~..#",
+    "#..~~ssssbbssss~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..~~~~~bbbb~~~~~..#",
+    "#..sssssbbbbsssss..#",
+    "#.......bbbb.......#",
+    "########....########",
+]
+
+MAP_FUCHSIA_CITY = [
+    "####....################....####",
+    "#...pppp................pppp...#",
+    "#...pppp..RRRR....BBBB..pppp...#",
+    "#...pppp..RRRR....BBBB..pppp...#",
+    "#...pppp..WWWD....WWWD..pppp...#",
+    "#...pppp................pppp...#",
+    "#...pppp..S..........S..pppp...#",
+    "#...pppppppppppppppppppppppp...#",
+    "#...pppp................pppp...#",
+    "#...pppp..WWWW....WWWW..pppp...#",
+    "#...pppp..WWWW....WWWW..pppp...#",
+    "#...pppp..WWWD....WWWD..pppp...#",
+    "#...pppp................pppp...#",
+    "#...pppppppppppppppppppppppp...#",
+    "#...pppp................pppp...#",
+    "#...pppp..mmmm....mmmm..pppp...#",
+    "#...pppp..mmmm....mmmm..pppp...#",
+    "#...pppp..WWWD....WWWD..pppp...#",
+    "#...pppp..o..........o..pppp...#",
+    "#...pppppppppppppppppppppppp...#",
+    "#...ssssssssssssssssssssssss...#",
+    "#...~~~~~~~~~~~~~~~~~~~~~~~~...#",
+    "#..............................#",
+    "################################",
+]
+
+MAP_FUCHSIA_GYM = [
+    "############",
+    "#Y...mm...Y#",
+    "#Y...mm...Y#",
+    "#....JJ....#",
+    "#....JJ....#",
+    "#..mm..mm..#",
+    "#....JJ....#",
+    "#....JJ....#",
+    "#.....D....#",
+    "############",
+]
+
+MAP_VICTORY_ROAD = [
+    "^^^^^^^^^^^^^^....^^^^^^^^^^^^^^",
+    "^.............____.............^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^..^rrrrrrr^..____..^xxxxxxx^..^",
+    "^..^rrrrrrr^..____..^xxxxxxx^..^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^.............____.............^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^..^aaaaaaa^..____..^mmmmmmm^..^",
+    "^..^aaaaaaa^..____..^mmmmmmm^..^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^.............____.............^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^..^eeeeeee^..____..^rrrrrrr^..^",
+    "^..^eeeeeee^..____..^rrrrrrr^..^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^.............____.............^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^..^xxxxxxx^..____..^aaaaaaa^..^",
+    "^..^xxxxxxx^..____..^aaaaaaa^..^",
+    "^..^^^^^^^^^..____..^^^^^^^^^..^",
+    "^.............____.............^",
+    "^..o..........____..........o..^",
+    "^.............____.............^",
+    "^.............____.............^",
+    "^^^^^^^^^^^^^^....^^^^^^^^^^^^^^",
+]
+
+MAP_INDIGO_PLATEAU = [
+    "############################",
+    "#K..YYYYYYYY....YYYYYYYY..K#",
+    "#K..Y......Y....Y......Y..K#",
+    "#...Y......Y....Y......Y...#",
+    "#...YYYYYYYY....YYYYYYYY...#",
+    "#..........................#",
+    "#............JJ............#",
+    "#............JJ............#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...........pppp...........#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...........pppp...........#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...........pppp...........#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...YYYY....pppp....YYYY...#",
+    "#...........pppp...........#",
+    "#.._.....P..pppp..P....._..#",
+    "#...........pppp...........#",
+    "#...........pppp...........#",
+    "############....############",
+]
+
+MAP_CERULEAN_CAVE = [
+    "^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "^..^^^^^^^^^^^^^^^^^^^^..^",
+    "^..^eeeeeeee..eeeeeeee^..^",
+    "^..^eeeeeeee..eeeeeeee^..^",
+    "^..^..................^..^",
+    "^..^..^^^^^^^^^^^^^^..^..^",
+    "^..^..^mmmmmmmmmmmm^..^..^",
+    "^..^..^mmmmmmmmmmmm^..^..^",
+    "^..^..^^^^^^^^^^^^^^..^..^",
+    "^..^..................^..^",
+    "^..^..^^^^^^^^^^^^^^..^..^",
+    "^..^..^xxxxxxxxxxxx^..^..^",
+    "^..^..^xxxxxxxxxxxx^..^..^",
+    "^..^..^^^^^^^^^^^^^^..^..^",
+    "^..^..................^..^",
+    "^..^..^^^^^^^^^^^^^^..^..^",
+    "^..^..^aaaaaaaaaaaa^..^..^",
+    "^..^..^aaaaaaaaaaaa^..^..^",
+    "^..^..^^^^^^^^^^^^^^..^..^",
+    "^..^..o............o..^..^",
+    "^........................^",
+    "^^^^^^^^^^^^....^^^^^^^^^^",
+]
+
 
 MAP_POKECENTER = [
     "############",
@@ -659,7 +1122,8 @@ MAP_DEFINITIONS = {
             (10, 17): {"target_map": "Route 21", "target_x": 10, "target_y": 1}
         },
         "npcs": [
-            {"name": "Town Elder", "x": 5, "y": 7, "dir": Direction.DOWN, "dialog": "Welcome to Pallet Town! Take the path North to explore Route 1, or visit Prof. Oak's Lab!"}
+            {"name": "Town Elder", "x": 5, "y": 7, "dir": Direction.DOWN, "dialog": "Welcome to Pallet Town! Take the path North to explore Route 1, or visit Prof. Oak's Lab!"},
+            {"name": "Prof. Oak's Aide", "x": 14, "y": 7, "dir": Direction.DOWN, "quest_id": "oak_bug_hunt", "dialog": "Hello trainer! Prof. Oak needs field data on wild insects. Can you catch 3 Bug-type Pokémon for our research? (Reward: $1000, 5x Great Ball, 1x Rare Candy)"}
         ],
         "signs": {
             (3, 10): "Pallet Town - Shades of your journey await!",
@@ -684,6 +1148,9 @@ MAP_DEFINITIONS = {
             (11, 0): {"target_map": "Viridian City", "target_x": 15, "target_y": 22}
         },
         "trainers": ["youngster_joey", "bug_catcher_sammy"],
+        "npcs": [
+            {"name": "Bird Watcher", "x": 14, "y": 14, "dir": Direction.LEFT, "quest_id": "bird_watcher_avian", "dialog": "I study avian Pokémon aerial maneuvers! Defeat 3 Flying-type Pokémon in battle to test your battle skills! (Reward: $1200, 3x Super Potion, 1x Rare Candy)"}
+        ],
         "signs": {
             (3, 7): "Route 1 - Connecting Pallet Town and Viridian City."
         },
@@ -724,9 +1191,13 @@ MAP_DEFINITIONS = {
         "warps": {
             (27, 8): {"target_map": "Viridian City", "target_x": 1, "target_y": 11},
             (27, 9): {"target_map": "Viridian City", "target_x": 1, "target_y": 12},
-            (27, 10): {"target_map": "Viridian City", "target_x": 1, "target_y": 13}
+            (27, 10): {"target_map": "Viridian City", "target_x": 1, "target_y": 13},
+            (9, 7): {"target_map": "Victory Road", "target_x": 15, "target_y": 24}
         },
         "trainers": ["rival_blue", "hiker_franklin"],
+        "npcs": [
+            {"name": "Veteran Ace Trainer", "x": 14, "y": 8, "dir": Direction.DOWN, "quest_id": "champion_road_trial", "dialog": "On the road to the Pokémon League, only the strongest survive! Defeat 5 Trainer opponents in battle! (Reward: $6000, 5x Rare Candy, 2x Nugget)"}
+        ],
         "signs": {
             (6, 8): "Route 22 - Indigo Plateau Pokémon League Front Gate."
         },
@@ -779,7 +1250,8 @@ MAP_DEFINITIONS = {
             (31, 14): {"target_map": "Route 3", "target_x": 1, "target_y": 13}
         },
         "npcs": [
-            {"name": "Museum Guide", "x": 20, "y": 15, "dir": Direction.LEFT, "dialog": "Welcome to Pewter City! Check out the Museum of Science, or challenge Leader Brock at the Gym!"}
+            {"name": "Museum Guide", "x": 20, "y": 15, "dir": Direction.LEFT, "dialog": "Welcome to Pewter City! Check out the Museum of Science, or challenge Leader Brock at the Gym!"},
+            {"name": "Fossil Maniac", "x": 16, "y": 12, "dir": Direction.DOWN, "quest_id": "fossil_moon_mystery", "dialog": "Mt. Moon holds ancient lunar secrets! Catch 2 mountain Pokémon (Clefairy, Geodude, Onix, Paras, or Zubat). (Reward: $2500, Moon Stone, Nugget)"}
         ],
         "signs": {
             (3, 6): "Pewter City - A Stone Gray City",
@@ -857,10 +1329,15 @@ MAP_DEFINITIONS = {
             (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
             (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
             (9, 11): {"target_map": "Cerulean Gym", "target_x": 6, "target_y": 8},
+            (4, 0): {"target_map": "Cerulean Cave", "target_x": 12, "target_y": 20},
             (12, 0): {"target_map": "Route 24", "target_x": 9, "target_y": 26},
             (13, 0): {"target_map": "Route 24", "target_x": 9, "target_y": 26},
             (14, 0): {"target_map": "Route 24", "target_x": 10, "target_y": 26},
             (15, 0): {"target_map": "Route 24", "target_x": 10, "target_y": 26},
+            (12, 23): {"target_map": "Route 5", "target_x": 12, "target_y": 1},
+            (13, 23): {"target_map": "Route 5", "target_x": 13, "target_y": 1},
+            (14, 23): {"target_map": "Route 5", "target_x": 14, "target_y": 1},
+            (15, 23): {"target_map": "Route 5", "target_x": 15, "target_y": 1},
             (31, 11): {"target_map": "Route 9", "target_x": 1, "target_y": 8},
             (31, 12): {"target_map": "Route 9", "target_x": 1, "target_y": 9},
             (31, 13): {"target_map": "Route 9", "target_x": 1, "target_y": 10}
@@ -883,9 +1360,9 @@ MAP_DEFINITIONS = {
             (0, 8): {"target_map": "Cerulean City", "target_x": 30, "target_y": 11},
             (0, 9): {"target_map": "Cerulean City", "target_x": 30, "target_y": 12},
             (0, 10): {"target_map": "Cerulean City", "target_x": 30, "target_y": 13},
-            (31, 8): {"target_map": "Lavender Town", "target_x": 1, "target_y": 11},
-            (31, 9): {"target_map": "Lavender Town", "target_x": 1, "target_y": 12},
-            (31, 10): {"target_map": "Lavender Town", "target_x": 1, "target_y": 13},
+            (31, 8): {"target_map": "Lavender Town", "target_x": 13, "target_y": 1},
+            (31, 9): {"target_map": "Lavender Town", "target_x": 14, "target_y": 1},
+            (31, 10): {"target_map": "Lavender Town", "target_x": 14, "target_y": 1},
             (18, 0): {"target_map": "Power Plant", "target_x": 13, "target_y": 20}
         },
         "trainers": ["camper_drew", "picnicker_alicia", "hiker_alan"],
@@ -902,16 +1379,20 @@ MAP_DEFINITIONS = {
         "bgm": "town",
         "encounter_zone": "Lavender Town",
         "warps": {
-            (0, 11): {"target_map": "Route 9", "target_x": 30, "target_y": 8},
-            (0, 12): {"target_map": "Route 9", "target_x": 30, "target_y": 9},
-            (0, 13): {"target_map": "Route 9", "target_x": 30, "target_y": 10},
+            (12, 0): {"target_map": "Route 9", "target_x": 30, "target_y": 8},
+            (13, 0): {"target_map": "Route 9", "target_x": 30, "target_y": 9},
+            (14, 0): {"target_map": "Route 9", "target_x": 30, "target_y": 9},
+            (15, 0): {"target_map": "Route 9", "target_x": 30, "target_y": 10},
+            (0, 11): {"target_map": "Route 8", "target_x": 30, "target_y": 8},
+            (0, 12): {"target_map": "Route 8", "target_x": 30, "target_y": 9},
+            (0, 13): {"target_map": "Route 8", "target_x": 30, "target_y": 10},
             (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
             (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
             (9, 10): {"target_map": "Pokémon Tower", "target_x": 13, "target_y": 20},
-            (12, 23): {"target_map": "Safari Zone", "target_x": 14, "target_y": 1},
-            (13, 23): {"target_map": "Safari Zone", "target_x": 15, "target_y": 1},
-            (14, 23): {"target_map": "Safari Zone", "target_x": 16, "target_y": 1},
-            (15, 23): {"target_map": "Safari Zone", "target_x": 17, "target_y": 1}
+            (12, 23): {"target_map": "Route 12", "target_x": 9, "target_y": 1},
+            (13, 23): {"target_map": "Route 12", "target_x": 10, "target_y": 1},
+            (14, 23): {"target_map": "Route 12", "target_x": 10, "target_y": 1},
+            (15, 23): {"target_map": "Route 12", "target_x": 11, "target_y": 1}
         },
         "npcs": [
             {"name": "Town Elder", "x": 16, "y": 8, "dir": Direction.DOWN, "dialog": "This is Lavender Town. Many trainers come here to pay their respects at Pokémon Tower."}
@@ -1065,6 +1546,7 @@ MAP_DEFINITIONS = {
         },
         "npcs": [
             {"name": "Nurse Joy", "x": 5, "y": 3, "dir": Direction.DOWN, "dialog": "Welcome to our Pokémon Center! We heal your Pokémon back to full health!", "is_healer": True},
+            {"name": "Move Master", "x": 2, "y": 5, "dir": Direction.RIGHT, "dialog": "I am the Move Master! For 3,000 coins, I can teach your Pokémon powerful new techniques or reroll their moveset!", "is_move_tutor": True},
             {"name": "PC Storage Terminal", "x": 8, "y": 5, "dir": Direction.DOWN, "dialog": "Booting up Pokémon Storage System...", "is_pc": True}
         ]
     },
@@ -1134,6 +1616,387 @@ MAP_DEFINITIONS = {
         "npcs": [
             {"name": "Museum Scientist", "x": 6, "y": 3, "dir": Direction.DOWN, "dialog": "We have authentic Moon Stone meteorites and ancient Aerodactyl fossils on display!"}
         ]
+    },
+    "Route 5": {
+        "grid": MAP_ROUTE_5,
+        "bgm": "town",
+        "encounter_zone": "Route 5",
+        "warps": {
+            (12, 0): {"target_map": "Cerulean City", "target_x": 12, "target_y": 22},
+            (13, 0): {"target_map": "Cerulean City", "target_x": 13, "target_y": 22},
+            (14, 0): {"target_map": "Cerulean City", "target_x": 14, "target_y": 22},
+            (15, 0): {"target_map": "Cerulean City", "target_x": 15, "target_y": 22},
+            (12, 23): {"target_map": "Saffron City", "target_x": 14, "target_y": 1},
+            (13, 23): {"target_map": "Saffron City", "target_x": 15, "target_y": 1},
+            (14, 23): {"target_map": "Saffron City", "target_x": 16, "target_y": 1},
+            (15, 23): {"target_map": "Saffron City", "target_x": 17, "target_y": 1}
+        },
+        "signs": {
+            (3, 7): "Route 5 - North to Cerulean City, South to Saffron City & Underground Path."
+        },
+        "ground_items": [
+            {"id": "route5_superpotion", "x": 3, "y": 20, "item": "Super Potion", "count": 2}
+        ]
+    },
+    "Route 6": {
+        "grid": MAP_ROUTE_6,
+        "bgm": "town",
+        "encounter_zone": "Route 6",
+        "warps": {
+            (12, 0): {"target_map": "Saffron City", "target_x": 14, "target_y": 30},
+            (13, 0): {"target_map": "Saffron City", "target_x": 15, "target_y": 30},
+            (14, 0): {"target_map": "Saffron City", "target_x": 16, "target_y": 30},
+            (15, 0): {"target_map": "Saffron City", "target_x": 17, "target_y": 30},
+            (12, 23): {"target_map": "Vermilion City", "target_x": 14, "target_y": 1},
+            (13, 23): {"target_map": "Vermilion City", "target_x": 15, "target_y": 1},
+            (14, 23): {"target_map": "Vermilion City", "target_x": 16, "target_y": 1},
+            (15, 23): {"target_map": "Vermilion City", "target_x": 17, "target_y": 1}
+        },
+        "trainers": ["camper_jeff"],
+        "signs": {
+            (3, 11): "Route 6 - North to Saffron City, South to Vermilion Port."
+        },
+        "ground_items": [
+            {"id": "route6_greatball", "x": 17, "y": 19, "item": "Great Ball", "count": 3}
+        ]
+    },
+    "Vermilion City": {
+        "grid": MAP_VERMILION_CITY,
+        "bgm": "town",
+        "encounter_zone": "Vermilion City",
+        "warps": {
+            (14, 0): {"target_map": "Route 6", "target_x": 14, "target_y": 22},
+            (15, 0): {"target_map": "Route 6", "target_x": 15, "target_y": 22},
+            (16, 0): {"target_map": "Route 6", "target_x": 16, "target_y": 22},
+            (17, 0): {"target_map": "Route 6", "target_x": 17, "target_y": 22},
+            (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
+            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (9, 11): {"target_map": "Vermilion Gym", "target_x": 6, "target_y": 8},
+            (14, 23): {"target_map": "S.S. Anne", "target_x": 14, "target_y": 18},
+            (15, 23): {"target_map": "S.S. Anne", "target_x": 15, "target_y": 18},
+            (31, 11): {"target_map": "Route 11", "target_x": 1, "target_y": 9},
+            (31, 12): {"target_map": "Route 11", "target_x": 1, "target_y": 9},
+            (31, 13): {"target_map": "Route 11", "target_x": 1, "target_y": 10},
+            (31, 14): {"target_map": "Route 11", "target_x": 1, "target_y": 10}
+        },
+        "trainers": ["sailor_eddie"],
+        "npcs": [
+            {"name": "Fishing Guru", "x": 18, "y": 9, "dir": Direction.DOWN, "dialog": "I love fishing in the sea! Cast your lines off the pier or board the luxury cruise liner S.S. Anne!"},
+            {"name": "Electrician Sparky", "x": 12, "y": 9, "dir": Direction.RIGHT, "quest_id": "sparky_electric_charge", "dialog": "Zzzzt! Our generators need electric charge samples! Catch a Pikachu, Voltorb, Magnemite, or Electabuzz! (Reward: $2000, Thunder Stone, 3x Ultra Ball)"},
+            {"name": "Old Fisherman Barny", "x": 22, "y": 15, "dir": Direction.DOWN, "quest_id": "sea_fisherman_harvest", "dialog": "The ocean tides bring great bounties! Catch 3 Water-type Pokémon from rivers or seas! (Reward: $2200, Water Stone, 4x Great Ball)"}
+        ],
+        "signs": {
+            (3, 6): "Vermilion City - The Port of Exquisite Sunsets",
+            (24, 6): "Vermilion PokéMart",
+            (6, 12): "Vermilion Gym - Leader: Lt. Surge (The Lightning American!)",
+            (24, 12): "S.S. Anne Harbor Pier - Luxury World Cruise"
+        },
+        "ground_items": [
+            {"id": "vermilion_thunderstone", "x": 6, "y": 17, "item": "Thunder Stone", "count": 1},
+            {"id": "vermilion_superpotion", "x": 18, "y": 17, "item": "Super Potion", "count": 2}
+        ]
+    },
+    "Vermilion Gym": {
+        "grid": MAP_VERMILION_GYM,
+        "bgm": "town",
+        "warps": {
+            (6, 8): {"target_map": "Vermilion City", "target_x": 9, "target_y": 12}
+        },
+        "trainers": ["rocker_gene", "gym_leader_surge"]
+    },
+    "S.S. Anne": {
+        "grid": MAP_SS_ANNE,
+        "bgm": "town",
+        "warps": {
+            (14, 19): {"target_map": "Vermilion City", "target_x": 14, "target_y": 22},
+            (15, 19): {"target_map": "Vermilion City", "target_x": 15, "target_y": 22}
+        },
+        "trainers": ["sailor_dwayne", "gentleman_thomas"],
+        "npcs": [
+            {"name": "Captain", "x": 14, "y": 4, "dir": Direction.DOWN, "dialog": "Ahoy matey! Welcome to the Captain's Bridge! Here, take good care of your Pokémon during our voyage!"}
+        ],
+        "ground_items": [
+            {"id": "ssanne_nugget", "x": 6, "y": 10, "item": "Nugget", "count": 1},
+            {"id": "ssanne_candy", "x": 20, "y": 10, "item": "Rare Candy", "count": 1}
+        ]
+    },
+    "Route 11": {
+        "grid": MAP_ROUTE_11,
+        "bgm": "town",
+        "encounter_zone": "Route 11",
+        "warps": {
+            (0, 8): {"target_map": "Vermilion City", "target_x": 30, "target_y": 12},
+            (0, 9): {"target_map": "Vermilion City", "target_x": 30, "target_y": 12},
+            (0, 10): {"target_map": "Vermilion City", "target_x": 30, "target_y": 13},
+            (0, 11): {"target_map": "Vermilion City", "target_x": 30, "target_y": 13},
+            (23, 7): {"target_map": "Diglett's Cave", "target_x": 12, "target_y": 22},
+            (31, 8): {"target_map": "Route 12", "target_x": 9, "target_y": 10},
+            (31, 9): {"target_map": "Route 12", "target_x": 10, "target_y": 10},
+            (31, 10): {"target_map": "Route 12", "target_x": 10, "target_y": 11},
+            (31, 11): {"target_map": "Route 12", "target_x": 11, "target_y": 11}
+        },
+        "trainers": ["engineer_bernie"],
+        "signs": {
+            (3, 7): "Route 11 - Connecting Vermilion City and Silence Bridge.",
+            (27, 7): "Diglett's Cave Entrance - Subterranean Tunnel Pass"
+        },
+        "ground_items": [
+            {"id": "route11_ultraball", "x": 3, "y": 15, "item": "Ultra Ball", "count": 3},
+            {"id": "route11_candy", "x": 14, "y": 15, "item": "Rare Candy", "count": 1}
+        ]
+    },
+    "Diglett's Cave": {
+        "grid": MAP_DIGLETTS_CAVE,
+        "bgm": "town",
+        "encounter_zone": "Diglett's Cave",
+        "warps": {
+            (12, 23): {"target_map": "Route 11", "target_x": 23, "target_y": 8},
+            (13, 23): {"target_map": "Route 11", "target_x": 23, "target_y": 8},
+            (12, 0): {"target_map": "Viridian City", "target_x": 6, "target_y": 18},
+            (13, 0): {"target_map": "Viridian City", "target_x": 7, "target_y": 18}
+        },
+        "signs": {
+            (12, 10): "Diglett's Cave - Underground Mountain Highway"
+        },
+        "ground_items": [
+            {"id": "diglett_nugget", "x": 3, "y": 21, "item": "Nugget", "count": 1},
+            {"id": "diglett_escaperope", "x": 19, "y": 21, "item": "Escape Rope", "count": 2}
+        ]
+    },
+    "Route 7": {
+        "grid": MAP_ROUTE_7,
+        "bgm": "town",
+        "encounter_zone": "Route 7",
+        "warps": {
+            (0, 7): {"target_map": "Celadon City", "target_x": 30, "target_y": 11},
+            (0, 8): {"target_map": "Celadon City", "target_x": 30, "target_y": 12},
+            (0, 9): {"target_map": "Celadon City", "target_x": 30, "target_y": 13},
+            (23, 7): {"target_map": "Saffron City", "target_x": 1, "target_y": 15},
+            (23, 8): {"target_map": "Saffron City", "target_x": 1, "target_y": 16},
+            (23, 9): {"target_map": "Saffron City", "target_x": 1, "target_y": 16}
+        },
+        "signs": {
+            (3, 10): "Route 7 - Connecting Saffron City and Celadon City.",
+            (20, 10): "Celadon City Ahead!"
+        },
+        "ground_items": [
+            {"id": "route7_firestone", "x": 3, "y": 13, "item": "Fire Stone", "count": 1}
+        ]
+    },
+    "Route 8": {
+        "grid": MAP_ROUTE_8,
+        "bgm": "town",
+        "encounter_zone": "Route 8",
+        "warps": {
+            (0, 7): {"target_map": "Saffron City", "target_x": 30, "target_y": 15},
+            (0, 8): {"target_map": "Saffron City", "target_x": 30, "target_y": 16},
+            (0, 9): {"target_map": "Saffron City", "target_x": 30, "target_y": 16},
+            (0, 10): {"target_map": "Saffron City", "target_x": 30, "target_y": 17},
+            (31, 7): {"target_map": "Lavender Town", "target_x": 1, "target_y": 11},
+            (31, 8): {"target_map": "Lavender Town", "target_x": 1, "target_y": 11},
+            (31, 9): {"target_map": "Lavender Town", "target_x": 1, "target_y": 12},
+            (31, 10): {"target_map": "Lavender Town", "target_x": 1, "target_y": 13}
+        },
+        "trainers": ["gambler_rich", "super_nerd_glenn"],
+        "signs": {
+            (3, 11): "Route 8 - Connecting Saffron City and Lavender Town.",
+            (27, 11): "Lavender Town East Ahead!"
+        },
+        "ground_items": [
+            {"id": "route8_maxpotion", "x": 3, "y": 14, "item": "Max Potion", "count": 1},
+            {"id": "route8_candy", "x": 15, "y": 14, "item": "Rare Candy", "count": 1}
+        ]
+    },
+    "Celadon City": {
+        "grid": MAP_CELADON_CITY,
+        "bgm": "town",
+        "warps": {
+            (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
+            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (10, 18): {"target_map": "Celadon Gym", "target_x": 6, "target_y": 8},
+            (31, 10): {"target_map": "Route 7", "target_x": 1, "target_y": 8},
+            (31, 11): {"target_map": "Route 7", "target_x": 1, "target_y": 8},
+            (31, 12): {"target_map": "Route 7", "target_x": 1, "target_y": 9},
+            (31, 13): {"target_map": "Route 7", "target_x": 1, "target_y": 9}
+        },
+        "trainers": ["lass_kay"],
+        "npcs": [
+            {"name": "Game Corner Clerk", "x": 16, "y": 9, "dir": Direction.DOWN, "dialog": "Welcome to Celadon City! Visit our multi-floor Department Store or test your team at Erika's Botanical Gym!"},
+            {"name": "Stone Connoisseur", "x": 20, "y": 12, "dir": Direction.DOWN, "quest_id": "celadon_evolution_mastery", "dialog": "Evolution stones hold the essence of nature! Evolve any Pokémon using an Evolution Stone! (Reward: $3500, 3x Rare Candy, Nugget)"}
+        ],
+        "signs": {
+            (3, 6): "Celadon City - The City of Rainbow Dreams",
+            (24, 6): "Celadon Mega Department Store - All Evolution Stones & Battle Goods!",
+            (6, 18): "Celadon Gym - Leader: Erika (The Nature-Loving Princess!)"
+        },
+        "ground_items": [
+            {"id": "celadon_leafstone", "x": 6, "y": 19, "item": "Leaf Stone", "count": 1},
+            {"id": "celadon_waterstone", "x": 23, "y": 19, "item": "Water Stone", "count": 1}
+        ]
+    },
+    "Celadon Gym": {
+        "grid": MAP_CELADON_GYM,
+        "bgm": "town",
+        "warps": {
+            (6, 8): {"target_map": "Celadon City", "target_x": 10, "target_y": 19}
+        },
+        "trainers": ["beauty_tamia", "gym_leader_erika"]
+    },
+    "Saffron City": {
+        "grid": MAP_SAFFRON_CITY,
+        "bgm": "town",
+        "warps": {
+            (14, 0): {"target_map": "Route 5", "target_x": 13, "target_y": 22},
+            (15, 0): {"target_map": "Route 5", "target_x": 14, "target_y": 22},
+            (16, 0): {"target_map": "Route 5", "target_x": 15, "target_y": 22},
+            (17, 0): {"target_map": "Route 5", "target_x": 15, "target_y": 22},
+            (14, 31): {"target_map": "Route 6", "target_x": 13, "target_y": 1},
+            (15, 31): {"target_map": "Route 6", "target_x": 14, "target_y": 1},
+            (16, 31): {"target_map": "Route 6", "target_x": 15, "target_y": 1},
+            (17, 31): {"target_map": "Route 6", "target_x": 15, "target_y": 1},
+            (0, 14): {"target_map": "Route 7", "target_x": 22, "target_y": 8},
+            (0, 15): {"target_map": "Route 7", "target_x": 22, "target_y": 8},
+            (0, 16): {"target_map": "Route 7", "target_x": 22, "target_y": 9},
+            (0, 17): {"target_map": "Route 7", "target_x": 22, "target_y": 9},
+            (31, 14): {"target_map": "Route 8", "target_x": 1, "target_y": 8},
+            (31, 15): {"target_map": "Route 8", "target_x": 1, "target_y": 9},
+            (31, 16): {"target_map": "Route 8", "target_x": 1, "target_y": 9},
+            (31, 17): {"target_map": "Route 8", "target_x": 1, "target_y": 10},
+            (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
+            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (24, 21): {"target_map": "Saffron Gym", "target_x": 6, "target_y": 10}
+        },
+        "trainers": ["blackbelt_nob"],
+        "npcs": [
+            {"name": "Silph President", "x": 16, "y": 8, "dir": Direction.DOWN, "dialog": "Welcome to Saffron City, the beating heart of Kanto! Silph Co. produces Master Balls and high-tech items!"},
+            {"name": "Black Belt Kenji", "x": 12, "y": 21, "dir": Direction.DOWN, "quest_id": "karate_spirit", "dialog": "Hi-yah! True mastery comes through hard training! Defeat 4 Fighting or Rock-type Pokémon in battle! (Reward: $3000, Move Reroll Disk, 2x Max Potion)"}
+        ],
+        "signs": {
+            (3, 6): "Saffron City - Shining Golden Metropolis Crossroads",
+            (24, 6): "Saffron PokéMart",
+            (24, 23): "Saffron Gym - Leader: Sabrina (Master of Psychic Pokémon!)"
+        },
+        "ground_items": [
+            {"id": "saffron_ultraball", "x": 6, "y": 27, "item": "Ultra Ball", "count": 3},
+            {"id": "saffron_candy", "x": 24, "y": 27, "item": "Rare Candy", "count": 2}
+        ]
+    },
+    "Saffron Gym": {
+        "grid": MAP_SAFFRON_GYM,
+        "bgm": "town",
+        "warps": {
+            (6, 10): {"target_map": "Saffron City", "target_x": 24, "target_y": 22}
+        },
+        "trainers": ["psychic_johan", "gym_leader_sabrina"]
+    },
+    "Route 12": {
+        "grid": MAP_ROUTE_12,
+        "bgm": "town",
+        "encounter_zone": "Route 12",
+        "warps": {
+            (9, 0): {"target_map": "Lavender Town", "target_x": 13, "target_y": 22},
+            (10, 0): {"target_map": "Lavender Town", "target_x": 14, "target_y": 22},
+            (11, 0): {"target_map": "Lavender Town", "target_x": 15, "target_y": 22},
+            (9, 35): {"target_map": "Fuchsia City", "target_x": 28, "target_y": 1},
+            (10, 35): {"target_map": "Fuchsia City", "target_x": 29, "target_y": 1},
+            (11, 35): {"target_map": "Fuchsia City", "target_x": 30, "target_y": 1}
+        },
+        "trainers": ["bird_keeper_rod"],
+        "signs": {
+            (3, 33): "Route 12 - Silence Bridge. North to Lavender, South to Fuchsia City."
+        },
+        "ground_items": [
+            {"id": "route12_snorlax_candy", "x": 8, "y": 11, "item": "Rare Candy", "count": 2}
+        ]
+    },
+    "Fuchsia City": {
+        "grid": MAP_FUCHSIA_CITY,
+        "bgm": "town",
+        "warps": {
+            (28, 0): {"target_map": "Route 12", "target_x": 10, "target_y": 34},
+            (29, 0): {"target_map": "Route 12", "target_x": 10, "target_y": 34},
+            (30, 0): {"target_map": "Route 12", "target_x": 11, "target_y": 34},
+            (4, 0): {"target_map": "Safari Zone", "target_x": 15, "target_y": 28},
+            (5, 0): {"target_map": "Safari Zone", "target_x": 16, "target_y": 28},
+            (6, 0): {"target_map": "Safari Zone", "target_x": 16, "target_y": 28},
+            (7, 0): {"target_map": "Safari Zone", "target_x": 17, "target_y": 28},
+            (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
+            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (10, 17): {"target_map": "Fuchsia Gym", "target_x": 6, "target_y": 8}
+        },
+        "npcs": [
+            {"name": "Safari Warden", "x": 16, "y": 9, "dir": Direction.DOWN, "dialog": "Welcome to Fuchsia City! North gate leads straight to the grand Safari Zone Sanctuary!"},
+            {"name": "Ninja Scout", "x": 14, "y": 12, "dir": Direction.DOWN, "quest_id": "ninja_toxic_challenge", "dialog": "A shinobi must conquer toxic hazards! Defeat 4 Poison-type Pokémon in battle! (Reward: $4000, 2x Max Revive, 5x Ultra Ball)"},
+            {"name": "Safari Ranger", "x": 8, "y": 9, "dir": Direction.RIGHT, "quest_id": "safari_wildlife_reserve", "dialog": "The Safari Zone sanctuary protects majestic creatures! Spot and catch a rare savanna Pokémon (Dratini, Kangaskhan, Tauros, Scyther, or Pinsir)! (Reward: $5000, Master Ball, 2x Rare Candy)"}
+        ],
+        "signs": {
+            (7, 6): "Fuchsia City - Behold! It's Passion Pink!",
+            (22, 6): "Fuchsia PokéMart",
+            (6, 17): "Fuchsia Gym - Leader: Koga (The Poisonous Ninja Master!)"
+        },
+        "ground_items": [
+            {"id": "fuchsia_maxpotion", "x": 6, "y": 18, "item": "Max Potion", "count": 2},
+            {"id": "fuchsia_candy", "x": 24, "y": 18, "item": "Rare Candy", "count": 1}
+        ]
+    },
+    "Fuchsia Gym": {
+        "grid": MAP_FUCHSIA_GYM,
+        "bgm": "town",
+        "warps": {
+            (6, 8): {"target_map": "Fuchsia City", "target_x": 10, "target_y": 18}
+        },
+        "trainers": ["juggler_nate", "gym_leader_koga"]
+    },
+    "Victory Road": {
+        "grid": MAP_VICTORY_ROAD,
+        "bgm": "town",
+        "encounter_zone": "Victory Road",
+        "warps": {
+            (15, 25): {"target_map": "Route 22", "target_x": 9, "target_y": 8},
+            (16, 25): {"target_map": "Route 22", "target_x": 9, "target_y": 8},
+            (15, 0): {"target_map": "Indigo Plateau", "target_x": 13, "target_y": 22},
+            (16, 0): {"target_map": "Indigo Plateau", "target_x": 14, "target_y": 22}
+        },
+        "trainers": ["cooltrainer_sam", "cooltrainer_brooke"],
+        "signs": {
+            (15, 23): "Victory Road - Final Trial of the Pokémon League!"
+        },
+        "ground_items": [
+            {"id": "victory_maxrevive", "x": 3, "y": 22, "item": "Max Revive", "count": 2},
+            {"id": "victory_candy", "x": 28, "y": 22, "item": "Rare Candy", "count": 3}
+        ]
+    },
+    "Indigo Plateau": {
+        "grid": MAP_INDIGO_PLATEAU,
+        "bgm": "town",
+        "encounter_zone": "Indigo Plateau",
+        "warps": {
+            (13, 23): {"target_map": "Victory Road", "target_x": 15, "target_y": 1},
+            (14, 23): {"target_map": "Victory Road", "target_x": 16, "target_y": 1}
+        },
+        "trainers": ["champion_blue"],
+        "npcs": [
+            {"name": "League Guide", "x": 6, "y": 20, "dir": Direction.RIGHT, "dialog": "Welcome to the Indigo Plateau Pokémon League! Face Champion Blue on the throne to claim the Championship!"}
+        ],
+        "signs": {
+            (13, 10): "Indigo Plateau - Supreme Pokémon League Headquarters"
+        }
+    },
+    "Cerulean Cave": {
+        "grid": MAP_CERULEAN_CAVE,
+        "bgm": "town",
+        "encounter_zone": "Cerulean Cave",
+        "warps": {
+            (12, 21): {"target_map": "Cerulean City", "target_x": 4, "target_y": 1},
+            (13, 21): {"target_map": "Cerulean City", "target_x": 4, "target_y": 1}
+        },
+        "signs": {
+            (12, 19): "Cerulean Cave - Unexplored Subterranean Depths. Danger!"
+        },
+        "ground_items": [
+            {"id": "ceruleancave_ultraball", "x": 6, "y": 19, "item": "Ultra Ball", "count": 5},
+            {"id": "ceruleancave_candy", "x": 19, "y": 19, "item": "Rare Candy", "count": 3}
+        ]
     }
 }
 
@@ -1152,6 +2015,7 @@ class Player:
         self.walk_frame = 0
         self.step_counter = 0
         self.current_map = current_map
+        self.current_prop = None
         self.in_tall_grass = False
         self.has_boat = True
         self.is_sailing = False
@@ -1188,11 +2052,14 @@ class Player:
                 tile = world.get_tile(self.current_map, self.grid_x, self.grid_y)
                 was_sailing = self.is_sailing
                 self.is_sailing = (tile == '~')
-                self.in_tall_grass = (tile == 'G')
+                self.current_prop = tile if tile in ENCOUNTER_PROP_TILES else None
+                self.in_tall_grass = (self.current_prop is not None)
                 
-                # Step sound in tall grass
-                if self.in_tall_grass:
-                    sound_mgr.play_sfx("rustle")
+                # Step sound in walk-through props or sailing
+                if self.current_prop:
+                    prop_info = ENCOUNTER_PROP_TILES.get(self.current_prop)
+                    if prop_info:
+                        sound_mgr.play_sfx(prop_info["sfx"])
                 elif not was_sailing and self.is_sailing:
                     sound_mgr.play_sfx("select")
             else:
@@ -1253,10 +2120,15 @@ class Player:
             sprite = gfx.player_sprites[self.facing][self.walk_frame]
             surf.blit(sprite, (draw_x, draw_y))
             
-            # If in tall grass, draw grass covering lower feet
+            # If in walk-through prop, draw immersive foot overlay
             if self.in_tall_grass and not self.is_moving:
-                grass_cover = gfx.cached_tiles["tall_grass"].subsurface((0, 16, TILE_SIZE, 16))
-                surf.blit(grass_cover, (draw_x, draw_y + 16))
+                overlay = gfx.prop_overlays.get(self.current_prop) if self.current_prop else None
+                if overlay:
+                    surf.blit(overlay, (draw_x, draw_y))
+                else:
+                    grass_cover = gfx.cached_tiles["tall_grass"].subsurface((0, 16, TILE_SIZE, 16))
+                    surf.blit(grass_cover, (draw_x, draw_y + 16))
+
 
 class World:
     def __init__(self):
@@ -1380,7 +2252,7 @@ class World:
                     return t_data
         return None
 
-    def draw(self, surf, map_name, camera_x, camera_y):
+    def draw(self, surf, map_name, camera_x, camera_y, quest_mgr=None):
         grid = self.maps[map_name]["grid"]
         rows = len(grid)
         cols = len(grid[0])
@@ -1433,6 +2305,24 @@ class World:
                 # Specialized tile drawing
                 if char == "G":
                     surf.blit(gfx.cached_tiles["savanna_tall_grass"] if is_safari else gfx.cached_tiles["tall_grass"], (draw_x, draw_y))
+                elif char == "F":
+                    surf.blit(gfx.cached_tiles["flower_meadow"], (draw_x, draw_y))
+                elif char == "*":
+                    surf.blit(gfx.cached_tiles["flower_red"], (draw_x, draw_y))
+                elif char == "L":
+                    surf.blit(gfx.cached_tiles["leaf_pile"], (draw_x, draw_y))
+                elif char == "r":
+                    surf.blit(gfx.cached_tiles["cave_rubble"], (draw_x, draw_y))
+                elif char == "x":
+                    surf.blit(gfx.cached_tiles["snow_drift"], (draw_x, draw_y))
+                elif char == "m":
+                    surf.blit(gfx.cached_tiles["spooky_mist"], (draw_x, draw_y))
+                elif char == "a":
+                    surf.blit(gfx.cached_tiles["volcanic_ash"], (draw_x, draw_y))
+                elif char == "u":
+                    surf.blit(gfx.cached_tiles["swamp_marsh"], (draw_x, draw_y))
+                elif char == "e":
+                    surf.blit(gfx.cached_tiles["electric_surge"], (draw_x, draw_y))
                 elif char == "p":
                     surf.blit(gfx.cached_tiles["canyon_dirt"] if is_canyon else gfx.cached_tiles["path"], (draw_x, draw_y))
                 elif char == "~":
@@ -1473,8 +2363,6 @@ class World:
                     surf.blit(gfx.cached_tiles["bookshelf"], (draw_x, draw_y))
                 elif char == "f":
                     surf.blit(gfx.cached_tiles["fence"], (draw_x, draw_y))
-                elif char == "*":
-                    surf.blit(gfx.cached_tiles["flower_red"], (draw_x, draw_y))
                 elif char == "R":
                     surf.blit(gfx.cached_tiles["roof_red"], (draw_x, draw_y))
                 elif char == "B":
@@ -1490,6 +2378,7 @@ class World:
                     surf.blit(gfx.cached_tiles["sign"], (draw_x, draw_y))
                 elif char == "C":
                     surf.blit(gfx.cached_tiles["counter"], (draw_x, draw_y))
+
                     
         # Draw Ground Collectible Items (if not yet collected)
         ground_items = self.maps[map_name].get("ground_items", [])
@@ -1512,8 +2401,29 @@ class World:
                 color = (180, 140, 220) # Purple for Prof. Oak
             elif npc.get("is_bill"):
                 color = (60, 180, 240) # Cyan for Bill
+            elif npc.get("quest_id"):
+                color = (255, 200, 50) # Amber Gold for Quest Givers
             pygame.draw.circle(surf, color, (int(nx + TILE_SIZE//2), int(ny + TILE_SIZE//2)), 12)
             pygame.draw.circle(surf, WHITE, (int(nx + TILE_SIZE//2), int(ny + TILE_SIZE//2 - 4)), 6)
+
+            # Floating Quest Indicator for Quest Givers
+            if npc.get("quest_id"):
+                q_id = npc["quest_id"]
+                if quest_mgr and quest_mgr.is_completed(q_id):
+                    badge_char = "✓"
+                    badge_color = (40, 220, 80)
+                elif quest_mgr and quest_mgr.is_active(q_id):
+                    badge_char = "?"
+                    badge_color = (100, 200, 255)
+                else:
+                    badge_char = "!"
+                    badge_color = (255, 230, 40)
+                bx = int(nx + TILE_SIZE//2)
+                by = int(ny - 6)
+                pygame.draw.circle(surf, (30, 30, 45), (bx, by), 7)
+                pygame.draw.circle(surf, badge_color, (bx, by), 7, 1)
+                txt = gfx.fonts["small"].render(badge_char, True, badge_color)
+                surf.blit(txt, (bx - txt.get_width()//2, by - txt.get_height()//2))
             
         # Draw Trainers
         trainer_ids = self.maps[map_name].get("trainers", [])
@@ -1639,8 +2549,10 @@ class World:
                     col = (225, 205, 140) # Sand
                 elif char == "b":
                     col = (175, 125, 75) # Bridge
-                elif char == "G":
-                    col = (165, 135, 55) if is_safari else (45, 135, 40) # Tall Grass
+                elif char in ENCOUNTER_PROP_TILES:
+                    col = ENCOUNTER_PROP_TILES[char]["minimap_color"]
+                    if char == "G" and is_safari:
+                        col = (165, 135, 55)
                 elif char == "O":
                     col = (120, 220, 255) if is_ice else (255, 215, 40) # Cave Entrance
                 elif char == "D":
@@ -1660,8 +2572,6 @@ class World:
                         col = (195, 175, 140)
                 elif char in ["J", "Y"]:
                     col = (145, 140, 155) if is_lavender else (175, 145, 120)
-                elif char == "*":
-                    col = (220, 70, 70)
                 else: # "."
                     if is_ice:
                         col = (150, 220, 245)
@@ -1675,6 +2585,7 @@ class World:
                         col = (190, 125, 80)
                     else:
                         col = (85, 160, 75)
+
                     
                 pygame.draw.rect(surf, col, (tx, ty, cell_size, cell_size))
                 
