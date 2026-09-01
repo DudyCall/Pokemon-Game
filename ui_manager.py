@@ -2538,42 +2538,42 @@ class TrainerCardScreen:
             ("Earth Badge", "Viridian Gym", "Leader Giovanni (Ground)")
         ]
 
-        # Map Nodes for Comprehensive Kanto Region Map
+        # Structured Grid Map Nodes for Kanto Region Map (gx: 0..8, gy: 0..7)
         self.map_nodes = [
-            {"name": "Indigo Plateau", "x": 130, "y": 70, "desc": "Supreme Pokémon League Headquarters where Champion Blue awaits.", "type": "CITY"},
-            {"name": "Victory Road", "x": 130, "y": 160, "desc": "Epic cavern testing trainers who conquered all 8 Kanto Gyms.", "type": "DUNGEON"},
-            {"name": "Route 22", "x": 130, "y": 280, "desc": "Foothills leading west to the Indigo Plateau League Gate.", "type": "ROUTE"},
-            {"name": "Viridian City", "x": 220, "y": 280, "desc": "The gateway crossroads city with Pokémon Center and Mart.", "type": "CITY"},
-            {"name": "Viridian Forest", "x": 220, "y": 210, "desc": "Deep woods labyrinth teeming with bug Pokémon and Pikachu.", "type": "DUNGEON"},
-            {"name": "Pewter City", "x": 220, "y": 140, "desc": "A stone gray city. Home of Leader Brock's Gym & the Museum.", "type": "CITY"},
-            {"name": "Diglett's Cave", "x": 310, "y": 280, "desc": "Underground mountain tunnel dug by wild Diglett connecting Route 11 and Viridian.", "type": "DUNGEON"},
-            {"name": "Route 3", "x": 310, "y": 140, "desc": "Mountain canyon foothills leading east to Mt. Moon.", "type": "ROUTE"},
-            {"name": "Mt. Moon", "x": 400, "y": 140, "desc": "Subterranean cavern rich in ancient fossils and Moon Stones.", "type": "DUNGEON"},
-            {"name": "Route 4", "x": 490, "y": 140, "desc": "Scenic river canyon slopes leading to Cerulean City.", "type": "ROUTE"},
-            {"name": "Cerulean City", "x": 580, "y": 140, "desc": "A floral canal metropolis. Home of Leader Misty's Gym.", "type": "CITY"},
-            {"name": "Cerulean Cave", "x": 580, "y": 70, "desc": "Mysterious subterranean lair of legendary wild Pokémon and Mewtwo.", "type": "DUNGEON"},
-            {"name": "Route 24", "x": 670, "y": 70, "desc": "Nugget Bridge gauntlet leading to Bill's Sea Cottage.", "type": "ROUTE"},
-            {"name": "Route 9", "x": 670, "y": 140, "desc": "Rocky badlands canyon trail connecting Cerulean and Lavender.", "type": "ROUTE"},
-            {"name": "Power Plant", "x": 750, "y": 140, "desc": "Industrial electric generating facility teeming with Electric Pokémon.", "type": "DUNGEON"},
-            {"name": "Route 5", "x": 580, "y": 210, "desc": "Grassy highway connecting Cerulean City south to Saffron City.", "type": "ROUTE"},
-            {"name": "Celadon City", "x": 450, "y": 280, "desc": "Bustling rainbow metropolis with Mega Department Store & Erika's Gym.", "type": "CITY"},
-            {"name": "Route 7", "x": 510, "y": 280, "desc": "Road connecting Celadon City east to the Saffron Metropolis.", "type": "ROUTE"},
-            {"name": "Saffron City", "x": 580, "y": 280, "desc": "Golden mega-city crossroad with Silph Co. & Sabrina's Psychic Gym.", "type": "CITY"},
-            {"name": "Route 8", "x": 670, "y": 280, "desc": "Road connecting Saffron City east to Lavender Town.", "type": "ROUTE"},
-            {"name": "Lavender Town", "x": 750, "y": 280, "desc": "A noble purple town enveloped in mist, home of Pokémon Tower.", "type": "TOWN"},
-            {"name": "Pokémon Tower", "x": 750, "y": 210, "desc": "Sacred haunted spire where spirits of Pokémon rest in peace.", "type": "DUNGEON"},
-            {"name": "Route 6", "x": 580, "y": 350, "desc": "Waterway route connecting Saffron City south to Vermilion Harbor.", "type": "ROUTE"},
-            {"name": "Vermilion City", "x": 580, "y": 420, "desc": "Sunset harbor city with Lt. Surge's Gym & the luxury S.S. Anne.", "type": "CITY"},
-            {"name": "S.S. Anne", "x": 580, "y": 490, "desc": "Grand luxury world cruise liner docked at Vermilion Harbor Pier.", "type": "DUNGEON"},
-            {"name": "Route 11", "x": 670, "y": 420, "desc": "East meadow route with Diglett's Cave entrance leading to Route 12.", "type": "ROUTE"},
-            {"name": "Route 12", "x": 750, "y": 420, "desc": "Scenic Silence Bridge over ocean waters connecting to Fuchsia City.", "type": "ROUTE"},
-            {"name": "Fuchsia City", "x": 750, "y": 490, "desc": "Historic ninja town with Koga's Poison Gym & the Safari Zone.", "type": "CITY"},
-            {"name": "Safari Zone", "x": 670, "y": 490, "desc": "Vast golden savanna reserve filled with rare wild Pokémon.", "type": "DUNGEON"},
-            {"name": "Route 1", "x": 220, "y": 350, "desc": "Lush grassy path connecting Pallet Town and Viridian City.", "type": "ROUTE"},
-            {"name": "Pallet Town", "x": 220, "y": 420, "desc": "A quiet hometown with fresh sea breezes and Prof. Oak's Lab.", "type": "TOWN"},
-            {"name": "Route 21", "x": 220, "y": 490, "desc": "Vast ocean sea route south of Pallet Town filled with water Pokémon.", "type": "ROUTE"},
-            {"name": "Seafoam Islands", "x": 220, "y": 530, "desc": "Sub-zero glacial ice caverns situated in the southern sea.", "type": "DUNGEON"},
-            {"name": "Cinnabar Island", "x": 220, "y": 570, "desc": "A fiery volcanic island with Pokémon research laboratories.", "type": "CITY"}
+            {"name": "Indigo Plateau", "gx": 0, "gy": 0, "x": 130, "y": 70, "label_pos": "bottom", "short_label": "INDIGO", "desc": "Supreme Pokémon League Headquarters where Champion Blue awaits.", "type": "CITY"},
+            {"name": "Victory Road", "gx": 0, "gy": 1, "x": 130, "y": 160, "label_pos": "right", "short_label": "VIC. ROAD", "desc": "Epic cavern testing trainers who conquered all 8 Kanto Gyms.", "type": "DUNGEON"},
+            {"name": "Route 22", "gx": 0, "gy": 3, "x": 130, "y": 280, "label_pos": "none", "short_label": "", "desc": "Foothills leading west to the Indigo Plateau League Gate.", "type": "ROUTE"},
+            {"name": "Viridian City", "gx": 2, "gy": 3, "x": 220, "y": 280, "label_pos": "left", "short_label": "VIRIDIAN", "desc": "The gateway crossroads city with Pokémon Center and Mart.", "type": "CITY"},
+            {"name": "Viridian Forest", "gx": 2, "gy": 2, "x": 220, "y": 210, "label_pos": "left", "short_label": "V. FOREST", "desc": "Deep woods labyrinth teeming with bug Pokémon and Pikachu.", "type": "DUNGEON"},
+            {"name": "Pewter City", "gx": 2, "gy": 1, "x": 220, "y": 140, "label_pos": "top", "short_label": "PEWTER", "desc": "A stone gray city. Home of Leader Brock's Gym & the Museum.", "type": "CITY"},
+            {"name": "Route 3", "gx": 3, "gy": 1, "x": 310, "y": 140, "label_pos": "none", "short_label": "", "desc": "Mountain canyon foothills leading east to Mt. Moon.", "type": "ROUTE"},
+            {"name": "Mt. Moon", "gx": 4, "gy": 1, "x": 400, "y": 140, "label_pos": "top", "short_label": "MT. MOON", "desc": "Subterranean cavern rich in ancient fossils and Moon Stones.", "type": "DUNGEON"},
+            {"name": "Route 4", "gx": 5, "gy": 1, "x": 490, "y": 140, "label_pos": "none", "short_label": "", "desc": "Scenic river canyon slopes leading to Cerulean City.", "type": "ROUTE"},
+            {"name": "Cerulean City", "gx": 6, "gy": 1, "x": 580, "y": 140, "label_pos": "top", "short_label": "CERULEAN", "desc": "A floral canal metropolis. Home of Leader Misty's Gym.", "type": "CITY"},
+            {"name": "Cerulean Cave", "gx": 6, "gy": 0, "x": 580, "y": 70, "label_pos": "left", "short_label": "C. CAVE", "desc": "Mysterious subterranean lair of legendary wild Pokémon and Mewtwo.", "type": "DUNGEON"},
+            {"name": "Route 24", "gx": 7, "gy": 0, "x": 670, "y": 70, "label_pos": "top", "short_label": "RT 24", "desc": "Nugget Bridge gauntlet leading north to Bill's Sea Cottage.", "type": "ROUTE"},
+            {"name": "Route 9", "gx": 7, "gy": 1, "x": 670, "y": 140, "label_pos": "none", "short_label": "", "desc": "Rocky badlands canyon trail connecting Cerulean and Lavender.", "type": "ROUTE"},
+            {"name": "Power Plant", "gx": 8, "gy": 1, "x": 750, "y": 140, "label_pos": "top", "short_label": "POWER PL.", "desc": "Industrial electric generating facility teeming with Electric Pokémon.", "type": "DUNGEON"},
+            {"name": "Route 5", "gx": 6, "gy": 2, "x": 580, "y": 210, "label_pos": "none", "short_label": "", "desc": "Grassy highway connecting Cerulean City south to Saffron City.", "type": "ROUTE"},
+            {"name": "Celadon City", "gx": 4, "gy": 3, "x": 450, "y": 280, "label_pos": "left", "short_label": "CELADON", "desc": "Bustling rainbow metropolis with Mega Department Store & Erika's Gym.", "type": "CITY"},
+            {"name": "Route 7", "gx": 5, "gy": 3, "x": 510, "y": 280, "label_pos": "none", "short_label": "", "desc": "Road connecting Celadon City east to the Saffron Metropolis.", "type": "ROUTE"},
+            {"name": "Saffron City", "gx": 6, "gy": 3, "x": 580, "y": 280, "label_pos": "bottom", "short_label": "SAFFRON", "desc": "Golden mega-city crossroad with Silph Co. & Sabrina's Psychic Gym.", "type": "CITY"},
+            {"name": "Route 8", "gx": 7, "gy": 3, "x": 670, "y": 280, "label_pos": "none", "short_label": "", "desc": "Road connecting Saffron City east to Lavender Town.", "type": "ROUTE"},
+            {"name": "Lavender Town", "gx": 8, "gy": 3, "x": 750, "y": 280, "label_pos": "right", "short_label": "LAVENDER", "desc": "A noble purple town enveloped in mist, home of Pokémon Tower.", "type": "TOWN"},
+            {"name": "Pokémon Tower", "gx": 8, "gy": 2, "x": 750, "y": 210, "label_pos": "right", "short_label": "TOWER", "desc": "Sacred haunted spire where spirits of Pokémon rest in peace.", "type": "DUNGEON"},
+            {"name": "Route 6", "gx": 6, "gy": 4, "x": 580, "y": 350, "label_pos": "none", "short_label": "", "desc": "Waterway route connecting Saffron City south to Vermilion Harbor.", "type": "ROUTE"},
+            {"name": "Vermilion City", "gx": 6, "gy": 5, "x": 580, "y": 420, "label_pos": "left", "short_label": "VERMILION", "desc": "Sunset harbor city with Lt. Surge's Gym & the luxury S.S. Anne.", "type": "CITY"},
+            {"name": "S.S. Anne", "gx": 6, "gy": 6, "x": 580, "y": 490, "label_pos": "left", "short_label": "S.S. ANNE", "desc": "Grand luxury world cruise liner docked at Vermilion Harbor Pier.", "type": "DUNGEON"},
+            {"name": "Route 11", "gx": 7, "gy": 5, "x": 670, "y": 420, "label_pos": "none", "short_label": "", "desc": "East meadow route with Diglett's Cave entrance leading to Route 12.", "type": "ROUTE"},
+            {"name": "Diglett's Cave", "gx": 8, "gy": 5, "x": 310, "y": 280, "label_pos": "right", "short_label": "DIGLETT", "desc": "Underground mountain tunnel dug by wild Diglett connecting Route 11 and Pewter.", "type": "DUNGEON"},
+            {"name": "Route 12", "gx": 8, "gy": 4, "x": 750, "y": 420, "label_pos": "none", "short_label": "", "desc": "Scenic Silence Bridge over ocean waters connecting to Fuchsia City.", "type": "ROUTE"},
+            {"name": "Fuchsia City", "gx": 8, "gy": 7, "x": 750, "y": 490, "label_pos": "right", "short_label": "FUCHSIA", "desc": "Historic ninja town with Koga's Poison Gym & the Safari Zone.", "type": "CITY"},
+            {"name": "Safari Zone", "gx": 7, "gy": 7, "x": 670, "y": 490, "label_pos": "top", "short_label": "SAFARI", "desc": "Vast golden savanna reserve filled with rare wild Pokémon.", "type": "DUNGEON"},
+            {"name": "Pallet Town", "gx": 2, "gy": 5, "x": 220, "y": 420, "label_pos": "left", "short_label": "PALLET", "desc": "A quiet hometown with fresh sea breezes and Prof. Oak's Lab.", "type": "TOWN"},
+            {"name": "Route 1", "gx": 2, "gy": 4, "x": 220, "y": 350, "label_pos": "none", "short_label": "", "desc": "Lush grassy path connecting Pallet Town and Viridian City.", "type": "ROUTE"},
+            {"name": "Route 21", "gx": 2, "gy": 6, "x": 220, "y": 490, "label_pos": "none", "short_label": "", "desc": "Vast ocean sea route south of Pallet Town filled with water Pokémon.", "type": "ROUTE"},
+            {"name": "Cinnabar Island", "gx": 2, "gy": 7, "x": 220, "y": 570, "label_pos": "left", "short_label": "CINNABAR", "desc": "A fiery volcanic island with Pokémon research laboratories and Blaine's Gym.", "type": "CITY"},
+            {"name": "Seafoam Islands", "gx": 4, "gy": 7, "x": 220, "y": 530, "label_pos": "bottom", "short_label": "SEAFOAM", "desc": "Sub-zero glacial ice caverns situated in the southern sea.", "type": "DUNGEON"}
         ]
         self.selected_node_idx = 0
         for idx, node in enumerate(self.map_nodes):
@@ -2584,23 +2584,77 @@ class TrainerCardScreen:
     def update(self, dt):
         self.timer += dt
 
+    def _navigate_direction(self, dir_name):
+        curr_node = self.map_nodes[self.selected_node_idx]
+        cgx, cgy = curr_node["gx"], curr_node["gy"]
+        best_idx = None
+        best_dist = float('inf')
+
+        for idx, other in enumerate(self.map_nodes):
+            if idx == self.selected_node_idx:
+                continue
+            ogx, ogy = other["gx"], other["gy"]
+            dx = ogx - cgx
+            dy = ogy - cgy
+
+            if dir_name == "UP" and dy < 0:
+                dist = abs(dy) * 2.0 + abs(dx) * 3.5
+                if dist < best_dist:
+                    best_dist = dist
+                    best_idx = idx
+            elif dir_name == "DOWN" and dy > 0:
+                dist = abs(dy) * 2.0 + abs(dx) * 3.5
+                if dist < best_dist:
+                    best_dist = dist
+                    best_idx = idx
+            elif dir_name == "LEFT" and dx < 0:
+                dist = abs(dx) * 2.0 + abs(dy) * 3.5
+                if dist < best_dist:
+                    best_dist = dist
+                    best_idx = idx
+            elif dir_name == "RIGHT" and dx > 0:
+                dist = abs(dx) * 2.0 + abs(dy) * 3.5
+                if dist < best_dist:
+                    best_dist = dist
+                    best_idx = idx
+
+        if best_idx is not None:
+            self.selected_node_idx = best_idx
+            sound_mgr.play_sfx("select")
+        else:
+            step = -1 if dir_name in ["UP", "LEFT"] else 1
+            self.selected_node_idx = (self.selected_node_idx + step) % len(self.map_nodes)
+            sound_mgr.play_sfx("select")
+
     def handle_input(self, event):
         if event.type != pygame.KEYDOWN:
             return None
 
-        if any(event.key == k for k in KEY_LEFT + KEY_RIGHT):
+        # Tab switching with Left/Right when on Tab 0, or Tab key anytime
+        if event.key in [pygame.K_TAB, pygame.K_q, pygame.K_e]:
             self.active_tab = 1 - self.active_tab
             sound_mgr.play_sfx("select")
+            return None
+
+        if self.active_tab == 0:
+            if any(event.key == k for k in KEY_RIGHT + KEY_CONFIRM):
+                self.active_tab = 1
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                return "BACK"
         elif self.active_tab == 1:
             if any(event.key == k for k in KEY_UP):
-                self.selected_node_idx = (self.selected_node_idx - 1) % len(self.map_nodes)
-                sound_mgr.play_sfx("select")
+                self._navigate_direction("UP")
             elif any(event.key == k for k in KEY_DOWN):
-                self.selected_node_idx = (self.selected_node_idx + 1) % len(self.map_nodes)
-                sound_mgr.play_sfx("select")
-        elif any(event.key == k for k in KEY_CANCEL + KEY_CONFIRM):
-            sound_mgr.play_sfx("cancel")
-            return "BACK"
+                self._navigate_direction("DOWN")
+            elif any(event.key == k for k in KEY_LEFT):
+                self._navigate_direction("LEFT")
+            elif any(event.key == k for k in KEY_RIGHT):
+                self._navigate_direction("RIGHT")
+            elif any(event.key == k for k in KEY_CANCEL + KEY_CONFIRM):
+                sound_mgr.play_sfx("cancel")
+                return "BACK"
 
         return None
 
@@ -2696,140 +2750,235 @@ class TrainerCardScreen:
                 surf.blit(gym_t, (bx + 54, by + 30))
                 surf.blit(stat_t, (bx + 54, by + 50))
 
-        # Tab 1: Kanto Region Map & Exploration
+        # Tab 1: Structured Kanto Region Map & Exploration
         else:
-            # Discovery Statistics Header on Left Panel
             visited_nodes = [n for n in self.map_nodes if len(self.world.explored_tiles.get(n["name"], set())) > 0]
             v_cnt = len(visited_nodes)
             tot_cnt = len(self.map_nodes)
             v_pct = int(100 * v_cnt / max(1, tot_cnt))
 
+            # Left Panel: Cartographic Kanto Region Map
             lx, ly, lw, lh = cx + 12, cy + 12, 426, ch - 24
-            pygame.draw.rect(surf, (248, 250, 255), (lx, ly, lw, lh), border_radius=8)
+            pygame.draw.rect(surf, (246, 250, 255), (lx, ly, lw, lh), border_radius=8)
             pygame.draw.rect(surf, UI_BORDER_LIGHT, (lx, ly, lw, lh), 1, border_radius=8)
 
-            # Discovery Progress Card at top of Left Panel
+            # Discovery Progress Header
             by = ly + 8
             pygame.draw.rect(surf, (238, 244, 255), (lx + 8, by, lw - 16, 36), border_radius=6)
             pygame.draw.rect(surf, (210, 222, 245), (lx + 8, by, lw - 16, 36), 1, border_radius=6)
 
-            p_title = gfx.fonts["small"].render(f"KANTO DISCOVERY PROGRESS: {v_cnt} / {tot_cnt} AREAS ({v_pct}%)", True, (20, 70, 160))
+            p_title = gfx.fonts["small"].render(f"KANTO DISCOVERY: {v_cnt} / {tot_cnt} AREAS ({v_pct}%)", True, (20, 70, 160))
             surf.blit(p_title, (lx + 16, by + 5))
 
-            # Miniature progress bar
             pb_w = lw - 32
             pb_fill = int(pb_w * (v_cnt / max(1, tot_cnt)))
             pygame.draw.rect(surf, (220, 226, 238), (lx + 16, by + 23, pb_w, 6), border_radius=3)
             pygame.draw.rect(surf, (40, 180, 80), (lx + 16, by + 23, pb_fill, 6), border_radius=3)
 
-            # Draw Region Map Connection Routes
-            map_lines = [
-                # Western Corridor: Indigo Plateau -> Victory Road -> Route 22 -> Viridian City
-                ((130, 70), (130, 160)),
-                ((130, 160), (130, 280)),
-                ((130, 280), (220, 280)),
-                # Pallet Town -> Route 1 -> Viridian City
-                ((220, 420), (220, 350)),
-                ((220, 350), (220, 280)),
-                # Viridian City -> Viridian Forest -> Pewter City
-                ((220, 280), (220, 210)),
-                ((220, 210), (220, 140)),
-                # Pewter City -> Route 3 -> Mt Moon -> Route 4 -> Cerulean City
-                ((220, 140), (310, 140)),
-                ((310, 140), (400, 140)),
-                ((400, 140), (490, 140)),
-                ((490, 140), (580, 140)),
-                # Cerulean City -> Cerulean Cave & Route 24
-                ((580, 140), (580, 70)),
-                ((580, 140), (670, 70)),
-                # Cerulean City -> Route 9 -> Power Plant -> Lavender Town
-                ((580, 140), (670, 140)),
-                ((670, 140), (750, 140)),
-                ((670, 140), (750, 280)),
-                # Lavender Town -> Pokémon Tower
-                ((750, 280), (750, 210)),
-                # Central Axis: Cerulean -> Route 5 -> Saffron City -> Route 6 -> Vermilion City
-                ((580, 140), (580, 210)),
-                ((580, 210), (580, 280)),
-                ((580, 280), (580, 350)),
-                ((580, 350), (580, 420)),
-                # East-West Axis: Celadon City -> Route 7 -> Saffron City -> Route 8 -> Lavender Town
-                ((450, 280), (510, 280)),
-                ((510, 280), (580, 280)),
-                ((580, 280), (670, 280)),
-                ((670, 280), (750, 280)),
-                # Vermilion City -> S.S. Anne & Route 11 -> Route 12 -> Fuchsia City
-                ((580, 420), (580, 490)),
-                ((580, 420), (670, 420)),
-                ((670, 420), (750, 420)),
-                ((750, 280), (750, 420)),
-                ((750, 420), (750, 490)),
-                ((750, 490), (670, 490)),
-                # Diglett's Cave connecting Route 11 to Pewter / Route 2
-                ((670, 420), (310, 280)),
-                # Southern Sea: Pallet Town -> Route 21 -> Seafoam Islands -> Cinnabar Island
-                ((220, 420), (220, 490)),
-                ((220, 490), (220, 530)),
-                ((220, 530), (220, 570))
+            # Map Canvas Area
+            map_ox, map_oy = lx + 12, by + 44
+            map_w, map_h = lw - 24, lh - 56
+
+            # 1. Cartographic Water & Land Background
+            # Ocean Background
+            pygame.draw.rect(surf, (190, 225, 245), (map_ox, map_oy, map_w, map_h), border_radius=6)
+            
+            # Gentle Ocean Wave Details in south & east
+            for wave_x, wave_y in [(map_ox + 40, map_oy + 320), (map_ox + 160, map_oy + 340), (map_ox + 320, map_oy + 280), (map_ox + 350, map_oy + 350)]:
+                pygame.draw.arc(surf, (165, 210, 235), (wave_x, wave_y, 24, 10), 3.14, 6.28, 2)
+
+            # Main Kanto Landmass
+            col_step = (map_w - 44) / 8.0
+            row_step = (map_h - 44) / 7.0
+
+            def get_pixel_pos(gx, gy):
+                return (map_ox + 22 + int(gx * col_step), map_oy + 22 + int(gy * row_step))
+
+            # Landmass Shapes
+            # Western Main Corridor (Viridian to Pewter & Pallet)
+            p_west_tl = get_pixel_pos(1.4, 0.4)
+            p_west_br = get_pixel_pos(2.6, 5.6)
+            pygame.draw.rect(surf, (224, 240, 216), (p_west_tl[0], p_west_tl[1], p_west_br[0] - p_west_tl[0], p_west_br[1] - p_west_tl[1]), border_radius=12)
+
+            # Northern Canyon Corridor (Pewter across Mt Moon to Cerulean & Power Plant)
+            p_north_tl = get_pixel_pos(1.4, 0.4)
+            p_north_br = get_pixel_pos(8.6, 1.6)
+            pygame.draw.rect(surf, (224, 240, 216), (p_north_tl[0], p_north_tl[1], p_north_br[0] - p_north_tl[0], p_north_br[1] - p_north_tl[1]), border_radius=12)
+
+            # Central Metropolis Region (Celadon, Saffron, Lavender, Vermilion)
+            p_cent_tl = get_pixel_pos(3.4, 2.4)
+            p_cent_br = get_pixel_pos(8.6, 5.6)
+            pygame.draw.rect(surf, (224, 240, 216), (p_cent_tl[0], p_cent_tl[1], p_cent_br[0] - p_cent_tl[0], p_cent_br[1] - p_cent_tl[1]), border_radius=14)
+
+            # Northwest Mountain Plateau (Indigo Plateau & Victory Road)
+            p_mt_tl = get_pixel_pos(-0.5, -0.4)
+            p_mt_br = get_pixel_pos(0.6, 3.6)
+            pygame.draw.rect(surf, (222, 212, 196), (p_mt_tl[0], p_mt_tl[1], p_mt_br[0] - p_mt_tl[0], p_mt_br[1] - p_mt_tl[1]), border_radius=10)
+
+            # Fuchsia & Safari Southern Peninsula
+            p_fuch_tl = get_pixel_pos(6.4, 6.4)
+            p_fuch_br = get_pixel_pos(8.6, 7.6)
+            pygame.draw.rect(surf, (224, 240, 216), (p_fuch_tl[0], p_fuch_tl[1], p_fuch_br[0] - p_fuch_tl[0], p_fuch_br[1] - p_fuch_tl[1]), border_radius=10)
+
+            # Cinnabar Island Landmass
+            p_cin_tl = get_pixel_pos(1.4, 6.5)
+            p_cin_br = get_pixel_pos(2.6, 7.6)
+            pygame.draw.rect(surf, (232, 222, 198), (p_cin_tl[0], p_cin_tl[1], p_cin_br[0] - p_cin_tl[0], p_cin_br[1] - p_cin_tl[1]), border_radius=8)
+
+            # Seafoam Glacial Islet
+            p_sea_tl = get_pixel_pos(3.6, 6.6)
+            p_sea_br = get_pixel_pos(4.4, 7.4)
+            pygame.draw.rect(surf, (210, 235, 250), (p_sea_tl[0], p_sea_tl[1], p_sea_br[0] - p_sea_tl[0], p_sea_br[1] - p_sea_tl[1]), border_radius=6)
+
+            # Outer Border for Map Canvas
+            pygame.draw.rect(surf, (190, 205, 225), (map_ox, map_oy, map_w, map_h), 1, border_radius=6)
+
+            # 2. Road Network Connections
+            # Land Routes (warm sand with brown borders)
+            land_routes = [
+                # Western Highway
+                ((0, 0), (0, 1)), ((0, 1), (0, 3)), ((0, 3), (2, 3)),
+                ((2, 1), (2, 2)), ((2, 2), (2, 3)), ((2, 3), (2, 4)), ((2, 4), (2, 5)),
+                # Northern Highway
+                ((2, 1), (3, 1)), ((3, 1), (4, 1)), ((4, 1), (5, 1)), ((5, 1), (6, 1)),
+                ((6, 1), (6, 0)), ((6, 1), (7, 0)), ((6, 1), (7, 1)), ((7, 1), (8, 1)),
+                # Central Highway
+                ((6, 1), (6, 2)), ((6, 2), (6, 3)), ((6, 3), (6, 4)), ((6, 4), (6, 5)), ((6, 5), (6, 6)),
+                # East-West Highway
+                ((4, 3), (5, 3)), ((5, 3), (6, 3)), ((6, 3), (7, 3)), ((7, 3), (8, 3)),
+                # Eastern Corridor
+                ((8, 1), (8, 3)), ((8, 3), (8, 2)), ((6, 5), (7, 5)), ((7, 5), (8, 5)),
+                ((8, 3), (8, 4)), ((8, 4), (8, 5)), ((8, 5), (8, 7)), ((7, 7), (8, 7))
             ]
 
-            # Scale and offset for left panel card area
-            map_ox, map_oy = lx + 8, by + 46
-            for p1, p2 in map_lines:
-                x1 = map_ox + int(p1[0] * 0.54)
-                y1 = map_oy + int(p1[1] * 0.63)
-                x2 = map_ox + int(p2[0] * 0.54)
-                y2 = map_oy + int(p2[1] * 0.63)
-                pygame.draw.line(surf, (200, 160, 100), (x1, y1), (x2, y2), 6)
-                pygame.draw.line(surf, (245, 215, 150), (x1, y1), (x2, y2), 3)
+            for (gx1, gy1), (gx2, gy2) in land_routes:
+                x1, y1 = get_pixel_pos(gx1, gy1)
+                x2, y2 = get_pixel_pos(gx2, gy2)
+                pygame.draw.line(surf, (155, 125, 75), (x1, y1), (x2, y2), 7)
+                pygame.draw.line(surf, (250, 228, 160), (x1, y1), (x2, y2), 3)
 
-            # Draw Map Nodes on Left Panel
+            # Water Routes (Southern Ocean Route 21, Seafoam channel, Safari coast)
+            water_routes = [
+                ((2, 5), (2, 6)), ((2, 6), (2, 7)), ((2, 7), (4, 7)), ((4, 7), (7, 7))
+            ]
+            for (gx1, gy1), (gx2, gy2) in water_routes:
+                x1, y1 = get_pixel_pos(gx1, gy1)
+                x2, y2 = get_pixel_pos(gx2, gy2)
+                pygame.draw.line(surf, (130, 185, 225), (x1, y1), (x2, y2), 5)
+                pygame.draw.line(surf, (255, 255, 255), (x1, y1), (x2, y2), 2)
+
+            # 3. Draw All Map Nodes & Anchor Labels
             for n_idx, node in enumerate(self.map_nodes):
-                nx = map_ox + int(node["x"] * 0.54)
-                ny = map_oy + int(node["y"] * 0.63)
+                nx, ny = get_pixel_pos(node["gx"], node["gy"])
                 is_sel = (n_idx == self.selected_node_idx)
                 is_player_here = (node["name"] == self.player.current_map)
                 is_visited = len(self.world.explored_tiles.get(node["name"], set())) > 0
 
-                # Node appearance based on type & visited status
+                # Render node icon by type
                 if is_visited:
                     if node["type"] == "CITY":
-                        pygame.draw.circle(surf, (220, 40, 40), (nx, ny), 8)
-                        pygame.draw.circle(surf, WHITE, (nx, ny), 4)
+                        # Red City Badge
+                        pygame.draw.rect(surf, (170, 25, 25), (nx - 8, ny - 8, 16, 16), border_radius=4)
+                        pygame.draw.rect(surf, (235, 45, 45), (nx - 7, ny - 7, 14, 14), border_radius=3)
+                        pygame.draw.rect(surf, WHITE, (nx - 4, ny - 4, 8, 8), border_radius=2)
+                        pygame.draw.rect(surf, (220, 40, 40), (nx - 2, ny - 2, 4, 4))
                     elif node["type"] == "TOWN":
-                        pygame.draw.circle(surf, (40, 100, 220), (nx, ny), 7)
-                        pygame.draw.circle(surf, WHITE, (nx, ny), 3)
+                        # Blue Town Badge
+                        pygame.draw.rect(surf, (25, 75, 175), (nx - 7, ny - 7, 14, 14), border_radius=3)
+                        pygame.draw.rect(surf, (45, 125, 235), (nx - 6, ny - 6, 12, 12), border_radius=2)
+                        pygame.draw.rect(surf, WHITE, (nx - 3, ny - 3, 6, 6), border_radius=1)
                     elif node["type"] == "DUNGEON":
-                        pygame.draw.polygon(surf, (140, 80, 40), [(nx, ny - 8), (nx + 7, ny + 6), (nx - 7, ny + 6)])
-                        pygame.draw.circle(surf, WHITE, (nx, ny), 2)
+                        # Amber Mountain Diamond
+                        pygame.draw.polygon(surf, (145, 70, 25), [(nx, ny - 8), (nx + 7, ny + 6), (nx - 7, ny + 6)])
+                        pygame.draw.polygon(surf, (215, 115, 45), [(nx, ny - 6), (nx + 5, ny + 4), (nx - 5, ny + 4)])
+                        pygame.draw.circle(surf, WHITE, (nx, ny + 1), 2)
                     else:
-                        pygame.draw.circle(surf, (50, 160, 60), (nx, ny), 5)
+                        # Green Route Milestone
+                        pygame.draw.circle(surf, (35, 115, 50), (nx, ny), 5)
+                        pygame.draw.circle(surf, (60, 180, 80), (nx, ny), 4)
+                        pygame.draw.circle(surf, WHITE, (nx, ny), 2)
                 else:
-                    # Unvisited node: Dimmed gray with question badge
-                    pygame.draw.circle(surf, (150, 160, 175), (nx, ny), 6)
-                    pygame.draw.circle(surf, (75, 85, 100), (nx, ny), 4)
+                    # Unvisited Slate Marker
+                    pygame.draw.circle(surf, (110, 120, 135), (nx, ny), 6)
+                    pygame.draw.circle(surf, (190, 200, 215), (nx, ny), 4)
+                    pygame.draw.circle(surf, (90, 100, 115), (nx, ny), 2)
 
-                # Selection Highlight ring
-                if is_sel:
-                    pygame.draw.circle(surf, (255, 140, 0), (nx, ny), 13, 2)
+                # Draw Anchor Label if configured
+                short_lbl = node.get("short_label", "")
+                lbl_pos = node.get("label_pos", "none")
+                if short_lbl and lbl_pos != "none":
+                    lbl_col = (30, 40, 60) if is_visited else (120, 130, 145)
+                    st = gfx.fonts["small"].render(short_lbl, True, lbl_col)
+                    if lbl_pos == "top":
+                        lx_p = nx - st.get_width() // 2
+                        ly_p = ny - 18
+                    elif lbl_pos == "bottom":
+                        lx_p = nx - st.get_width() // 2
+                        ly_p = ny + 10
+                    elif lbl_pos == "left":
+                        lx_p = nx - st.get_width() - 11
+                        ly_p = ny - 6
+                    elif lbl_pos == "right":
+                        lx_p = nx + 11
+                        ly_p = ny - 6
+                    else:
+                        lx_p = nx + 10
+                        ly_p = ny - 6
 
-                # Blinking Player Indicator
-                if is_player_here and int(self.timer * 3) % 2 == 0:
-                    pygame.draw.circle(surf, (255, 230, 40), (nx, ny - 13), 5)
-                    here_t = gfx.fonts["small"].render("YOU", True, (220, 40, 40))
-                    surf.blit(here_t, (nx - here_t.get_width() // 2, ny - 26))
+                    surf.blit(st, (lx_p, ly_p))
 
-                # Node Label
-                if is_visited:
-                    lbl_col = (200, 80, 0) if is_sel else UI_TEXT
-                    nl = gfx.fonts["small"].render(node["name"], True, lbl_col)
-                else:
-                    lbl_col = (220, 120, 40) if is_sel else (140, 150, 165)
-                    nl = gfx.fonts["small"].render(f"? {node['name']}", True, lbl_col)
-                
-                # Position label to right or left depending on side
-                lx_pos = (nx + 10) if node["x"] < 500 else (nx - nl.get_width() - 10)
-                surf.blit(nl, (lx_pos, ny - 6))
+            # 4. Animated Selection Target Reticle & Floating Callout Tooltip
+            sel_node = self.map_nodes[self.selected_node_idx]
+            snx, sny = get_pixel_pos(sel_node["gx"], sel_node["gy"])
+            
+            # Pulsing Selection Ring
+            pulse = math.sin(self.timer * 6) * 2
+            ret_r = int(12 + pulse)
+            pygame.draw.circle(surf, (255, 140, 0), (snx, sny), ret_r, 2)
+            # Reticle corner brackets
+            b_s = 6
+            for dx_b, dy_b in [(-1, -1), (1, -1), (-1, 1), (1, 1)]:
+                bx_c = snx + dx_b * (ret_r + 2)
+                by_c = sny + dy_b * (ret_r + 2)
+                pygame.draw.line(surf, (255, 160, 20), (bx_c, by_c), (bx_c - dx_b * b_s, by_c), 2)
+                pygame.draw.line(surf, (255, 160, 20), (bx_c, by_c), (bx_c, by_c - dy_b * b_s), 2)
+
+            # Floating Tooltip Pill for Selected Location
+            sel_visited = len(self.world.explored_tiles.get(sel_node["name"], set())) > 0
+            callout_title = sel_node["name"] if sel_visited else f"? {sel_node['name']}"
+            c_txt = gfx.fonts["regular"].render(callout_title, True, (20, 40, 80))
+            badge_txt = gfx.fonts["small"].render(f"[{sel_node['type']}]", True, (220, 100, 20) if sel_visited else (130, 140, 155))
+            
+            cw_tip = max(c_txt.get_width() + badge_txt.get_width() + 24, 130)
+            ch_tip = 32
+            # Tooltip placement (keep inside canvas)
+            tip_x = snx + 16 if snx + 16 + cw_tip <= map_ox + map_w - 4 else snx - 16 - cw_tip
+            tip_y = sny - 16 if sny - 16 >= map_oy + 4 else sny + 16
+
+            pygame.draw.rect(surf, (0, 0, 0, 50), (tip_x + 2, tip_y + 2, cw_tip, ch_tip), border_radius=6)
+            pygame.draw.rect(surf, WHITE, (tip_x, tip_y, cw_tip, ch_tip), border_radius=6)
+            pygame.draw.rect(surf, (255, 140, 40), (tip_x, tip_y, cw_tip, ch_tip), 2, border_radius=6)
+            surf.blit(c_txt, (tip_x + 8, tip_y + 7))
+            surf.blit(badge_txt, (tip_x + c_txt.get_width() + 14, tip_y + 9))
+
+            # 5. High-Visibility Player Location Pin ("YOU")
+            for node in self.map_nodes:
+                if node["name"] == self.player.current_map:
+                    pnx, pny = get_pixel_pos(node["gx"], node["gy"])
+                    # Pulsing radar ping wave
+                    ping_phase = (self.timer * 2.5) % 1.0
+                    ping_r = int(6 + ping_phase * 16)
+                    pygame.draw.circle(surf, (255, 215, 40), (pnx, pny), ping_r, 1)
+
+                    # Player Pin
+                    pygame.draw.circle(surf, (220, 40, 40), (pnx, pny - 12), 6)
+                    pygame.draw.circle(surf, (255, 230, 60), (pnx, pny - 12), 4)
+                    pygame.draw.polygon(surf, (220, 40, 40), [(pnx - 4, pny - 10), (pnx + 4, pny - 10), (pnx, pny - 3)])
+                    
+                    if int(self.timer * 3) % 2 == 0:
+                        you_t = gfx.fonts["small"].render("YOU", True, (220, 30, 30))
+                        surf.blit(you_t, (pnx - you_t.get_width() // 2, pny - 26))
+                    break
 
             # =========================================================================
             # Right Panel: Selected Area Exploration Dossier & Live Minimap
@@ -2838,7 +2987,6 @@ class TrainerCardScreen:
             pygame.draw.rect(surf, (252, 252, 255), (rx, ry, rw, rh), border_radius=8)
             pygame.draw.rect(surf, UI_BORDER_LIGHT, (rx, ry, rw, rh), 1, border_radius=8)
 
-            sel_node = self.map_nodes[self.selected_node_idx]
             node_name = sel_node["name"]
             explored_set = self.world.explored_tiles.get(node_name, set())
             is_visited = len(explored_set) > 0
@@ -2849,7 +2997,6 @@ class TrainerCardScreen:
             surf.blit(loc_title, (rx + 12, ry + 10))
 
             if is_visited:
-                # Calculate map %
                 if grid:
                     walkable = sum(1 for r in range(len(grid)) for c in range(len(grid[0])) if grid[r][c] not in ["#", "^", "W", "~"])
                     exp_walkable = sum(1 for (cx_t, cy_t) in explored_set if 0 <= cy_t < len(grid) and 0 <= cx_t < len(grid[0]) and grid[cy_t][cx_t] not in ["#", "^", "W", "~"])
@@ -2878,12 +3025,12 @@ class TrainerCardScreen:
                 gx_start = cm_x + (cm_w - g_w) // 2
                 gy_start = cm_y + (cm_h - g_h) // 2
 
-                is_cave = (node_name in ["Mt. Moon", "Seafoam Islands"])
+                is_cave = (node_name in ["Mt. Moon", "Seafoam Islands", "Victory Road", "Cerulean Cave", "Diglett's Cave"])
                 is_ice = (node_name == "Seafoam Islands")
                 is_lavender = (node_name in ["Lavender Town", "Pokémon Tower"])
                 is_power_plant = (node_name == "Power Plant")
                 is_safari = (node_name == "Safari Zone")
-                is_canyon = (node_name == "Route 9")
+                is_canyon = (node_name in ["Route 9", "Route 3", "Route 4"])
                 ground_items = self.world.maps.get(node_name, {}).get("ground_items", [])
 
                 for r in range(rows):
@@ -2933,14 +3080,12 @@ class TrainerCardScreen:
                             if g_item["x"] == c and g_item["y"] == r and g_item["id"] not in self.world.collected_items:
                                 pygame.draw.circle(surf, (240, 50, 50), (tx + cell_s // 2, ty + cell_s // 2), max(1, cell_s // 2))
 
-                # If player is in this map, draw blip
                 if self.player.current_map == node_name:
                     px = gx_start + self.player.grid_x * cell_s + cell_s // 2
                     py = gy_start + self.player.grid_y * cell_s + cell_s // 2
                     pygame.draw.circle(surf, (255, 230, 40), (px, py), max(3, cell_s + 1), 1)
                     pygame.draw.circle(surf, (240, 40, 40), (px, py), max(2, cell_s))
             else:
-                # Shrouded Unknown Region Mystery Card
                 pygame.draw.circle(surf, (40, 48, 64), (cm_x + cm_w // 2, cm_y + cm_h // 2 - 12), 24)
                 q_txt = gfx.fonts["title"].render("?", True, (130, 145, 170))
                 surf.blit(q_txt, (cm_x + (cm_w - q_txt.get_width()) // 2, cm_y + cm_h // 2 - 32))
@@ -2949,13 +3094,28 @@ class TrainerCardScreen:
                 surf.blit(un_t, (cm_x + (cm_w - un_t.get_width()) // 2, cm_y + cm_h // 2 + 18))
                 surf.blit(un_sub, (cm_x + (cm_w - un_sub.get_width()) // 2, cm_y + cm_h // 2 + 40))
 
-            # 3. Location Description Card
+            # 3. Location Description Card (with multi-line word wrap)
             dx, dy, dw, dh = rx + 12, ry + 214, rw - 24, 60
             pygame.draw.rect(surf, (245, 248, 255), (dx, dy, dw, dh), border_radius=6)
             pygame.draw.rect(surf, (215, 225, 240), (dx, dy, dw, dh), 1, border_radius=6)
             
-            d_desc = gfx.fonts["small"].render(sel_node["desc"], True, UI_TEXT)
-            surf.blit(d_desc, (dx + 8, dy + 8))
+            # Word-wrap description lines
+            words = sel_node["desc"].split(" ")
+            d_lines = []
+            cur_line = []
+            for w in words:
+                test_line = " ".join(cur_line + [w])
+                if gfx.fonts["small"].size(test_line)[0] < dw - 16:
+                    cur_line.append(w)
+                else:
+                    d_lines.append(" ".join(cur_line))
+                    cur_line = [w]
+            if cur_line:
+                d_lines.append(" ".join(cur_line))
+
+            for l_i, line_str in enumerate(d_lines[:3]):
+                dl_surf = gfx.fonts["small"].render(line_str, True, UI_TEXT)
+                surf.blit(dl_surf, (dx + 8, dy + 8 + l_i * 17))
 
             # 4. Known Wild Pokémon Habitats
             hx, hy, hw, hh = rx + 12, ry + 282, rw - 24, 150
@@ -2966,7 +3126,6 @@ class TrainerCardScreen:
             surf.blit(h_head, (hx + 8, hy + 8))
 
             if is_visited:
-                # Gather unique encounters
                 all_encs = []
                 seen_species = set()
                 for enc in WILD_ENCOUNTERS.get(node_name, []) + WILD_WATER_ENCOUNTERS.get(node_name, []):
@@ -2994,16 +3153,15 @@ class TrainerCardScreen:
                         sp_txt = gfx.fonts["small"].render(f"{status_mark}{sp}", True, tag_txt_c)
                         surf.blit(sp_txt, (cx_p + 6, cy_p + 4))
                 else:
-                    no_w = gfx.fonts["small"].render("No wild Pokémon roaming this area.", True, UI_TEXT_MUTED)
+                    safe_msg = "Peaceful Settlement. Pokémon Center & PokéMart available." if sel_node["type"] in ["CITY", "TOWN"] else "No wild Pokémon roaming this area."
+                    no_w = gfx.fonts["small"].render(safe_msg, True, UI_TEXT_MUTED)
                     surf.blit(no_w, (hx + 10, hy + 35))
             else:
-                un_enc = gfx.fonts["small"].render("Fauna Unknown.", True, UI_TEXT_MUTED)
-                un_enc2 = gfx.fonts["small"].render("Explore this region to log wild species!", True, (140, 150, 165))
+                un_enc = gfx.fonts["small"].render("Fauna Unknown. Explore area to record wild habitats.", True, UI_TEXT_MUTED)
                 surf.blit(un_enc, (hx + 10, hy + 35))
-                surf.blit(un_enc2, (hx + 10, hy + 58))
 
         # Bottom Controls Hint
-        hint = gfx.fonts["small"].render("Left/Right: Switch Tab  |  Up/Down: Browse Exploration Map  |  [X / Enter]: Return", True, UI_TEXT_MUTED)
+        hint = gfx.fonts["small"].render("D-Pad / Arrows: Move Cursor  |  [Tab]: Switch Tab  |  [X / Enter]: Return", True, UI_TEXT_MUTED)
         surf.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, 565))
 
 class QuestLogScreen:

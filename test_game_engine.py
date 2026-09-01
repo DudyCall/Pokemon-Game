@@ -539,6 +539,14 @@ class TestPokemonEngine(unittest.TestCase):
         screen.handle_input(event_right)
         self.assertEqual(screen.active_tab, 1)
         
+        # Test spatial navigation
+        initial_node = screen.map_nodes[screen.selected_node_idx]
+        event_up = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP)
+        screen.handle_input(event_up)
+        # Verify node has gx and gy
+        self.assertIn("gx", screen.map_nodes[screen.selected_node_idx])
+        self.assertIn("gy", screen.map_nodes[screen.selected_node_idx])
+
         surf = pygame.Surface((800, 600))
         # Test draw all nodes (visited and unvisited) without crash
         for node_idx in range(len(screen.map_nodes)):
