@@ -13,7 +13,10 @@ from constants import (
 )
 from graphics_manager import gfx
 from sound_manager import sound_mgr
-from pokemon_data import POKEMON_SPECIES, ITEMS, MOVES, WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS, STONE_EVOLUTIONS
+from pokemon_data import (
+    POKEMON_SPECIES, ITEMS, MOVES, WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS, STONE_EVOLUTIONS,
+    get_pokemon_evolution_info, get_full_evolution_tree
+)
 
 class PokedexScreen:
     def __init__(self, pokedex):
@@ -215,6 +218,16 @@ class PartySummaryScreen:
                 else:
                     sound_mgr.play_sfx("cancel")
                     return "BACK"
+            elif event.key in [pygame.K_e, pygame.K_TAB]:
+                sel_p = self.party[self.selected_idx]
+                tgt = sel_p.check_evolution()
+                if tgt:
+                    old_name = sel_p.nickname
+                    sel_p.evolve(tgt)
+                    sound_mgr.play_sfx("level_up")
+                    self.notice_msg = f"★ Congratulations! {old_name} evolved into {tgt.upper()}!"
+                    self.notice_timer = 5.0
+                    return None
             elif any(event.key == k for k in KEY_CONFIRM):
                 if self.party_swap_source is not None:
                     if self.party_swap_source != self.selected_idx:
@@ -236,6 +249,16 @@ class PartySummaryScreen:
         elif self.mode == "SUMMARY_MOVES":
             curr_pkmn = self.party[self.selected_idx]
             num_moves = len(curr_pkmn.moves)
+
+            if event.key in [pygame.K_e, pygame.K_TAB]:
+                tgt = curr_pkmn.check_evolution()
+                if tgt:
+                    old_name = curr_pkmn.nickname
+                    curr_pkmn.evolve(tgt)
+                    sound_mgr.play_sfx("level_up")
+                    self.notice_msg = f"★ Congratulations! {old_name} evolved into {tgt.upper()}!"
+                    self.notice_timer = 5.0
+                    return None
 
             # Move selection navigation (Up / Down)
             if any(event.key == k for k in KEY_UP):
@@ -384,12 +407,16 @@ class PartySummaryScreen:
             elif p.status:
                 gfx.draw_status_badge(surf, p.status, row_x + 100 + len(p.types) * 58, row_y + 88, width=48, height=20)
 
-            # Move preview count
-            m_count_txt = gfx.fonts["small"].render(f"Moves: {len(p.moves)}/4", True, UI_TEXT_MUTED)
-            surf.blit(m_count_txt, (row_x + rw - m_count_txt.get_width() - 15, row_y + 90))
+            tgt_evo = p.check_evolution()
+            if tgt_evo:
+                evo_txt = gfx.fonts["small"].render(f"★ [E]: EVOLVE ➔ {tgt_evo}", True, (20, 150, 50))
+                surf.blit(evo_txt, (row_x + rw - evo_txt.get_width() - 15, row_y + 90))
+            else:
+                m_count_txt = gfx.fonts["small"].render(f"Moves: {len(p.moves)}/4", True, UI_TEXT_MUTED)
+                surf.blit(m_count_txt, (row_x + rw - m_count_txt.get_width() - 15, row_y + 90))
 
         # Bottom Hint Bar
-        nav_hint = gfx.fonts["small"].render("Arrows: Select  |  [Z / Enter]: Inspect & Reorder Moves  |  [S / Shift]: Move Party Order  |  [X]: Exit", True, UI_TEXT_MUTED)
+        nav_hint = gfx.fonts["small"].render("Arrows: Select  |  [Z]: Inspect & Reorder  |  [E]: Evolve Ready  |  [S]: Swap Order  |  [X]: Exit", True, UI_TEXT_MUTED)
         surf.blit(nav_hint, (SCREEN_WIDTH // 2 - nav_hint.get_width() // 2, 568))
 
     def _draw_summary_moves(self, surf):
@@ -407,7 +434,11 @@ class PartySummaryScreen:
             n_txt = gfx.fonts["regular"].render(self.notice_msg, True, (220, 60, 0))
             surf.blit(n_txt, (30, 56))
         else:
-            sub_txt = gfx.fonts["small"].render("Use [▲/▼] to select moves. Press [Z/Enter] to pick up and swap move positions!", True, UI_TEXT_MUTED)
+            tgt_evo = curr_pkmn.check_evolution()
+            if tgt_evo:
+                sub_txt = gfx.fonts["regular"].render(f"★ READY TO EVOLVE! Press [E / Tab] to evolve into {tgt_evo.upper()}!", True, (30, 150, 60))
+            else:
+                sub_txt = gfx.fonts["small"].render("Use [▲/▼] to select moves. Press [Z/Enter] to pick up and swap move positions!", True, UI_TEXT_MUTED)
             surf.blit(sub_txt, (30, 58))
 
         # 1. Left Panel: Pokemon Profile & Stats
@@ -552,29 +583,30 @@ class PartySummaryScreen:
             surf.blit(d_head, (rx + 22, desc_y + 10))
 
             m_desc_str = sel_move_data.get("desc", "No description available.")
-            # Word wrap
+            # Word wrap within description box
             words = m_desc_str.split(" ")
             lines = []
             curr_line = ""
             for w in words:
                 test = curr_line + (" " if curr_line else "") + w
-                if gfx.fonts["regular"].size(test)[0] < rw - 50:
+                if gfx.fonts["small"].size(test)[0] < (rw - 48):
                     curr_line = test
                 else:
-                    lines.append(curr_line)
+                    if curr_line:
+                        lines.append(curr_line)
                     curr_line = w
             if curr_line:
                 lines.append(curr_line)
 
-            for l_i, l_text in enumerate(lines[:3]):
-                d_surf = gfx.fonts["regular"].render(l_text, True, UI_TEXT)
-                surf.blit(d_surf, (rx + 22, desc_y + 34 + l_i * 22))
+            for l_i, l_text in enumerate(lines[:4]):
+                d_surf = gfx.fonts["small"].render(l_text, True, UI_TEXT)
+                surf.blit(d_surf, (rx + 22, desc_y + 32 + l_i * 18))
 
             # Status effect info if applicable
             eff = sel_move_data.get("effect")
             if eff:
                 eff_txt = gfx.fonts["small"].render(f"Effect: {eff.get('status', eff.get('stat', 'Special Effect'))}", True, (210, 80, 0))
-                surf.blit(eff_txt, (rx + 22, desc_y + 112))
+                surf.blit(eff_txt, (rx + 22, desc_y + 114))
 
         # Bottom Hint Bar
         bot_hint = gfx.fonts["small"].render("▲/▼: Select Move  |  [Z/Enter]: Pick up & Swap Move  |  ◀/▶: Prev/Next Pokémon  |  [X]: Back", True, UI_TEXT_MUTED)
@@ -939,124 +971,6 @@ class BagScreen:
         msg_c = (40, 140, 60) if self.success_timer > 0 else UI_TEXT
         surf.blit(gfx.fonts["regular"].render(self.message, True, msg_c), (bx + 20, by + 26))
 
-def get_pokemon_evolution_info(pokemon, inventory=None):
-    """
-    Returns structured evolution requirements and level milestones for a Pokemon:
-    - target_species: str or None
-    - method: 'LEVEL', 'STONE', 'NONE'
-    - req_level: int or None
-    - levels_left: int or None
-    - is_ready: bool
-    - stone_targets: list of (stone_name, target_species)
-    - short_text: str (for mini badges on cards)
-    """
-    if not pokemon:
-        return {"method": "NONE", "short_text": "Empty"}
-    species = pokemon.species
-    level = pokemon.level
-    data = POKEMON_SPECIES.get(species, {})
-    lvl_evo = data.get("evolution")
-
-    stone_targets = []
-    for s_name, mapping in STONE_EVOLUTIONS.items():
-        if species in mapping:
-            stone_targets.append((s_name, mapping[species]))
-
-    if lvl_evo and lvl_evo.get("target"):
-        req_lvl = lvl_evo.get("level", 100)
-        target = lvl_evo.get("target")
-        lvls_left = max(0, req_lvl - level)
-        is_ready = (level >= req_lvl)
-        if is_ready:
-            short_txt = f"★ Ready! ➔ {target}"
-        else:
-            short_txt = f"▲ {target} in {lvls_left} Lvl{'s' if lvls_left != 1 else ''} (Lv.{req_lvl})"
-        return {
-            "target_species": target,
-            "method": "LEVEL",
-            "req_level": req_lvl,
-            "levels_left": lvls_left,
-            "is_ready": is_ready,
-            "stone_targets": stone_targets,
-            "short_text": short_txt
-        }
-    elif stone_targets:
-        first_target = stone_targets[0][1]
-        first_stone = stone_targets[0][0].replace(" Stone", "")
-        if len(stone_targets) == 1:
-            short_txt = f"💎 {first_stone} Stone ➔ {first_target}"
-        else:
-            short_txt = f"💎 {len(stone_targets)} Stone Paths"
-        return {
-            "target_species": first_target,
-            "method": "STONE",
-            "req_level": None,
-            "levels_left": None,
-            "is_ready": True,
-            "stone_targets": stone_targets,
-            "short_text": short_txt
-        }
-    else:
-        return {
-            "target_species": None,
-            "method": "NONE",
-            "req_level": None,
-            "levels_left": None,
-            "is_ready": False,
-            "stone_targets": [],
-            "short_text": "👑 Final Form"
-        }
-
-def get_full_evolution_tree(current_species):
-    """
-    Builds the full multi-stage evolution tree (past forms, current form, and future forms).
-    Returns (root_species, chain) where chain is a list of node dicts.
-    """
-    parents = {}
-    for parent, data in POKEMON_SPECIES.items():
-        evo = data.get("evolution")
-        if evo and evo.get("target"):
-            parents[evo["target"]] = (parent, {"type": "LEVEL", "level": evo["level"]})
-    for stone, mappings in STONE_EVOLUTIONS.items():
-        for parent, target in mappings.items():
-            if target not in parents:
-                parents[target] = (parent, {"type": "STONE", "stone": stone})
-
-    root = current_species
-    visited = set()
-    while root in parents and root not in visited:
-        visited.add(root)
-        root = parents[root][0]
-
-    chain = []
-    curr = root
-    visited_fwd = set()
-    while curr and curr not in visited_fwd:
-        visited_fwd.add(curr)
-        c_data = POKEMON_SPECIES.get(curr, {})
-        lvl_evo = c_data.get("evolution")
-
-        stone_evos = []
-        for stone, mappings in STONE_EVOLUTIONS.items():
-            if curr in mappings:
-                stone_evos.append({"stone": stone, "target": mappings[curr]})
-
-        chain.append({
-            "species": curr,
-            "level_evo": lvl_evo,
-            "stone_evos": stone_evos,
-            "types": c_data.get("types", ["Normal"]),
-            "base_stats": c_data.get("base_stats", {}),
-            "learnset": c_data.get("learnset", {})
-        })
-
-        if lvl_evo:
-            curr = lvl_evo.get("target")
-        else:
-            curr = None
-
-    return root, chain
-
 class PCBoxScreen:
     """
     Comprehensive Pokémon Storage System (PC Box) screen with interactive
@@ -1172,13 +1086,20 @@ class PCBoxScreen:
             return None
 
         # 4. Main Navigation Mode
-        # Quick hotkey for Evolution Progression Chart: E, P, or Tab
+        # Quick hotkey for Evolution / Progression Chart: E, P, or Tab
         if event.key in [pygame.K_e, pygame.K_p, pygame.K_TAB]:
             sel_pkmn = self._get_current_selected_pokemon()
             if sel_pkmn:
-                self.evolution_pokemon = sel_pkmn
-                self.menu_mode = "EVOLUTION_CHART"
-                sound_mgr.play_sfx("confirm")
+                tgt = sel_pkmn.check_evolution()
+                if tgt:
+                    old_name = sel_pkmn.nickname
+                    sel_pkmn.evolve(tgt)
+                    sound_mgr.play_sfx("level_up")
+                    self.show_notification(f"★ Congratulations! {old_name} evolved into {tgt.upper()}!")
+                else:
+                    self.evolution_pokemon = sel_pkmn
+                    self.menu_mode = "EVOLUTION_CHART"
+                    sound_mgr.play_sfx("confirm")
             else:
                 self.show_notification("No Pokémon selected!")
             return None
@@ -1208,11 +1129,7 @@ class PCBoxScreen:
                 self._adjust_pc_scroll()
                 sound_mgr.play_sfx("select")
         elif any(event.key == k for k in KEY_CONFIRM):
-            if self.active_panel == "PARTY" and len(self.party) > 0:
-                self.menu_mode = "ACTIONS"
-                self.action_idx = 0
-                sound_mgr.play_sfx("confirm")
-            elif self.active_panel == "PC" and len(self.pc_box) > 0:
+            if (self.active_panel == "PARTY" and len(self.party) > 0) or (self.active_panel == "PC" and len(self.pc_box) > 0):
                 self.menu_mode = "ACTIONS"
                 self.action_idx = 0
                 sound_mgr.play_sfx("confirm")
@@ -1231,13 +1148,24 @@ class PCBoxScreen:
             self.pc_scroll = self.pc_idx - 5
 
     def _get_available_actions(self):
+        sel = self._get_current_selected_pokemon()
+        evo_act = [f"★ EVOLVE INTO {sel.check_evolution().upper()}!"] if (sel and sel.check_evolution()) else []
         if self.active_panel == "PARTY":
-            return ["DEPOSIT TO PC", "SWAP WITH PC", "SUMMARY", "EVOLUTION PROGRESSION", "CANCEL"]
+            return evo_act + ["DEPOSIT TO PC", "SWAP WITH PC", "SUMMARY", "EVOLUTION PROGRESSION", "CANCEL"]
         else:
-            return ["WITHDRAW TO PARTY", "SWAP WITH PARTY", "SUMMARY", "EVOLUTION PROGRESSION", "CANCEL"]
+            return evo_act + ["WITHDRAW TO PARTY", "SWAP WITH PARTY", "SUMMARY", "EVOLUTION PROGRESSION", "CANCEL"]
 
     def _execute_action(self, action):
-        if action == "DEPOSIT TO PC":
+        if "EVOLVE INTO" in action:
+            sel = self._get_current_selected_pokemon()
+            if sel and sel.check_evolution():
+                tgt = sel.check_evolution()
+                old_name = sel.nickname
+                sel.evolve(tgt)
+                sound_mgr.play_sfx("level_up")
+                self.show_notification(f"★ Congratulations! {old_name} evolved into {tgt.upper()}!")
+                self.menu_mode = "NAVIGATE"
+        elif action == "DEPOSIT TO PC":
             if len(self.party) <= 1:
                 self.show_notification("Cannot deposit your last Pokémon!")
                 sound_mgr.play_sfx("cancel")
@@ -1518,78 +1446,195 @@ class PCBoxScreen:
         # 4. Summary Card Modal Popup Overlay
         if self.menu_mode == "SUMMARY" and self.summary_pokemon:
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 130))
+            overlay.fill((0, 0, 0, 140))
             surf.blit(overlay, (0, 0))
 
             p = self.summary_pokemon
-            sw, sh = 540, 410
+            sw, sh = 720, 510
             sx = (SCREEN_WIDTH - sw) // 2
             sy = (SCREEN_HEIGHT - sh) // 2
 
-            pygame.draw.rect(surf, UI_BORDER_DARK, (sx - 2, sy - 2, sw + 4, sh + 4), border_radius=14)
-            pygame.draw.rect(surf, WHITE, (sx, sy, sw, sh), border_radius=12)
+            # Main Card Box
+            pygame.draw.rect(surf, (30, 45, 80), (sx - 3, sy - 3, sw + 6, sh + 6), border_radius=16)
+            pygame.draw.rect(surf, (248, 250, 255), (sx, sy, sw, sh), border_radius=14)
 
-            # Header
-            shead = gfx.fonts["title"].render(f"{p.nickname or p.species} - Level {p.level}", True, (20, 70, 160))
-            surf.blit(shead, (sx + 24, sy + 16))
+            # 1. Header Banner
+            pygame.draw.rect(surf, (230, 238, 252), (sx, sy, sw, 52), border_top_left_radius=14, border_top_right_radius=14)
+            pygame.draw.line(surf, (190, 210, 240), (sx, sy + 52), (sx + sw, sy + 52), 2)
 
-            # Sprite & Types
+            p_id = getattr(p, "pokedex_id", POKEMON_SPECIES.get(p.species, {}).get("id", 1))
+            shead = gfx.fonts["title"].render(f"{p.nickname or p.species}", True, (20, 70, 160))
+            lvl_pill = gfx.fonts["medium"].render(f"Lv. {p.level}", True, (220, 80, 0))
+            id_txt = gfx.fonts["regular"].render(f"No. {p_id:03d}", True, UI_TEXT_MUTED)
+
+            surf.blit(shead, (sx + 20, sy + 12))
+            surf.blit(lvl_pill, (sx + 30 + shead.get_width(), sy + 16))
+            surf.blit(id_txt, (sx + 45 + shead.get_width() + lvl_pill.get_width(), sy + 18))
+
+            close_tag = gfx.fonts["small"].render("[ESC / Z / X] Close", True, (120, 140, 170))
+            surf.blit(close_tag, (sx + sw - close_tag.get_width() - 20, sy + 18))
+
+            # 2. Upper Left: Sprite & Types
+            sp_w, sp_h = 160, 195
+            pygame.draw.rect(surf, (242, 246, 254), (sx + 16, sy + 64, sp_w, sp_h), border_radius=10)
+            pygame.draw.rect(surf, (215, 225, 242), (sx + 16, sy + 64, sp_w, sp_h), 1, border_radius=10)
+
             sp_surf = gfx.get_pokemon_sprite(p.species, is_back=False, size=(110, 110))
-            surf.blit(sp_surf, (sx + 24, sy + 52))
+            surf.blit(sp_surf, (sx + 16 + (sp_w - 110) // 2, sy + 70))
 
             p_types = POKEMON_SPECIES.get(p.species, {}).get("types", ["Normal"])
+            total_type_w = len(p_types) * 60 + (len(p_types) - 1) * 6
+            start_tx = sx + 16 + (sp_w - total_type_w) // 2
             for t_idx, t_name in enumerate(p_types):
-                gfx.draw_type_badge(surf, t_name, sx + 24 + t_idx * 70, sy + 170, width=64, height=22)
+                gfx.draw_type_badge(surf, t_name, start_tx + t_idx * 66, sy + 186, width=60, height=22)
+
             if p.is_fainted():
-                gfx.draw_status_badge(surf, "Fainted", sx + 24 + len(p_types) * 70, sy + 170, width=54, height=22)
+                gfx.draw_status_badge(surf, "Fainted", sx + 16 + (sp_w - 54) // 2, sy + 218, width=54, height=20)
             elif p.status:
-                gfx.draw_status_badge(surf, p.status, sx + 24 + len(p_types) * 70, sy + 170, width=54, height=22)
+                gfx.draw_status_badge(surf, p.status, sx + 16 + (sp_w - 54) // 2, sy + 218, width=54, height=20)
 
-            # Stats Column
-            stat_x = sx + 160
-            s_hp = gfx.fonts["regular"].render(f"HP: {p.current_hp}/{p.max_hp}", True, UI_TEXT)
-            s_atk = gfx.fonts["regular"].render(f"Attack: {p.stats['atk']}", True, UI_TEXT)
-            s_def = gfx.fonts["regular"].render(f"Defense: {p.stats['def']}", True, UI_TEXT)
-            s_spd = gfx.fonts["regular"].render(f"Speed: {p.stats['spd']}", True, UI_TEXT)
-            s_exp = gfx.fonts["small"].render(f"EXP: {p.exp} / {p.exp_for_next_level()}", True, UI_TEXT_MUTED)
+            # 3. Upper Middle: Stats Table & EXP Progress
+            stat_w, stat_h = 240, 195
+            stat_x = sx + 188
+            pygame.draw.rect(surf, WHITE, (stat_x, sy + 64, stat_w, stat_h), border_radius=10)
+            pygame.draw.rect(surf, (215, 225, 242), (stat_x, sy + 64, stat_w, stat_h), 1, border_radius=10)
 
-            surf.blit(s_hp, (stat_x, sy + 55))
-            surf.blit(s_atk, (stat_x, sy + 82))
-            surf.blit(s_def, (stat_x, sy + 109))
-            surf.blit(s_spd, (stat_x, sy + 136))
-            surf.blit(s_exp, (stat_x, sy + 165))
+            stat_head = gfx.fonts["small"].render("COMBAT ATTRIBUTES", True, (40, 80, 160))
+            surf.blit(stat_head, (stat_x + 12, sy + 72))
 
-            # Evolution info preview box
-            evo_info = get_pokemon_evolution_info(p, self.inventory)
-            pygame.draw.rect(surf, (240, 245, 255), (sx + 300, sy + 52, sw - 324, 136), border_radius=8)
-            pygame.draw.rect(surf, (200, 215, 240), (sx + 300, sy + 52, sw - 324, 136), 1, border_radius=8)
+            stats_rows = [
+                ("HP", f"{p.current_hp} / {p.max_hp}", (230, 70, 70)),
+                ("Attack", str(p.stats.get("atk", 10)), (240, 130, 30)),
+                ("Defense", str(p.stats.get("def", 10)), (230, 190, 40)),
+                ("Sp. Atk", str(p.stats.get("spatk", 10)), (60, 140, 240)),
+                ("Sp. Def", str(p.stats.get("spdef", 10)), (70, 190, 90)),
+                ("Speed", str(p.stats.get("spd", 10)), (230, 90, 180)),
+            ]
+
+            for s_i, (s_lbl, s_val, s_col) in enumerate(stats_rows):
+                s_row_y = sy + 94 + s_i * 22
+                pygame.draw.rect(surf, s_col, (stat_x + 12, s_row_y, 50, 18), border_radius=3)
+                l_txt = gfx.fonts["small"].render(s_lbl, True, WHITE)
+                surf.blit(l_txt, (stat_x + 12 + (50 - l_txt.get_width()) // 2, s_row_y + 2))
+
+                v_txt = gfx.fonts["small"].render(s_val, True, UI_TEXT)
+                surf.blit(v_txt, (stat_x + stat_w - v_txt.get_width() - 14, s_row_y + 2))
+
+            # EXP Bar inside stats card
+            exp_y = sy + 232
+            exp_progress = p.exp_progress_ratio() if hasattr(p, "exp_progress_ratio") else 0.5
+            gfx.draw_exp_bar(surf, stat_x + 12, exp_y, stat_w - 24, 6, exp_progress)
+            exp_txt = gfx.fonts["small"].render(f"EXP: {p.exp} / {p.exp_for_next_level()}", True, UI_TEXT_MUTED)
+            surf.blit(exp_txt, (stat_x + (stat_w - exp_txt.get_width()) // 2, exp_y + 8))
+
+            # 4. Upper Right: Evolution Milestone Card
+            evo_w, evo_h = 260, 195
+            evo_x = sx + 440
+            pygame.draw.rect(surf, (244, 248, 255), (evo_x, sy + 64, evo_w, evo_h), border_radius=10)
+            pygame.draw.rect(surf, (200, 215, 240), (evo_x, sy + 64, evo_w, evo_h), 1, border_radius=10)
 
             e_head = gfx.fonts["small"].render("EVOLUTION MILESTONE", True, (20, 70, 160))
-            surf.blit(e_head, (sx + 312, sy + 60))
-            e_desc = gfx.fonts["regular"].render(evo_info["short_text"], True, (200, 80, 0) if evo_info["is_ready"] else UI_TEXT)
-            surf.blit(e_desc, (sx + 312, sy + 84))
+            surf.blit(e_head, (evo_x + 14, sy + 72))
 
-            e_hint = gfx.fonts["small"].render("Press [E / Tab] for Full Progression Chart", True, (40, 110, 220))
-            surf.blit(e_hint, (sx + 312, sy + 155))
+            evo_info = get_pokemon_evolution_info(p, self.inventory)
+            
+            # Evolution Short Text (Word Wrapped)
+            evo_text_str = evo_info.get("short_text", "Fully evolved form.")
+            e_words = evo_text_str.split(" ")
+            e_lines, cur_line = [], ""
+            for w in e_words:
+                test = cur_line + (" " if cur_line else "") + w
+                if gfx.fonts["regular"].size(test)[0] < evo_w - 28:
+                    cur_line = test
+                else:
+                    e_lines.append(cur_line)
+                    cur_line = w
+            if cur_line:
+                e_lines.append(cur_line)
 
-            # Moves Box
-            moves_y = sy + 205
-            pygame.draw.rect(surf, (245, 248, 255), (sx + 20, moves_y, sw - 40, 130), border_radius=8)
-            pygame.draw.rect(surf, UI_BORDER_LIGHT, (sx + 20, moves_y, sw - 40, 130), 1, border_radius=8)
+            for l_i, l_str in enumerate(e_lines[:3]):
+                e_col = (210, 70, 0) if evo_info.get("is_ready") else UI_TEXT
+                l_surf = gfx.fonts["regular"].render(l_str, True, e_col)
+                surf.blit(l_surf, (evo_x + 14, sy + 98 + l_i * 24))
 
-            m_title = gfx.fonts["small"].render("KNOWN MOVES", True, (40, 100, 200))
-            surf.blit(m_title, (sx + 30, moves_y + 8))
+            # Target species preview tag if available
+            target_species = evo_info.get("target")
+            if target_species:
+                t_sp_icon = gfx.get_pokemon_sprite(target_species, is_back=False, size=(38, 38))
+                surf.blit(t_sp_icon, (evo_x + 14, sy + 155))
+                t_lbl = gfx.fonts["small"].render(f"Target: {target_species}", True, (40, 90, 180))
+                surf.blit(t_lbl, (evo_x + 58, sy + 165))
 
-            for m_i, m in enumerate(p.moves[:4]):
-                mx_pos = sx + 30 + (m_i % 2) * 250
-                my_pos = moves_y + 32 + (m_i // 2) * 44
-                m_name = gfx.fonts["regular"].render(m.name, True, UI_TEXT)
-                m_pp = gfx.fonts["small"].render(f"PP: {m.pp}/{m.max_pp} ({m.type})", True, UI_TEXT_MUTED)
-                surf.blit(m_name, (mx_pos, my_pos))
-                surf.blit(m_pp, (mx_pos, my_pos + 18))
+            # Interactive Chart Button
+            btn_chart_y = sy + 215
+            pygame.draw.rect(surf, (220, 235, 255), (evo_x + 10, btn_chart_y, evo_w - 20, 30), border_radius=6)
+            pygame.draw.rect(surf, (100, 160, 240), (evo_x + 10, btn_chart_y, evo_w - 20, 30), 1, border_radius=6)
+            e_hint = gfx.fonts["small"].render("[E / Tab]: Full Evolution Chart", True, (20, 80, 190))
+            surf.blit(e_hint, (evo_x + (evo_w - e_hint.get_width()) // 2, btn_chart_y + 7))
 
-            close_hint = gfx.fonts["small"].render("Press [Z / X / Enter / ESC] to Close Summary  |  [E / Tab]: Evolution Chart", True, (200, 80, 0))
-            surf.blit(close_hint, (sx + (sw - close_hint.get_width()) // 2, sy + 375))
+            # 5. Lower Section: Known Moves (4 Slots)
+            moves_box_y = sy + 270
+            moves_w, moves_h = sw - 32, 190
+            pygame.draw.rect(surf, WHITE, (sx + 16, moves_box_y, moves_w, moves_h), border_radius=10)
+            pygame.draw.rect(surf, (215, 225, 242), (sx + 16, moves_box_y, moves_w, moves_h), 1, border_radius=10)
+
+            m_title = gfx.fonts["small"].render("KNOWN MOVES & TECHNIQUES", True, (40, 100, 200))
+            surf.blit(m_title, (sx + 28, moves_box_y + 10))
+
+            card_move_w = (moves_w - 36) // 2
+            card_move_h = 62
+
+            for m_i in range(4):
+                col_i = m_i % 2
+                row_i = m_i // 2
+                mx_pos = sx + 24 + col_i * (card_move_w + 12)
+                my_pos = moves_box_y + 34 + row_i * (card_move_h + 8)
+
+                if m_i < len(p.moves):
+                    m = p.moves[m_i]
+                    m_name_str = m["name"] if isinstance(m, dict) else getattr(m, "name", "Tackle")
+                    m_pp_val = m.get("pp", 35) if isinstance(m, dict) else getattr(m, "pp", 35)
+                    m_max_pp = m.get("max_pp", 35) if isinstance(m, dict) else getattr(m, "max_pp", 35)
+                    m_type = m.get("type", "Normal") if isinstance(m, dict) else getattr(m, "type", "Normal")
+                    m_cat = m.get("category", "Physical") if isinstance(m, dict) else getattr(m, "category", "Physical")
+                    m_pwr = m.get("power", 0) if isinstance(m, dict) else getattr(m, "power", 0)
+
+                    # Move Card Background
+                    pygame.draw.rect(surf, (250, 252, 255), (mx_pos, my_pos, card_move_w, card_move_h), border_radius=8)
+                    pygame.draw.rect(surf, (220, 230, 245), (mx_pos, my_pos, card_move_w, card_move_h), 1, border_radius=8)
+
+                    # Slot index tag
+                    pygame.draw.rect(surf, (40, 100, 180), (mx_pos + 8, my_pos + 8, 22, 22), border_radius=4)
+                    idx_txt = gfx.fonts["small"].render(str(m_i + 1), True, WHITE)
+                    surf.blit(idx_txt, (mx_pos + 8 + (22 - idx_txt.get_width()) // 2, my_pos + 11))
+
+                    # Move Name
+                    m_name_surf = gfx.fonts["regular"].render(m_name_str, True, UI_TEXT)
+                    surf.blit(m_name_surf, (mx_pos + 36, my_pos + 8))
+
+                    # Type Badge & Category
+                    gfx.draw_type_badge(surf, m_type, mx_pos + 36, my_pos + 34, width=54, height=18)
+                    cat_txt = gfx.fonts["small"].render(m_cat.upper(), True, UI_TEXT_MUTED)
+                    surf.blit(cat_txt, (mx_pos + 96, my_pos + 36))
+
+                    # Power & PP on the right
+                    pwr_str = f"Pwr: {m_pwr}" if m_pwr > 0 else "Pwr: --"
+                    pwr_txt = gfx.fonts["small"].render(pwr_str, True, UI_TEXT_MUTED)
+                    pp_str = f"PP: {m_pp_val}/{m_max_pp}"
+                    pp_txt = gfx.fonts["regular"].render(pp_str, True, (40, 120, 220) if m_pp_val > 0 else (220, 40, 40))
+
+                    surf.blit(pwr_txt, (mx_pos + card_move_w - pwr_txt.get_width() - 14, my_pos + 8))
+                    surf.blit(pp_txt, (mx_pos + card_move_w - pp_txt.get_width() - 14, my_pos + 32))
+                else:
+                    # Empty Move Slot
+                    pygame.draw.rect(surf, (246, 248, 252), (mx_pos, my_pos, card_move_w, card_move_h), border_radius=8)
+                    pygame.draw.rect(surf, (230, 235, 245), (mx_pos, my_pos, card_move_w, card_move_h), 1, border_radius=8)
+                    emp_txt = gfx.fonts["small"].render("- Empty Move Slot -", True, (160, 175, 195))
+                    surf.blit(emp_txt, (mx_pos + (card_move_w - emp_txt.get_width()) // 2, my_pos + 22))
+
+            # 6. Bottom Navigation Hint
+            close_hint = gfx.fonts["small"].render("Press [Z / X / Enter / ESC] to Close  |  [E / Tab]: Evolution Progression Chart", True, (180, 70, 0))
+            surf.blit(close_hint, (sx + (sw - close_hint.get_width()) // 2, sy + sh - 28))
 
         # 5. Evolution Progression Chart Modal Popup Overlay
         if self.menu_mode == "EVOLUTION_CHART" and self.evolution_pokemon:

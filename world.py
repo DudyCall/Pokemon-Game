@@ -11,7 +11,7 @@ from constants import (
 from graphics_manager import gfx
 from sound_manager import sound_mgr
 from pokemon_data import WILD_ENCOUNTERS, TRAINERS
-from map_data import *
+from map_data import MAP_DEFINITIONS
 from player import Player
 from barrier_system import barrier_mgr
 

@@ -5,6 +5,7 @@ Supports multiple save slots with rich metadata, timestamps, and legacy save mig
 import os
 import json
 import datetime
+import shutil
 from pokemon import Pokemon
 from inventory import Inventory
 

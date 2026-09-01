@@ -415,37 +415,97 @@ class MoveRerollScreen:
 class DialogueBox:
     def __init__(self, speaker_name, text, on_complete=None, portrait_key=None, trainer_data=None):
         self.speaker = speaker_name
-        self.full_text = text
-        self.visible_chars = 0
-        self.speed = 40.0
+        self.raw_text = text
+        self.full_text = text # Backwards compatibility
         self.on_complete = on_complete
-        self.finished = False
         self.portrait_key = portrait_key or (trainer_data.get("id") if isinstance(trainer_data, dict) else speaker_name)
         self.trainer_data = trainer_data
         self.timer = 0.0
 
+        # Calculate max text width
+        has_portrait = bool(self.portrait_key)
+        bw = SCREEN_WIDTH - 60
+        text_max_w = bw - 110 - 64 if has_portrait else bw - 48
+
+        # Build paginated pages of text
+        self.pages = self._paginate_text(text, max_w=text_max_w, max_lines_per_page=3)
+        if not self.pages:
+            self.pages = [["..."]]
+        self.current_page_idx = 0
+        self.visible_chars = 0
+        self.speed = 40.0
+        self.finished_page = False
+
+    @property
+    def finished(self):
+        return self.finished_page and (self.current_page_idx + 1 >= len(self.pages))
+
+    @finished.setter
+    def finished(self, val):
+        self.finished_page = bool(val)
+        if val:
+            self.visible_chars = 999999
+
+    def _paginate_text(self, text, max_w, max_lines_per_page=3):
+        paragraphs = text.split("\n")
+        all_lines = []
+        for p in paragraphs:
+            p = p.strip()
+            if not p:
+                continue
+            words = p.split(" ")
+            curr_line = ""
+            for w in words:
+                if not w:
+                    continue
+                test = curr_line + (" " if curr_line else "") + w
+                if gfx.fonts["medium"].size(test)[0] < max_w:
+                    curr_line = test
+                else:
+                    if curr_line:
+                        all_lines.append(curr_line)
+                    curr_line = w
+            if curr_line:
+                all_lines.append(curr_line)
+
+        pages = []
+        for i in range(0, len(all_lines), max_lines_per_page):
+            pages.append(all_lines[i : i + max_lines_per_page])
+        return pages
+
     def update(self, dt):
         self.timer += dt
-        if not self.finished:
+        curr_page_lines = self.pages[self.current_page_idx]
+        total_page_chars = sum(len(l) for l in curr_page_lines) + max(0, len(curr_page_lines) - 1)
+        if not self.finished_page:
             self.visible_chars += self.speed * dt
-            if self.visible_chars >= len(self.full_text):
-                self.visible_chars = len(self.full_text)
-                self.finished = True
+            if self.visible_chars >= total_page_chars:
+                self.visible_chars = total_page_chars
+                self.finished_page = True
 
     def handle_input(self, event):
         if event.type != pygame.KEYDOWN:
             return False
-        if any(event.key == k for k in KEY_CONFIRM + KEY_CANCEL) or event.key in [pygame.K_SPACE, pygame.K_RETURN, pygame.K_z, pygame.K_x]:
-            if not self.finished:
-                self.visible_chars = len(self.full_text)
-                self.finished = True
+        if any(event.key == k for k in KEY_CONFIRM + KEY_CANCEL) or event.key in [pygame.K_SPACE, pygame.K_RETURN, pygame.K_z, pygame.K_x, pygame.K_DOWN]:
+            curr_page_lines = self.pages[self.current_page_idx]
+            total_page_chars = sum(len(l) for l in curr_page_lines) + max(0, len(curr_page_lines) - 1)
+            if not self.finished_page:
+                self.visible_chars = total_page_chars
+                self.finished_page = True
                 sound_mgr.play_sfx("select")
                 return False
             else:
-                sound_mgr.play_sfx("confirm")
-                if self.on_complete:
-                    self.on_complete()
-                return True
+                if self.current_page_idx + 1 < len(self.pages):
+                    self.current_page_idx += 1
+                    self.visible_chars = 0
+                    self.finished_page = False
+                    sound_mgr.play_sfx("select")
+                    return False
+                else:
+                    sound_mgr.play_sfx("confirm")
+                    if self.on_complete:
+                        self.on_complete()
+                    return True
         return False
 
     def draw(self, surf):
@@ -459,11 +519,9 @@ class DialogueBox:
 
         # 1. Portrait Frame (Left Side)
         has_portrait = bool(self.portrait_key)
-        # Determine if mouth is currently talking (animating between open/closed while streaming text)
-        is_talking = (not self.finished) and (int(self.visible_chars * 3.5) % 2 == 1)
+        is_talking = (not self.finished_page) and (int(self.visible_chars * 3.5) % 2 == 1)
         
         text_start_x = bx + 24
-        text_max_w = bw - 48
         
         if has_portrait:
             portrait_size = (110, 110)
@@ -475,18 +533,13 @@ class DialogueBox:
             px = bx + 16
             py = by + (bh - portrait_size[1]) // 2 + 6
             
-            # Subtle card drop shadow behind portrait
             pygame.draw.rect(surf, (30, 36, 48), (px - 3, py - 3, portrait_size[0] + 6, portrait_size[1] + 6), border_radius=10)
             pygame.draw.rect(surf, (245, 248, 255), (px - 1, py - 1, portrait_size[0] + 2, portrait_size[1] + 2), border_radius=8)
             surf.blit(port_surf, (px, py))
-            
-            # Adjust text margins
             text_start_x = px + portrait_size[0] + 22
-            text_max_w = bw - (text_start_x - bx) - 24
 
         # 2. Speaker Name Tag Badge
         if self.speaker:
-            # Customize badge colors based on character identity
             sp_lower = self.speaker.lower()
             if "leader" in sp_lower or "brock" in sp_lower or "misty" in sp_lower:
                 badge_bg = (255, 245, 210)
@@ -524,27 +577,26 @@ class DialogueBox:
             stxt = gfx.fonts["regular"].render(speaker_display, True, badge_txt_c)
             surf.blit(stxt, (sx + 14, sy + 4))
 
-        # 3. Typewriter Text Rendering with Line Wrapping
-        disp_text = self.full_text[:int(self.visible_chars)]
-        words = disp_text.split(" ")
-        lines = []
-        curr_line = ""
-        for w in words:
-            test = curr_line + (" " if curr_line else "") + w
-            if gfx.fonts["medium"].size(test)[0] < text_max_w:
-                curr_line = test
-            else:
-                lines.append(curr_line)
-                curr_line = w
-        if curr_line:
-            lines.append(curr_line)
+        # 3. Render Lines for Current Page
+        curr_page_lines = self.pages[self.current_page_idx]
+        chars_left = int(self.visible_chars)
+        for i, l_str in enumerate(curr_page_lines):
+            if chars_left <= 0:
+                break
+            visible_line = l_str[:chars_left]
+            chars_left -= (len(l_str) + 1)
+            ltxt = gfx.fonts["medium"].render(visible_line, True, UI_TEXT)
+            surf.blit(ltxt, (text_start_x, by + 24 + i * 32))
 
-        for i, l_str in enumerate(lines[:3]):
-            ltxt = gfx.fonts["medium"].render(l_str, True, UI_TEXT)
-            surf.blit(ltxt, (text_start_x, by + 26 + i * 34))
+        # 4. Page indicator & Blinking continue arrow
+        is_last_page = (self.current_page_idx + 1 == len(self.pages))
+        if len(self.pages) > 1:
+            page_txt = gfx.fonts["small"].render(f"Page {self.current_page_idx + 1}/{len(self.pages)}", True, (130, 150, 180))
+            surf.blit(page_txt, (bx + bw - page_txt.get_width() - 130, by + bh - 24))
 
-        # 4. Blinking Continue Arrow Indicator
-        if self.finished:
+        if self.finished_page:
             if int(self.timer * 4.0) % 2 == 0:
-                arrow_surf = gfx.fonts["small"].render("[Z / Enter] ▼", True, (220, 90, 20))
+                prompt_str = "[Z / Enter] Done" if is_last_page else "[Z / Enter] Next ▼"
+                prompt_col = (30, 140, 50) if is_last_page else (220, 90, 20)
+                arrow_surf = gfx.fonts["small"].render(prompt_str, True, prompt_col)
                 surf.blit(arrow_surf, (bx + bw - arrow_surf.get_width() - 20, by + bh - 24))

@@ -95,6 +95,9 @@ class BattleSystem:
         # Move Reorder Mode
         self.move_swap_source = None
         
+        # Floating Combat Damage Text
+        self.floating_texts = []
+        
         # Attack FX
         self.active_fx = None
         self.fx_timer = 0.0
@@ -172,6 +175,13 @@ class BattleSystem:
         if self.screen_shake > 0:
             self.screen_shake = max(0, self.screen_shake - int(dt * 30))
             
+        # Update floating combat damage numbers
+        for ft in self.floating_texts[:]:
+            ft["timer"] -= dt
+            ft["y"] -= 26 * dt
+            if ft["timer"] <= 0:
+                self.floating_texts.remove(ft)
+
         # Sprite entry slide during Intro
         if self.phase in [BattlePhase.INTRO, BattlePhase.MESSAGE_QUEUE, BattlePhase.ACTION_MENU]:
             if self.player_pos_x < self.target_player_x:
@@ -474,6 +484,40 @@ class BattleSystem:
         self.catch_shakes = 0
         sound_mgr.play_sfx("throw")
 
+    def calculate_damage_range(self, move, attacker=None, defender=None):
+        """Calculates min and max estimated damage range and type effectiveness for a move."""
+        if attacker is None:
+            attacker = self.player_pokemon
+        if defender is None:
+            defender = self.enemy_pokemon
+
+        power = move.get("power", 0)
+        if power <= 0:
+            return 0, 0, 1.0
+
+        category = move.get("category", "Physical")
+        m_type = move.get("type", "Normal")
+
+        if category == "Special":
+            atk = attacker.stats.get("spatk", 10)
+            defn = defender.stats.get("spdef", 10)
+        else:
+            atk = attacker.stats.get("atk", 10)
+            defn = defender.stats.get("def", 10)
+
+        stab = 1.5 if m_type in attacker.types else 1.0
+        effectiveness = 1.0
+        for d_type in defender.types:
+            effectiveness *= TYPE_CHART.get(m_type, {}).get(d_type, 1.0)
+
+        if effectiveness == 0.0:
+            return 0, 0, 0.0
+
+        base_calc = (((2 * attacker.level / 5 + 2) * power * (atk / max(1, defn))) / 50 + 2) * stab * effectiveness
+        min_dmg = max(1, math.floor(base_calc * 0.85))
+        max_dmg = max(1, math.floor(base_calc * 1.0))
+        return min_dmg, max_dmg, effectiveness
+
     def _switch_player_pokemon(self, new_index):
         old_name = self.player_pokemon.nickname
         self.player_index = new_index
@@ -581,6 +625,31 @@ class BattleSystem:
                 dmg = math.floor((((2 * attacker.level / 5 + 2) * power * (atk / max(1, defn))) / 50 + 2) * stab * effectiveness * (1.5 if is_crit else 1.0) * rand_factor)
                 dmg = max(1, dmg)
                 
+                # Spawn floating combat damage text over target
+                def_x = int(self.enemy_pos_x) + 70 if not is_player else int(self.player_pos_x) + 90
+                def_y = 65 if not is_player else 190
+                txt_label = f"-{dmg}"
+                txt_col = (255, 60, 60)
+                if is_crit:
+                    txt_label = f"CRIT! -{dmg}"
+                    txt_col = (255, 215, 0)
+                elif effectiveness > 1.0:
+                    txt_label = f"SUPER! -{dmg}"
+                    txt_col = (255, 110, 20)
+                elif effectiveness < 1.0 and effectiveness > 0:
+                    txt_label = f"-{dmg}"
+                    txt_col = (170, 180, 200)
+
+                self.floating_texts.append({
+                    "text": txt_label,
+                    "x": def_x,
+                    "y": def_y,
+                    "timer": 1.4,
+                    "color": txt_col,
+                    "is_crit": is_crit,
+                    "is_super": effectiveness > 1.0
+                })
+
                 # Apply damage with animation
                 self.hp_target = max(0, defender.current_hp - dmg)
                 self.hp_target_pokemon = defender
@@ -599,6 +668,7 @@ class BattleSystem:
                 
                 # Post attack comments
                 def on_damage_applied():
+                    self.queue_message(f"{defender.nickname} took {dmg} damage!")
                     if is_crit:
                         self.queue_message("A critical hit!")
                     if effectiveness > 1.0:
@@ -916,6 +986,16 @@ class BattleSystem:
             enemy_center = (int(self.enemy_pos_x) + 80, 70 + 80)
             draw_battle_attack_vfx(surf, self.active_fx, self.fx_timer, player_center, enemy_center)
 
+        # Draw Floating Combat Damage Numbers
+        for ft in self.floating_texts:
+            f_font = gfx.fonts["large"] if (ft.get("is_crit") or ft.get("is_super")) else gfx.fonts["medium"]
+            # Shadow
+            sh_txt = f_font.render(ft["text"], True, (20, 20, 30))
+            surf.blit(sh_txt, (int(ft["x"]) + 2, int(ft["y"]) + 2))
+            # Foreground text
+            fg_txt = f_font.render(ft["text"], True, ft["color"])
+            surf.blit(fg_txt, (int(ft["x"]), int(ft["y"])))
+
         # Draw HUD Cards (Enemy Top-Left, Player Bottom-Right)
         self._draw_enemy_hud(surf)
         self._draw_player_hud(surf)
@@ -928,7 +1008,7 @@ class BattleSystem:
             self._draw_level_up_modal(surf)
 
     def _draw_enemy_hud(self, surf):
-        x, y, w, h = 40, 40, 260, 75
+        x, y, w, h = 40, 40, 260, 80
         # Background card
         pygame.draw.rect(surf, UI_BORDER_DARK, (x - 2, y - 2, w + 4, h + 4), border_radius=8)
         pygame.draw.rect(surf, UI_BG, (x, y, w, h), border_radius=6)
@@ -936,18 +1016,22 @@ class BattleSystem:
         # Enemy Name & Level
         name_txt = gfx.fonts["regular"].render(self.enemy_pokemon.species.upper(), True, UI_TEXT)
         lvl_txt = gfx.fonts["small"].render(f"Lv.{self.enemy_pokemon.level}", True, UI_TEXT_MUTED)
-        surf.blit(name_txt, (x + 12, y + 10))
-        surf.blit(lvl_txt, (x + w - lvl_txt.get_width() - 12, y + 12))
+        surf.blit(name_txt, (x + 12, y + 8))
+        surf.blit(lvl_txt, (x + w - lvl_txt.get_width() - 12, y + 10))
         
         # HP Bar
         bar_w = 180 if not self.enemy_pokemon.status else 136
-        gfx.draw_hp_bar(surf, x + 50, y + 42, bar_w, 10, self.enemy_pokemon.current_hp, self.enemy_pokemon.max_hp)
+        gfx.draw_hp_bar(surf, x + 50, y + 34, bar_w, 10, self.enemy_pokemon.current_hp, self.enemy_pokemon.max_hp)
         hp_lbl = gfx.fonts["small"].render("HP", True, (240, 180, 40))
-        surf.blit(hp_lbl, (x + 22, y + 38))
+        surf.blit(hp_lbl, (x + 22, y + 30))
         
         # Enemy Status Badge
         if self.enemy_pokemon.status:
-            gfx.draw_status_badge(surf, self.enemy_pokemon.status, x + 50 + bar_w + 6, y + 38, width=38, height=18)
+            gfx.draw_status_badge(surf, self.enemy_pokemon.status, x + 50 + bar_w + 6, y + 30, width=38, height=18)
+
+        # Numeric Enemy HP Display
+        hp_num = gfx.fonts["small"].render(f"{self.enemy_pokemon.current_hp} / {self.enemy_pokemon.max_hp}", True, UI_TEXT)
+        surf.blit(hp_num, (x + w - hp_num.get_width() - 14, y + 50))
 
     def _draw_player_hud(self, surf):
         x, y, w, h = 480, 250, 280, 110
@@ -1030,10 +1114,10 @@ class BattleSystem:
                 ltxt = gfx.fonts["regular"].render(labels[i], True, UI_TEXT if not is_sel else (180, 60, 0))
                 surf.blit(ltxt, (rx + (btn_w - ltxt.get_width()) // 2, ry + (btn_h - ltxt.get_height()) // 2))
 
-        # Move Selection Sub-Menu
+        # Move Selection Sub-Menu with Live Damage Forecast Intelligence Card
         elif self.phase == BattlePhase.MOVE_SELECT:
-            btn_w, btn_h = 240, 60
-            positions = [(30, 20), (290, 20), (30, 95), (290, 95)]
+            btn_w, btn_h = 225, 58
+            positions = [(20, 14), (252, 14), (20, 78), (252, 78)]
             
             for i, move in enumerate(self.player_pokemon.moves):
                 lx, ly = positions[i]
@@ -1057,20 +1141,104 @@ class BattleSystem:
                 
                 # Move Name
                 mtxt = gfx.fonts["regular"].render(move["name"], True, (210, 60, 0) if is_sel else UI_TEXT)
-                surf.blit(mtxt, (rx + 12, ry + 10))
+                surf.blit(mtxt, (rx + 10, ry + 7))
+
+                # Power Tag on Top Right
+                pwr = move.get("power", 0)
+                pwr_str = f"Pwr: {pwr}" if pwr > 0 else "Status"
+                pwr_col = (210, 70, 0) if pwr > 0 else (120, 140, 170)
+                pwr_txt = gfx.fonts["small"].render(pwr_str, True, pwr_col)
+                surf.blit(pwr_txt, (rx + btn_w - pwr_txt.get_width() - 10, ry + 9))
                 
-                # Type badge & PP
-                gfx.draw_type_badge(surf, move["type"], rx + 12, ry + 32, width=60, height=20)
+                # Type badge & PP on Bottom
+                gfx.draw_type_badge(surf, move["type"], rx + 10, ry + 31, width=54, height=19)
                 pp_txt = gfx.fonts["small"].render(f"PP {move['pp']}/{move['max_pp']}", True, UI_TEXT_MUTED)
-                surf.blit(pp_txt, (rx + btn_w - pp_txt.get_width() - 12, ry + 34))
+                surf.blit(pp_txt, (rx + btn_w - pp_txt.get_width() - 10, ry + 33))
 
                 if is_swap:
                     sw_lbl = gfx.fonts["small"].render("SWAP", True, (230, 50, 50))
-                    surf.blit(sw_lbl, (rx + btn_w - sw_lbl.get_width() - 12, ry + 10))
+                    surf.blit(sw_lbl, (rx + btn_w - sw_lbl.get_width() - 10, ry + 7))
+
+            # Right Intelligence / Damage Forecast Card
+            fc_x = bx + 486
+            fc_y = by + 14
+            fc_w = bw - 502
+            fc_h = 138
+            pygame.draw.rect(surf, (243, 247, 255), (fc_x, fc_y, fc_w, fc_h), border_radius=8)
+            pygame.draw.rect(surf, (195, 210, 235), (fc_x, fc_y, fc_w, fc_h), 1, border_radius=8)
+
+            fc_head = gfx.fonts["small"].render("MOVE FORECAST", True, (20, 70, 160))
+            surf.blit(fc_head, (fc_x + 10, fc_y + 6))
+
+            if self.move_index < len(self.player_pokemon.moves):
+                sel_m = self.player_pokemon.moves[self.move_index]
+                m_pwr = sel_m.get("power", 0)
+                m_acc = sel_m.get("accuracy", 100)
+                m_cat = sel_m.get("category", "Physical")
+
+                cat_line = gfx.fonts["small"].render(f"{m_cat}  |  Acc: {m_acc}%", True, UI_TEXT)
+                surf.blit(cat_line, (fc_x + 10, fc_y + 24))
+
+                if m_pwr > 0:
+                    min_d, max_d, eff = self.calculate_damage_range(sel_m)
+                    
+                    # Effectiveness tag
+                    if eff > 1.0:
+                        eff_tag = gfx.fonts["small"].render("▲ Super Effective! (x2.0)", True, (30, 140, 50))
+                    elif 0 < eff < 1.0:
+                        eff_tag = gfx.fonts["small"].render("▼ Not Very Effective (x0.5)", True, (210, 80, 0))
+                    elif eff == 0.0:
+                        eff_tag = gfx.fonts["small"].render("✕ No Effect (x0.0)", True, (120, 130, 150))
+                    else:
+                        eff_tag = gfx.fonts["small"].render("● Normal Damage (x1.0)", True, (50, 90, 170))
+                    surf.blit(eff_tag, (fc_x + 10, fc_y + 42))
+
+                    # Estimated Damage Pill Box
+                    dmg_box_y = fc_y + 64
+                    pygame.draw.rect(surf, (255, 238, 235), (fc_x + 8, dmg_box_y, fc_w - 16, 64), border_radius=6)
+                    pygame.draw.rect(surf, (245, 180, 170), (fc_x + 8, dmg_box_y, fc_w - 16, 64), 1, border_radius=6)
+
+                    lbl_d = gfx.fonts["small"].render("ESTIMATED DAMAGE:", True, (160, 40, 10))
+                    surf.blit(lbl_d, (fc_x + 14, dmg_box_y + 6))
+
+                    dmg_str = f"~ {min_d} - {max_d} HP"
+                    dmg_surf = gfx.fonts["medium"].render(dmg_str, True, (210, 30, 0))
+                    surf.blit(dmg_surf, (fc_x + 14, dmg_box_y + 26))
+
+                else:
+                    eff_tag = gfx.fonts["small"].render("● Status / Tactical Move", True, (100, 120, 150))
+                    surf.blit(eff_tag, (fc_x + 10, fc_y + 42))
+
+                    stat_box_y = fc_y + 64
+                    pygame.draw.rect(surf, (238, 244, 255), (fc_x + 8, stat_box_y, fc_w - 16, 64), border_radius=6)
+                    pygame.draw.rect(surf, (190, 210, 240), (fc_x + 8, stat_box_y, fc_w - 16, 64), 1, border_radius=6)
+
+                    lbl_s = gfx.fonts["small"].render("TACTICAL EFFECT:", True, (30, 80, 160))
+                    surf.blit(lbl_s, (fc_x + 14, stat_box_y + 6))
+
+                    raw_desc = sel_m.get("desc", "Applies tactical battlefield advantage.")
+                    # Word wrap within box width
+                    words = raw_desc.split(" ")
+                    lines, cur = [], ""
+                    for w in words:
+                        t = cur + (" " if cur else "") + w
+                        if gfx.fonts["small"].size(t)[0] < (fc_w - 32):
+                            cur = t
+                        else:
+                            if cur:
+                                lines.append(cur)
+                            cur = w
+                    if cur:
+                        lines.append(cur)
+
+                    for l_idx, l_str in enumerate(lines[:2]):
+                        d_txt = gfx.fonts["small"].render(l_str, True, (40, 70, 130))
+                        surf.blit(d_txt, (fc_x + 14, stat_box_y + 24 + l_idx * 16))
 
             # Bottom Hint
             swap_hint = gfx.fonts["small"].render("[S / Shift / Tab]: Swap Move Positions  |  [X]: Back", True, (40, 100, 180))
-            surf.blit(swap_hint, (bx + 20, by + bh - 18))
+            surf.blit(swap_hint, (bx + 20, by + bh - 20))
+            surf.blit(swap_hint, (bx + 20, by + bh - 20))
 
         # Bag Selection Sub-Menu with Live Item Explanation Tooltip
         elif self.phase == BattlePhase.BAG_SELECT:

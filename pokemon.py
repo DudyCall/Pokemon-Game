@@ -221,6 +221,13 @@ class Pokemon:
             return True, target_move, old_move_name, msg
 
 
+    def check_evolution(self):
+        """Checks if this Pokémon is currently eligible for level-based evolution."""
+        evo = self.species_data.get("evolution")
+        if evo and self.level >= evo.get("level", 100):
+            return evo.get("target")
+        return None
+
     def evolve(self, target_species):
         if target_species in POKEMON_SPECIES:
             old_name = self.species
@@ -231,6 +238,12 @@ class Pokemon:
             if self.nickname == old_name:
                 self.nickname = target_species
             self.recalculate_stats()
+            # Check if newly evolved form learns any new signature move at current level
+            learnset = self.species_data.get("learnset", {})
+            if self.level in learnset:
+                for m_name in learnset[self.level]:
+                    if m_name in MOVES and m_name not in [m["name"] for m in self.moves]:
+                        self.learn_move(m_name)
             return True
         return False
 

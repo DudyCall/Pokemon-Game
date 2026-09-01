@@ -98,7 +98,36 @@ class Inventory:
             exp_needed = pokemon.exp_for_next_level() - pokemon.exp
             events = pokemon.gain_exp(exp_needed)
             self.remove_item(item_name, 1)
-            return True, f"{pokemon.nickname} grew to Level {pokemon.level}!"
+            
+            msg_parts = [f"{pokemon.nickname} grew to Level {pokemon.level}!"]
+            
+            # Process move learning
+            for ev in events:
+                if ev[0] == "LEARN_MOVE":
+                    m_name = ev[1]
+                    ok, m_msg = pokemon.learn_move(m_name)
+                    if ok:
+                        msg_parts.append(m_msg)
+            
+            # Process evolution if triggered by leveling or already ready
+            target_species = None
+            for ev in events:
+                if ev[0] == "EVOLVE":
+                    target_species = ev[1]
+                    break
+            if not target_species:
+                target_species = pokemon.check_evolution()
+                
+            if target_species:
+                old_name = pokemon.nickname
+                pokemon.evolve(target_species)
+                msg_parts.append(f"What?! {old_name} is evolving! Congratulations, {old_name} evolved into {target_species.upper()}!")
+                if quest_mgr is not None:
+                    quest_mgr.on_item_used(item_name, pokemon, self)
+            elif quest_mgr is not None:
+                quest_mgr.on_item_used(item_name, pokemon, self)
+                
+            return True, " ".join(msg_parts)
 
         # Evolution Stones (Moon Stone, Fire Stone, Water Stone, Thunder Stone, Leaf Stone)
         if "stone_type" in data:
