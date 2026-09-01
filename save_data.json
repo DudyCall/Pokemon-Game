@@ -1,6 +1,6 @@
 {
   "slot": 1,
-  "timestamp": "2026-09-01 11:59",
+  "timestamp": "2026-09-01 12:10",
   "player": {
     "name": "Red",
     "gender": "Boy",
@@ -23,12 +23,12 @@
       "exp": 512,
       "status": null,
       "ivs": {
-        "hp": 23,
-        "atk": 29,
-        "def": 10,
-        "spatk": 25,
-        "spdef": 21,
-        "spd": 28
+        "hp": 12,
+        "atk": 14,
+        "def": 18,
+        "spatk": 29,
+        "spdef": 12,
+        "spd": 16
       },
       "moves": [
         {

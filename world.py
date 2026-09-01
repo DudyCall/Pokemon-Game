@@ -34,6 +34,7 @@ from pokemon_data import WILD_ENCOUNTERS, TRAINERS
 # O = Cave Entrance / Arch
 # f = Fence (Solid obstacle)
 # * = Red Flower Patch (Wild Pokemon encounter)
+# H = House / Facility Roof / Furniture (Solid obstacle)
 # R = PokeCenter Red Roof (Solid obstacle)
 # B = Mart Blue Roof (Solid obstacle)
 # W = Building Wall (Solid obstacle)
@@ -45,14 +46,13 @@ from pokemon_data import WILD_ENCOUNTERS, TRAINERS
 # P = PC Terminal
 # J = Gym Arena Mat
 # Y = Gym / Museum Statue (Solid obstacle)
-# H = Lab Tech Desk / Furniture (Solid obstacle)
 # K = Bookshelf (Solid obstacle)
 # o = Ground Collectible Item Poké Ball
 
 MAP_PALLET_TOWN = [
     "########....##########",
     "#......pppppp........#",
-    "#..WW..p....p..WWWW..#",
+    "#..HH..p....p..HHHH..#",
     "#..WW..p....p..WWWW..#",
     "#..WD..p....p..WWWD..#",
     "#......pppppp........#",
@@ -115,7 +115,7 @@ MAP_VIRIDIAN_CITY = [
     "...p........pppp........p..#",
     "...pppppppppppppppppppppp..#",
     "...p........pppp........p..#",
-    "#..p..WWWW..pppp..WWWW..p..#",
+    "#..p..HHHH..pppp..HHHH..p..#",
     "#..p..WWWW..pppp..WWWW..p..#",
     "#..p..WWWD..pppp..WWWD..p..#",
     "#..p........pppp........p..#",
@@ -134,7 +134,7 @@ MAP_ROUTE_22 = [
     "#..^..GGGG........rrrr..^..#",
     "#..^..GGGG..~~~~..rrrr..^..#",
     "#..^..uuuu..~~~~..uuuu..^..#",
-    "#..^..WWWW..~~~~..o.....^..#",
+    "#..^..HHHH..~~~~..o.....^..#",
     "#..^..WWWD..~~~~........^..#",
     "#..^..S.....pppppppppppppppp",
     "#..^........p..........p....",
@@ -193,7 +193,7 @@ MAP_PEWTER_CITY = [
     "#..S.........pp.........S......#",
     "#..pppppppppppppppppppppppppppp.",
     "#..p........pppp........p.......",
-    "#..p..WWWW..pppp..WWWW..p.......",
+    "#..p..HHHH..pppp..HHHH..p.......",
     "#..p..WWWW..pppp..WWWW..p......#",
     "#..p..WWWD..pppp..WWWD..p......#",
     "#..p..S.....pppp..S.....p.......",
@@ -287,7 +287,7 @@ MAP_CERULEAN_CITY = [
     "#..S.........pp.........S......#",
     "#..pppppppppppppppppppppp......#",
     "#..p........pppp........p......#",
-    "#..p..WWWW..pppp..WWWW..p......#",
+    "#..p..HHHH..pppp..HHHH..p......#",
     "#..p..WWWW..pppp..WWWW..p......#",
     "...p..WWWD..pppp..WWWD..pppppppp",
     "...ppppppppppppppppppppppppppppp",
@@ -469,7 +469,7 @@ MAP_SEAFOAM_ISLANDS = [
 ]
 
 MAP_ROUTE_24 = [
-    "#################WWWD###",
+    "#################HHHD###",
     "#...............WWWW...#",
     "#..~~~~~~~~~~~~~WWWW...#",
     "#..~~~~~~~~~~~~~S......#",
@@ -544,7 +544,7 @@ MAP_CINNABAR_ISLAND = [
     "#..S......pp...S.........#",
     "#..pppppppppppppppppppp..#",
     "#..p......pppp........p..#",
-    "#..p..WWWWpppp..WWWW..p..#",
+    "#..p..HHHHpppp..HHHH..p..#",
     "#..p..WWWWpppp..WWWW..p..#",
     "#..p..WWWDpppp..WWWD..p..#",
     "#..p......pppp........p..#",
@@ -623,7 +623,7 @@ MAP_VERMILION_CITY = [
     "#..S........pppp.....S.........#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........pppp............p..#",
-    "#..p..WWWW..pppp..WWWW......p..#",
+    "#..p..HHHH..pppp..HHHH......p..#",
     "#..p..WWWW..pppp..WWWW......p..#",
     "#..p..WWWD..pppp..WWWD......pppp",
     "#..p........pppp............pppp",
@@ -765,14 +765,14 @@ MAP_ROUTE_8 = [
 MAP_CELADON_CITY = [
     "################################",
     "#..............................#",
-    "#..RRRR.....WWWWWWWW.....BBBB..#",
+    "#..RRRR.....HHHHHHHH.....BBBB..#",
     "#..RRRR.....WWWWWWWD.....BBBB..#",
     "#..WWWD.....WWWWWWWW.....WWWD..#",
     "#...........pppppppp...........#",
     "#..S........pppppppp.....S.....#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p........pppppppp........p..#",
-    "#..p..WWWW..pppppppp..WWWW..p..#",
+    "#..p..HHHH..pppppppp..HHHH..p..#",
     "#..p..WWWW..pppppppp..WWWW..pppp",
     "#..p..WWWD..pppppppp..WWWD..pppp",
     "#..p........pppppppp........pppp",
@@ -780,7 +780,7 @@ MAP_CELADON_CITY = [
     "#..p........pppppppp........p..#",
     "#..p..FFFF..pppppppp..FFFF..p..#",
     "#..p..FFFF..pppppppp..FFFF..p..#",
-    "#..p..WWWW..pppppppp..WWWW..p..#",
+    "#..p..HHHH..pppppppp..HHHH..p..#",
     "#..p..WWWD..pppppppp..WWWD..p..#",
     "#..p..o.....pppppppp...o....p..#",
     "#..p..~~~~~~bbbbbbbb~~~~~~..p..#",
@@ -812,17 +812,17 @@ MAP_SAFFRON_CITY = [
     "#..S..........pppp.......S.....#",
     "#..pppppppppppppppppppppppppp..#",
     "#..p..........pppp..........p..#",
-    "#..p..WWWW....pppp....WWWW..p..#",
+    "#..p..HHHH....pppp....HHHH..p..#",
     "#..p..WWWW....pppp....WWWW..p..#",
     "#..p..WWWD....pppp....WWWD..p..#",
     "#..p..........pppp..........p..#",
-    "#..p..WWWWWWWWWWWWWWWWWWWW..p..#",
+    "#..p..HHHHHHHHHHHHHHHHHHHH..p..#",
     "pppp..WWWWWWWWWWWWWWWWWWWW..pppp",
     "pppp..WWWWWWWWWWWDWWWWWWWW..pppp",
     "pppp..WWWWWWWWWWWWWWWWWWWW..pppp",
     "pppp..........pppp..........pppp",
     "#..p..........pppp..........p..#",
-    "#..p..WWWW....pppp....WWWW..p..#",
+    "#..p..HHHH....pppp....HHHH..p..#",
     "#..p..WWWW....pppp....WWWW..p..#",
     "#..p..WWWD....pppp....WWWD..p..#",
     "#..p..........pppp..........p..#",
@@ -901,7 +901,7 @@ MAP_FUCHSIA_CITY = [
     "#...pppp..S..........S..pppp...#",
     "#...pppppppppppppppppppppppp...#",
     "#...pppp................pppp...#",
-    "#...pppp..WWWW....WWWW..pppp...#",
+    "#...pppp..HHHH....HHHH..pppp...#",
     "#...pppp..WWWW....WWWW..pppp...#",
     "#...pppp..WWWD....WWWD..pppp...#",
     "#...pppp................pppp...#",
@@ -2256,13 +2256,18 @@ class World:
         grid = self.maps[map_name]["grid"]
         rows = len(grid)
         cols = len(grid[0])
-        is_cave = (map_name in ["Mt. Moon", "Seafoam Islands"])
+        is_cave = (map_name in ["Mt. Moon", "Diglett's Cave", "Victory Road", "Cerulean Cave", "Seafoam Islands"])
         is_ice = (map_name == "Seafoam Islands")
         is_lavender = (map_name in ["Lavender Town", "Pokémon Tower"])
         is_tower = (map_name == "Pokémon Tower")
         is_power_plant = (map_name == "Power Plant")
         is_safari = (map_name == "Safari Zone")
-        is_canyon = (map_name == "Route 9")
+        is_canyon = (map_name in ["Route 9", "Route 3", "Route 4"])
+        is_house_indoor = ("House" in map_name or "Cottage" in map_name)
+        is_center_indoor = ("Pokecenter" in map_name)
+        is_mart_indoor = ("Mart" in map_name)
+        is_lab_indoor = ("Lab" in map_name or "Silph" in map_name)
+        is_gym_indoor = ("Gym" in map_name or "Dojo" in map_name)
         
         # Calculate visible tile range
         start_col = max(0, int(camera_x // TILE_SIZE))
@@ -2291,8 +2296,16 @@ class World:
                     surf.blit(gfx.cached_tiles["savanna_grass"], (draw_x, draw_y))
                 elif is_canyon:
                     surf.blit(gfx.cached_tiles["canyon_dirt"], (draw_x, draw_y))
+                elif is_house_indoor and char in ["_", "C", "N", "M", "P", "H", "K"]:
+                    surf.blit(gfx.cached_tiles["floor_house"], (draw_x, draw_y))
+                elif is_center_indoor and char in ["_", "C", "N", "M", "P", "H", "K"]:
+                    surf.blit(gfx.cached_tiles["floor_center"], (draw_x, draw_y))
+                elif is_mart_indoor and char in ["_", "C", "N", "M", "P", "H", "K"]:
+                    surf.blit(gfx.cached_tiles["floor_mart"], (draw_x, draw_y))
+                elif is_lab_indoor and char in ["_", "C", "N", "M", "P", "H", "K"]:
+                    surf.blit(gfx.cached_tiles["floor_lab"], (draw_x, draw_y))
                 elif char in ["_", "C", "N", "M", "P", "H", "K"]:
-                    surf.blit(gfx.cached_tiles["floor"], (draw_x, draw_y))
+                    surf.blit(gfx.cached_tiles["floor_house"] if is_house_indoor else gfx.cached_tiles["floor_center"], (draw_x, draw_y))
                 elif char in ["J", "Y"]:
                     surf.blit(gfx.cached_tiles["gym_floor"], (draw_x, draw_y))
                 elif char in ["s"]:
@@ -2308,7 +2321,10 @@ class World:
                 elif char == "F":
                     surf.blit(gfx.cached_tiles["flower_meadow"], (draw_x, draw_y))
                 elif char == "*":
-                    surf.blit(gfx.cached_tiles["flower_red"], (draw_x, draw_y))
+                    if is_house_indoor:
+                        surf.blit(gfx.cached_tiles["potted_plant"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["flower_red"], (draw_x, draw_y))
                 elif char == "L":
                     surf.blit(gfx.cached_tiles["leaf_pile"], (draw_x, draw_y))
                 elif char == "r":
@@ -2336,6 +2352,8 @@ class World:
                         surf.blit(gfx.cached_tiles["spooky_tree"], (draw_x, draw_y))
                     elif is_safari:
                         surf.blit(gfx.cached_tiles["acacia_tree"], (draw_x, draw_y))
+                    elif is_cave:
+                        surf.blit(gfx.cached_tiles["cave_wall"], (draw_x, draw_y))
                     else:
                         surf.blit(gfx.cached_tiles["tree_tl"], (draw_x, draw_y))
                 elif char == "^":
@@ -2346,7 +2364,31 @@ class World:
                     else:
                         surf.blit(gfx.cached_tiles["cave_wall"], (draw_x, draw_y))
                 elif char == "O":
-                    surf.blit(gfx.cached_tiles["ice_door"] if is_ice else gfx.cached_tiles["cave_door"], (draw_x, draw_y))
+                    # Bespoke dungeon entrance facades
+                    if is_ice or map_name in ["Seafoam Islands", "Route 21"]:
+                        surf.blit(gfx.cached_tiles["cave_door_seafoam"], (draw_x, draw_y))
+                    elif map_name in ["Mt. Moon", "Route 3", "Route 4"]:
+                        surf.blit(gfx.cached_tiles["cave_door_mt_moon"], (draw_x, draw_y))
+                    elif map_name in ["Viridian Forest", "Route 2"]:
+                        surf.blit(gfx.cached_tiles["cave_door_forest"], (draw_x, draw_y))
+                    elif map_name in ["Diglett's Cave", "Route 11"]:
+                        surf.blit(gfx.cached_tiles["cave_door_diglett"], (draw_x, draw_y))
+                    elif map_name in ["Route 9", "Power Plant"]:
+                        surf.blit(gfx.cached_tiles["gate_power_plant"], (draw_x, draw_y))
+                    elif map_name in ["Lavender Town", "Pokémon Tower"]:
+                        surf.blit(gfx.cached_tiles["gate_pokemon_tower"], (draw_x, draw_y))
+                    elif map_name in ["Fuchsia City", "Safari Zone"]:
+                        surf.blit(gfx.cached_tiles["gate_safari_zone"], (draw_x, draw_y))
+                    elif map_name in ["Vermilion City", "S.S. Anne"]:
+                        surf.blit(gfx.cached_tiles["pier_ss_anne"], (draw_x, draw_y))
+                    elif map_name in ["Route 22", "Victory Road"]:
+                        surf.blit(gfx.cached_tiles["cave_door_victory"], (draw_x, draw_y))
+                    elif map_name in ["Indigo Plateau"]:
+                        surf.blit(gfx.cached_tiles["gate_indigo_plateau"], (draw_x, draw_y))
+                    elif map_name in ["Cerulean City", "Cerulean Cave"]:
+                        surf.blit(gfx.cached_tiles["cave_door_cerulean_cave"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["cave_door"], (draw_x, draw_y))
                 elif char == "J":
                     surf.blit(gfx.cached_tiles["gym_mat"], (draw_x, draw_y))
                 elif char == "Y":
@@ -2355,10 +2397,23 @@ class World:
                     else:
                         surf.blit(gfx.cached_tiles["gym_statue"], (draw_x, draw_y))
                 elif char == "H":
-                    if is_power_plant:
-                        surf.blit(gfx.cached_tiles["generator_coil"], (draw_x, draw_y))
-                    else:
+                    # Roofs on overworld vs furniture indoor
+                    if is_house_indoor:
+                        surf.blit(gfx.cached_tiles["kitchen_sink"], (draw_x, draw_y))
+                    elif is_lab_indoor:
                         surf.blit(gfx.cached_tiles["lab_table"], (draw_x, draw_y))
+                    elif is_power_plant:
+                        surf.blit(gfx.cached_tiles["generator_coil"], (draw_x, draw_y))
+                    elif map_name == "Pallet Town" and x >= 14:
+                        surf.blit(gfx.cached_tiles["roof_oak_lab"], (draw_x, draw_y))
+                    elif map_name == "Celadon City" and x >= 10 and x <= 22 and y <= 4:
+                        surf.blit(gfx.cached_tiles["roof_dept_store"], (draw_x, draw_y))
+                    elif map_name == "Saffron City" and y >= 12 and y <= 16:
+                        surf.blit(gfx.cached_tiles["roof_silph_co"], (draw_x, draw_y))
+                    elif "Gym" in map_name:
+                        surf.blit(gfx.cached_tiles["roof_gym"], (draw_x, draw_y))
+                    else:
+                        surf.blit(gfx.cached_tiles["roof_house"], (draw_x, draw_y))
                 elif char == "K":
                     surf.blit(gfx.cached_tiles["bookshelf"], (draw_x, draw_y))
                 elif char == "f":
@@ -2370,10 +2425,50 @@ class World:
                 elif char == "W":
                     if is_power_plant:
                         surf.blit(gfx.cached_tiles["warning_tile"], (draw_x, draw_y))
+                    elif is_tower:
+                        surf.blit(gfx.cached_tiles["spooky_tree"], (draw_x, draw_y))
+                    elif map_name == "Pallet Town" and x >= 14:
+                        surf.blit(gfx.cached_tiles["wall_oak_lab"], (draw_x, draw_y))
+                    elif "Gym" in map_name:
+                        surf.blit(gfx.cached_tiles["wall_gym"], (draw_x, draw_y))
+                    elif map_name == "Celadon City" and x >= 10 and x <= 22 and y <= 6:
+                        surf.blit(gfx.cached_tiles["wall_dept_store"], (draw_x, draw_y))
+                    elif map_name == "Saffron City" and y >= 12 and y <= 18:
+                        surf.blit(gfx.cached_tiles["wall_silph_co"], (draw_x, draw_y))
                     else:
-                        surf.blit(gfx.cached_tiles["wall_white"], (draw_x, draw_y))
+                        # Context-aware house wall: upper wall has window & flower planter box, lower wall has brick base
+                        is_upper_wall = (y + 1 < rows and grid[y + 1][x] in ["W", "D"])
+                        if is_upper_wall:
+                            surf.blit(gfx.cached_tiles["wall_house_window"], (draw_x, draw_y))
+                        else:
+                            surf.blit(gfx.cached_tiles["wall_house"], (draw_x, draw_y))
                 elif char == "D":
-                    surf.blit(gfx.cached_tiles["door"], (draw_x, draw_y))
+                    if map_name == "Pallet Town" and x >= 14:
+                        surf.blit(gfx.cached_tiles["door_lab"], (draw_x, draw_y))
+                    elif map_name in ["Lavender Town", "Pokémon Tower"]:
+                        surf.blit(gfx.cached_tiles["gate_pokemon_tower"], (draw_x, draw_y))
+                    elif map_name in ["Power Plant"]:
+                        surf.blit(gfx.cached_tiles["gate_power_plant"], (draw_x, draw_y))
+                    elif "Gym" in map_name:
+                        surf.blit(gfx.cached_tiles["door_gym"], (draw_x, draw_y))
+                    else:
+                        # Check if door belongs to PokeCenter (near R) or Mart (near B)
+                        near_r = any(
+                            0 <= cy < rows and 0 <= cx < cols and grid[cy][cx] == "R"
+                            for cy in range(max(0, y - 3), min(rows, y + 1))
+                            for cx in range(max(0, x - 3), min(cols, x + 4))
+                        )
+                        near_b = any(
+                            0 <= cy < rows and 0 <= cx < cols and grid[cy][cx] == "B"
+                            for cy in range(max(0, y - 3), min(rows, y + 1))
+                            for cx in range(max(0, x - 3), min(cols, x + 4))
+                        )
+                        if near_r:
+                            surf.blit(gfx.cached_tiles["door_center"], (draw_x, draw_y))
+                        elif near_b:
+                            surf.blit(gfx.cached_tiles["door_mart"], (draw_x, draw_y))
+                        else:
+                            surf.blit(gfx.cached_tiles["door_house"], (draw_x, draw_y))
                 elif char == "S":
                     surf.blit(gfx.cached_tiles["sign"], (draw_x, draw_y))
                 elif char == "C":
