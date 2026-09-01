@@ -173,6 +173,11 @@ class Game:
             self.show_notification(msg)
         for event in raw_events + extra:
             if event.type == pygame.QUIT:
+                if self.state != GameState.TITLE and hasattr(self, 'player') and hasattr(self, 'quest_mgr'):
+                    SaveSystem.save_game(
+                        self.player, self.party, self.inventory, self.pokedex, self.world,
+                        slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                    )
                 self.running = False
                 return
 
@@ -292,7 +297,10 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     # Quick Save (F5 or K)
                     if any(event.key == k for k in KEY_QUICKSAVE):
-                        ok, msg = SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+                        ok, msg = SaveSystem.save_game(
+                            self.player, self.party, self.inventory, self.pokedex, self.world,
+                            slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                        )
                         sound_mgr.play_sfx("confirm" if ok else "cancel")
                         self.show_notification(f"Quick-Saved to Slot {self.current_save_slot}!")
                         continue
@@ -347,7 +355,8 @@ class Game:
                         inventory=self.inventory,
                         pokedex=self.pokedex,
                         world=self.world,
-                        pc_box=self.pc_box
+                        pc_box=self.pc_box,
+                        quest_mgr=self.quest_mgr
                     )
                     self.state = GameState.SAVE_SLOTS
                 continue
@@ -520,7 +529,10 @@ class Game:
             self.inventory.add_item(item_name, item_cnt)
             sound_mgr.play_sfx("confirm")
             self.show_notification(f"Found {item_cnt}x {item_name}!")
-            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+            SaveSystem.save_game(
+                self.player, self.party, self.inventory, self.pokedex, self.world,
+                slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+            )
             item_desc = ITEMS.get(item_name, {}).get("desc", "")
             pickup_text = f"{self.player.name} found {item_cnt}x {item_name} and put it in the Bag!\n\n{item_desc}" if item_desc else f"{self.player.name} found {item_cnt}x {item_name} and put it in the Bag!"
             self.current_dialogue = DialogueBox("Item Found", pickup_text, on_complete=None, portrait_key="item")
@@ -587,7 +599,10 @@ class Game:
                 for p in self.party:
                     p.full_restore()
                 # Auto-save
-                SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+                SaveSystem.save_game(
+                    self.player, self.party, self.inventory, self.pokedex, self.world,
+                    slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                )
                 sound_mgr.play_sfx("heal")
                 healer_name = npc.get("name", "Nurse Joy")
                 self.current_dialogue = DialogueBox(
@@ -625,7 +640,10 @@ class Game:
                         self.pc_box.append(eevee)
                         dest = "your PC Storage Box"
                     self.pokedex.register_caught("Eevee")
-                    SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.current_save_slot, pc_box=self.pc_box)
+                    SaveSystem.save_game(
+                        self.player, self.party, self.inventory, self.pokedex, self.world,
+                        slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                    )
                     self.current_dialogue = DialogueBox("Bill", f"Thanks for visiting my Sea Cottage! Take this rare Eevee! It was sent to {dest}!", on_complete=None, portrait_key="Bill")
                 else:
                     self.current_dialogue = DialogueBox("Bill", "Eevee has many wonderful evolutions with elemental stones! Take good care of it!", on_complete=None, portrait_key="Bill")
@@ -878,11 +896,11 @@ class Game:
                         if badge_name:
                             self.world.badges.add(badge_name)
                             self.show_notification(f"Earned the {badge_name}!")
-                        # Save game progress immediately so defeated trainers and badges stay saved
-                        SaveSystem.save_game(
-                            self.player, self.party, self.inventory, self.pokedex, self.world,
-                            slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
-                        )
+                    # Save game progress immediately so defeated trainers, catches, EXP, and quest progress stay saved
+                    SaveSystem.save_game(
+                        self.player, self.party, self.inventory, self.pokedex, self.world,
+                        slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                    )
                     self.battle_system = None
                     self.state = GameState.OVERWORLD
                     sound_mgr.play_bgm("town")

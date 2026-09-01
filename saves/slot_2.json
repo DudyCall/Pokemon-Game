@@ -1,133 +1,36 @@
 {
   "slot": 2,
-  "timestamp": "2026-08-17 21:32",
+  "timestamp": "2026-09-01 13:50",
   "player": {
     "name": "Red",
     "gender": "Boy",
     "outfit_theme": "Classic Red",
     "hat_style": "Trainer Cap",
     "hair_color": "Dark Brown",
-    "grid_x": 6,
-    "grid_y": 6,
-    "map": "Pokecenter",
-    "facing": 0
+    "grid_x": 12,
+    "grid_y": 20,
+    "map": "Route 1",
+    "facing": 1,
+    "has_boat": true,
+    "is_sailing": false
   },
   "party": [
     {
-      "species": "Bulbasaur",
-      "nickname": "Bulbasaur",
-      "level": 11,
-      "current_hp": 34,
-      "exp": 1331,
-      "status": null,
-      "ivs": {
-        "hp": 26,
-        "atk": 24,
-        "def": 25,
-        "spatk": 28,
-        "spdef": 27,
-        "spd": 22
-      },
-      "moves": [
-        {
-          "name": "Tackle",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "A physical charge attack.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Growl",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 40,
-          "pp": 40,
-          "desc": "Lowers the foe's Attack.",
-          "effect": {
-            "stages": -1,
-            "stat": "atk"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Leech Seed",
-          "type": "Grass",
-          "power": 0,
-          "accuracy": 90,
-          "category": "Status",
-          "max_pp": 10,
-          "pp": 10,
-          "desc": "Plants a seed on the target to steal HP every turn.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Vine Whip",
-          "type": "Grass",
-          "power": 45,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Strikes the foe with slender vines.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
       "species": "Pikachu",
       "nickname": "Pikachu",
-      "level": 10,
-      "current_hp": 28,
-      "exp": 1000,
+      "level": 12,
+      "current_hp": 26,
+      "exp": 2049,
       "status": null,
       "ivs": {
-        "hp": 20,
-        "atk": 22,
+        "hp": 21,
+        "atk": 24,
         "def": 18,
-        "spatk": 25,
-        "spdef": 20,
-        "spd": 30
+        "spatk": 20,
+        "spdef": 24,
+        "spd": 14
       },
       "moves": [
-        {
-          "name": "Thunder Shock",
-          "type": "Electric",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "An electric shock that may paralyze.",
-          "effect": {
-            "chance": 10,
-            "status": "Paralysis"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "Growl",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 40,
-          "pp": 40,
-          "desc": "Lowers the foe's Attack.",
-          "effect": {
-            "stages": -1,
-            "stat": "atk"
-          },
-          "crit_bonus": false
-        },
         {
           "name": "Quick Attack",
           "type": "Normal",
@@ -135,9 +38,24 @@
           "accuracy": 100,
           "category": "Physical",
           "max_pp": 30,
-          "pp": 30,
+          "pp": 22,
           "desc": "An extremely fast physical strike.",
           "effect": null,
+          "crit_bonus": false
+        },
+        {
+          "name": "Growl",
+          "type": "Normal",
+          "power": 0,
+          "accuracy": 100,
+          "category": "Status",
+          "max_pp": 40,
+          "pp": 40,
+          "desc": "Lowers the foe's Attack.",
+          "effect": {
+            "stages": -1,
+            "stat": "atk"
+          },
           "crit_bonus": false
         },
         {
@@ -148,83 +66,11 @@
           "category": "Status",
           "max_pp": 20,
           "pp": 20,
-          "desc": "Paralyzes the target.",
+          "desc": "A weak shock that paralyzes.",
           "effect": {
             "chance": 100,
             "status": "Paralysis"
           },
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Pidgey",
-      "nickname": "Pidgey",
-      "level": 6,
-      "current_hp": 22,
-      "exp": 216,
-      "status": null,
-      "ivs": {
-        "hp": 24,
-        "atk": 22,
-        "def": 24,
-        "spatk": 28,
-        "spdef": 21,
-        "spd": 21
-      },
-      "moves": [
-        {
-          "name": "Tackle",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "A physical charge attack.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Gust",
-          "type": "Flying",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "Strikes the foe with wing gusts.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Rattata",
-      "nickname": "Rattata",
-      "level": 8,
-      "current_hp": 25,
-      "exp": 512,
-      "status": null,
-      "ivs": {
-        "hp": 22,
-        "atk": 28,
-        "def": 20,
-        "spatk": 18,
-        "spdef": 20,
-        "spd": 29
-      },
-      "moves": [
-        {
-          "name": "Tackle",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "A physical charge attack.",
-          "effect": null,
           "crit_bonus": false
         },
         {
@@ -241,173 +87,13 @@
             "stat": "def"
           },
           "crit_bonus": false
-        },
-        {
-          "name": "Quick Attack",
-          "type": "Normal",
-          "power": 40,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 30,
-          "pp": 30,
-          "desc": "An extremely fast physical strike.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Bellsprout",
-      "nickname": "Bellsprout",
-      "level": 8,
-      "current_hp": 27,
-      "exp": 512,
-      "status": null,
-      "ivs": {
-        "hp": 27,
-        "atk": 29,
-        "def": 20,
-        "spatk": 28,
-        "spdef": 19,
-        "spd": 22
-      },
-      "moves": [
-        {
-          "name": "Vine Whip",
-          "type": "Grass",
-          "power": 45,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "Strikes the foe with slender vines.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Growth",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Raises Attack and Sp. Atk.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Wrap",
-          "type": "Normal",
-          "power": 15,
-          "accuracy": 90,
-          "category": "Physical",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Traps and squeezes the foe.",
-          "effect": null,
-          "crit_bonus": false
-        }
-      ]
-    },
-    {
-      "species": "Oddish",
-      "nickname": "Oddish",
-      "level": 5,
-      "current_hp": 21,
-      "exp": 125,
-      "status": null,
-      "ivs": {
-        "hp": 25,
-        "atk": 24,
-        "def": 26,
-        "spatk": 29,
-        "spdef": 27,
-        "spd": 18
-      },
-      "moves": [
-        {
-          "name": "Absorb",
-          "type": "Grass",
-          "power": 20,
-          "accuracy": 100,
-          "category": "Special",
-          "max_pp": 25,
-          "pp": 25,
-          "desc": "An attack that absorbs half the damage inflicted.",
-          "effect": null,
-          "crit_bonus": false
-        },
-        {
-          "name": "Sweet Scent",
-          "type": "Normal",
-          "power": 0,
-          "accuracy": 100,
-          "category": "Status",
-          "max_pp": 20,
-          "pp": 20,
-          "desc": "Lowers the foe's evasiveness.",
-          "effect": {
-            "stages": -1,
-            "stat": "def"
-          },
-          "crit_bonus": false
         }
       ]
     }
   ],
-  "pc_box": [
-    {
-      "species": "Weedle",
-      "nickname": "Weedle",
-      "level": 3,
-      "current_hp": 16,
-      "exp": 27,
-      "status": null,
-      "ivs": {
-        "hp": 29,
-        "atk": 24,
-        "def": 16,
-        "spatk": 29,
-        "spdef": 17,
-        "spd": 27
-      },
-      "moves": [
-        {
-          "name": "Poison Sting",
-          "type": "Poison",
-          "power": 15,
-          "accuracy": 100,
-          "category": "Physical",
-          "max_pp": 35,
-          "pp": 35,
-          "desc": "Stabs with a poisonous barb.",
-          "effect": {
-            "chance": 30,
-            "status": "Poison"
-          },
-          "crit_bonus": false
-        },
-        {
-          "name": "String Shot",
-          "type": "Bug",
-          "power": 0,
-          "accuracy": 95,
-          "category": "Status",
-          "max_pp": 40,
-          "pp": 40,
-          "desc": "Binds foe with silk string.",
-          "effect": {
-            "stages": -1,
-            "stat": "spd"
-          },
-          "crit_bonus": false
-        }
-      ]
-    }
-  ],
+  "pc_box": [],
   "inventory": {
-    "money": 5500,
+    "money": 3160,
     "items": {
       "Poke Ball": 10,
       "Potion": 5,
@@ -417,23 +103,705 @@
   },
   "pokedex": {
     "seen": [
-      "Bulbasaur",
-      "Pikachu",
-      "Pidgey",
-      "Rattata",
-      "Bellsprout",
-      "Oddish",
+      "Caterpie",
       "Weedle"
     ],
-    "caught": [
-      "Bulbasaur",
-      "Pikachu",
-      "Pidgey",
-      "Rattata",
-      "Bellsprout",
-      "Oddish",
-      "Weedle"
+    "caught": []
+  },
+  "defeated_trainers": [
+    "bug_catcher_sammy"
+  ],
+  "collected_items": [],
+  "badges": [],
+  "unlocked_barriers": [],
+  "explored_tiles": {
+    "Pallet Town": [
+      [
+        12,
+        4
+      ],
+      [
+        12,
+        1
+      ],
+      [
+        12,
+        7
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        5,
+        7
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        8,
+        3
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        10,
+        6
+      ],
+      [
+        9,
+        8
+      ],
+      [
+        11,
+        5
+      ],
+      [
+        8,
+        6
+      ],
+      [
+        10,
+        3
+      ],
+      [
+        10,
+        9
+      ],
+      [
+        11,
+        8
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        7,
+        4
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        7
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        12,
+        0
+      ],
+      [
+        12,
+        3
+      ],
+      [
+        12,
+        6
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        8,
+        2
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        9,
+        7
+      ],
+      [
+        8,
+        5
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        9,
+        4
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        11,
+        7
+      ],
+      [
+        10,
+        5
+      ],
+      [
+        8,
+        8
+      ],
+      [
+        11,
+        1
+      ],
+      [
+        10,
+        8
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        7,
+        6
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        12,
+        5
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        8,
+        4
+      ],
+      [
+        9,
+        3
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        8,
+        7
+      ],
+      [
+        10,
+        4
+      ],
+      [
+        9,
+        6
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        7
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        6
+      ],
+      [
+        11,
+        0
+      ],
+      [
+        7,
+        2
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        7,
+        8
+      ]
+    ],
+    "Route 1": [
+      [
+        15,
+        21
+      ],
+      [
+        16,
+        20
+      ],
+      [
+        12,
+        25
+      ],
+      [
+        14,
+        22
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        8,
+        18
+      ],
+      [
+        9,
+        17
+      ],
+      [
+        11,
+        23
+      ],
+      [
+        13,
+        17
+      ],
+      [
+        15,
+        23
+      ],
+      [
+        16,
+        22
+      ],
+      [
+        7,
+        19
+      ],
+      [
+        18,
+        19
+      ],
+      [
+        12,
+        18
+      ],
+      [
+        14,
+        24
+      ],
+      [
+        17,
+        23
+      ],
+      [
+        9,
+        19
+      ],
+      [
+        10,
+        20
+      ],
+      [
+        13,
+        19
+      ],
+      [
+        16,
+        24
+      ],
+      [
+        7,
+        21
+      ],
+      [
+        18,
+        21
+      ],
+      [
+        12,
+        20
+      ],
+      [
+        14,
+        17
+      ],
+      [
+        9,
+        21
+      ],
+      [
+        8,
+        25
+      ],
+      [
+        10,
+        22
+      ],
+      [
+        13,
+        21
+      ],
+      [
+        15,
+        18
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        7,
+        23
+      ],
+      [
+        12,
+        22
+      ],
+      [
+        14,
+        19
+      ],
+      [
+        10,
+        24
+      ],
+      [
+        13,
+        23
+      ],
+      [
+        16,
+        19
+      ],
+      [
+        12,
+        24
+      ],
+      [
+        14,
+        21
+      ],
+      [
+        8,
+        20
+      ],
+      [
+        10,
+        17
+      ],
+      [
+        11,
+        25
+      ],
+      [
+        16,
+        21
+      ],
+      [
+        6,
+        22
+      ],
+      [
+        12,
+        17
+      ],
+      [
+        14,
+        23
+      ],
+      [
+        8,
+        22
+      ],
+      [
+        10,
+        19
+      ],
+      [
+        13,
+        18
+      ],
+      [
+        11,
+        18
+      ],
+      [
+        16,
+        23
+      ],
+      [
+        6,
+        24
+      ],
+      [
+        12,
+        19
+      ],
+      [
+        14,
+        25
+      ],
+      [
+        17,
+        18
+      ],
+      [
+        8,
+        24
+      ],
+      [
+        10,
+        21
+      ],
+      [
+        9,
+        23
+      ],
+      [
+        11,
+        20
+      ],
+      [
+        15,
+        20
+      ],
+      [
+        7,
+        25
+      ],
+      [
+        12,
+        21
+      ],
+      [
+        14,
+        18
+      ],
+      [
+        17,
+        20
+      ],
+      [
+        10,
+        23
+      ],
+      [
+        9,
+        25
+      ],
+      [
+        11,
+        22
+      ],
+      [
+        13,
+        25
+      ],
+      [
+        15,
+        22
+      ],
+      [
+        12,
+        23
+      ],
+      [
+        17,
+        22
+      ],
+      [
+        8,
+        19
+      ],
+      [
+        9,
+        18
+      ],
+      [
+        10,
+        25
+      ],
+      [
+        11,
+        24
+      ],
+      [
+        15,
+        24
+      ],
+      [
+        7,
+        20
+      ],
+      [
+        18,
+        20
+      ],
+      [
+        8,
+        21
+      ],
+      [
+        10,
+        18
+      ],
+      [
+        9,
+        20
+      ],
+      [
+        11,
+        17
+      ],
+      [
+        13,
+        20
+      ],
+      [
+        15,
+        17
+      ],
+      [
+        6,
+        23
+      ],
+      [
+        7,
+        22
+      ],
+      [
+        18,
+        22
+      ],
+      [
+        8,
+        23
+      ],
+      [
+        9,
+        22
+      ],
+      [
+        11,
+        19
+      ],
+      [
+        13,
+        22
+      ],
+      [
+        15,
+        19
+      ],
+      [
+        16,
+        18
+      ],
+      [
+        6,
+        25
+      ],
+      [
+        7,
+        24
+      ],
+      [
+        14,
+        20
+      ],
+      [
+        17,
+        19
+      ],
+      [
+        9,
+        24
+      ],
+      [
+        11,
+        21
+      ],
+      [
+        13,
+        24
+      ]
     ]
   },
-  "defeated_trainers": []
+  "quests": {
+    "active_quests": {
+      "oak_bug_hunt": {
+        "progress": 2
+      }
+    },
+    "completed_quests": {
+      "sparky_electric_charge": {
+        "completed_at": "2026-09-01 12:00:00"
+      }
+    }
+  }
 }

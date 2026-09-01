@@ -34,6 +34,9 @@ class TestPokemonEngine(unittest.TestCase):
         if os.path.exists(cls.test_dir):
             shutil.rmtree(cls.test_dir, ignore_errors=True)
 
+    def setUp(self):
+        SaveSystem.set_saves_dir(self.test_dir)
+
     def test_pokemon_creation_and_stats(self):
         p = Pokemon("Charmander", level=5)
         self.assertEqual(p.species, "Charmander")
@@ -148,12 +151,72 @@ class TestPokemonEngine(unittest.TestCase):
 
         # Verify Slot summaries
         summaries = SaveSystem.get_all_slots_summary()
-        self.assertEqual(len(summaries), 3)
+        self.assertEqual(len(summaries), 99)
         self.assertTrue(summaries[0]["exists"])
         self.assertEqual(summaries[0]["lead_species"], "Squirtle")
         self.assertTrue(summaries[1]["exists"])
         self.assertEqual(summaries[1]["lead_species"], "Charmander")
         self.assertEqual(summaries[1]["party_count"], 2)
+
+    def test_99_save_slots_and_persistence(self):
+        """Tests saving and loading across up to 99 slots, including Slot 99 and dual sync."""
+        world = World()
+        player = Player(x=8, y=6, current_map="Pallet Town", name="Red")
+        party = [Pokemon("Scyther", level=42)]
+        inv = Inventory()
+        inv.money = 99999
+        pdx = Pokedex()
+        pdx.register_caught("Scyther")
+
+        # Save to Slot 99
+        ok, msg = SaveSystem.save_game(player, party, inv, pdx, world, slot=99)
+        self.assertTrue(ok)
+
+        # Load from Slot 99
+        loaded_player = Player()
+        res, msg = SaveSystem.load_game(loaded_player, World(), slot=99)
+        self.assertIsNotNone(res)
+        l_party, l_inv, l_pdx, l_pc = res[:4]
+        self.assertEqual(l_party[0].species, "Scyther")
+        self.assertEqual(l_party[0].level, 42)
+        self.assertEqual(l_inv.money, 99999)
+
+        # Verify summary for Slot 99
+        summary_99 = SaveSystem.get_slot_summary(99)
+        self.assertIsNotNone(summary_99)
+        self.assertTrue(summary_99["exists"])
+        self.assertEqual(summary_99["lead_species"], "Scyther")
+        self.assertEqual(summary_99["lead_level"], 42)
+
+        # Test SaveSlotSelectScreen 99-slot scroll navigation
+        from ui_menus import SaveSlotSelectScreen
+        screen = SaveSlotSelectScreen(mode="LOAD", active_slot=1)
+        self.assertEqual(len(screen.slots), 99)
+        self.assertEqual(screen.selected_idx, 0)
+        self.assertEqual(screen.scroll_offset, 0)
+
+        # Move Down
+        event_down = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN)
+        screen.handle_input(event_down)
+        self.assertEqual(screen.selected_idx, 1)
+
+        # Page Down Jump (+4)
+        event_pgdn = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_PAGEDOWN)
+        screen.handle_input(event_pgdn)
+        self.assertEqual(screen.selected_idx, 5)
+        self.assertGreaterEqual(screen.scroll_offset, 1)
+
+        # End key (Jump to Slot 99)
+        event_end = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_END)
+        screen.handle_input(event_end)
+        self.assertEqual(screen.selected_idx, 98)
+        self.assertEqual(screen.scroll_offset, 95) # 99 - 4
+
+        # Home key (Jump to Slot 1)
+        event_home = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_HOME)
+        screen.handle_input(event_home)
+        self.assertEqual(screen.selected_idx, 0)
+        self.assertEqual(screen.scroll_offset, 0)
 
     def test_world_movement_and_collision(self):
         world = World()
@@ -1735,6 +1798,186 @@ class TestPokemonEngine(unittest.TestCase):
         self.assertIsNotNone(game.current_dialogue)
         self.assertIn("Squirtle", game.current_dialogue.full_text)
         self.assertEqual(game.current_dialogue.portrait_key, "Squirtle")
+
+    def test_battle_attack_elemental_vfx(self):
+        """Tests that BattleSystem sets active_fx and renders all elemental VFX without error."""
+        from battle_system import BattleSystem, BattlePhase
+        from battle_vfx import draw_battle_attack_vfx
+
+        p_pkmn = Pokemon("Charmander", level=10)
+        e_pkmn = Pokemon("Bulbasaur", level=10)
+        battle = BattleSystem([p_pkmn], e_pkmn)
+
+        # Clear intro messages
+        while battle.messages or battle.phase == BattlePhase.MESSAGE_QUEUE:
+            battle.advance_message_queue()
+
+        # Test move execution triggering ATTACK_ANIM phase and setting active_fx
+        ember_move = {"name": "Ember", "type": "Fire", "power": 40, "accuracy": 100, "category": "Special"}
+        battle._queue_attack(p_pkmn, e_pkmn, ember_move, is_player=True)
+
+        # Advance through "Charmander used Ember!" message to perform move
+        battle.advance_message_queue()
+
+        # Now in ATTACK_ANIM phase with active_fx set
+        self.assertEqual(battle.phase, BattlePhase.ATTACK_ANIM)
+        self.assertIsNotNone(battle.active_fx)
+        self.assertEqual(battle.active_fx["move_type"], "Fire")
+        self.assertEqual(battle.active_fx["move_name"], "Ember")
+        self.assertTrue(battle.active_fx["is_player_attacker"])
+
+        # Test rendering all elemental visual effects onto surface
+        surf = pygame.Surface((800, 600))
+        element_types = ["Fire", "Water", "Electric", "Grass", "Ice", "Psychic", "Ghost", "Rock", "Ground", "Dragon", "Flying", "Normal"]
+        for elem in element_types:
+            fx_data = {
+                "move_name": f"{elem} Strike",
+                "move_type": elem,
+                "is_player_attacker": True,
+                "is_crit": True,
+                "effectiveness": 2.0,
+                "category": "Special"
+            }
+            # Test across multiple animation time slices
+            for t_step in [0.1, 0.35, 0.55]:
+                draw_battle_attack_vfx(surf, fx_data, timer=t_step, player_pos=(200, 300), enemy_pos=(600, 150))
+
+        # Test battle draw with active_fx
+        battle.draw(surf)
+
+        # Update battle past fx duration (0.65s) -> transitions to HP_ANIM
+        battle.update(0.7)
+        self.assertEqual(battle.phase, BattlePhase.HP_ANIM)
+
+    def test_active_quest_persistence_on_save_and_exit(self):
+        """Tests that active quest progress is persisted, preserved across saves, and restored on load."""
+        import tempfile
+        from quest_system import QuestManager
+        from player import Player
+        from save_system import SaveSystem, Pokedex
+        from inventory import Inventory
+        from world import World
+
+        test_dir = tempfile.mkdtemp()
+        SaveSystem.set_saves_dir(test_dir)
+        try:
+            player = Player(name="Ash", x=8, y=6)
+            party = [Pokemon("Pikachu", level=10)]
+            inv = Inventory()
+            pokedex = Pokedex()
+            world = World()
+
+            # 1. Accept oak_bug_hunt quest and make partial progress (2/3)
+            q_mgr = QuestManager()
+            q_mgr.accept_quest("oak_bug_hunt")
+            self.assertTrue(q_mgr.is_active("oak_bug_hunt"))
+            self.assertEqual(q_mgr.get_progress("oak_bug_hunt"), 0)
+
+            caterpie = Pokemon("Caterpie", level=4)
+            q_mgr.on_pokemon_caught(caterpie, inv)
+            q_mgr.on_pokemon_caught(caterpie, inv)
+            self.assertEqual(q_mgr.get_progress("oak_bug_hunt"), 2)
+            self.assertTrue(q_mgr.is_active("oak_bug_hunt"))
+
+            # 2. Save game with quest_mgr
+            ok, msg = SaveSystem.save_game(player, party, inv, pokedex, world, slot=1, pc_box=[], quest_mgr=q_mgr)
+            self.assertTrue(ok)
+
+            # 3. Simulate intermediate auto-save where quest_mgr was omitted (e.g. quick item pickup)
+            # Failsafe should preserve existing active quest data!
+            ok2, msg2 = SaveSystem.save_game(player, party, inv, pokedex, world, slot=1, pc_box=[], quest_mgr=None)
+            self.assertTrue(ok2)
+
+            # 4. Load game from save slot
+            new_player = Player()
+            new_world = World()
+            res, load_msg = SaveSystem.load_game(new_player, new_world, slot=1)
+            self.assertIsNotNone(res)
+            new_party, new_inv, new_pdx, new_pc_box, q_data = res[:5]
+
+            # 5. Restore QuestManager from loaded data
+            restored_q_mgr = QuestManager.from_dict(q_data)
+            self.assertTrue(restored_q_mgr.is_active("oak_bug_hunt"))
+            self.assertEqual(restored_q_mgr.get_progress("oak_bug_hunt"), 2)
+            self.assertFalse(restored_q_mgr.is_completed("oak_bug_hunt"))
+
+            # 6. Complete remaining objective (3/3) and verify completion
+            msgs = restored_q_mgr.on_pokemon_caught(caterpie, new_inv)
+            self.assertTrue(restored_q_mgr.is_completed("oak_bug_hunt"))
+            self.assertFalse(restored_q_mgr.is_active("oak_bug_hunt"))
+            self.assertGreater(len(msgs), 0)
+
+        finally:
+            SaveSystem.set_saves_dir(self.test_dir)
+
+    def test_pokemon_move_swapping_and_summary_ui(self):
+        """Tests swapping move positions on Pokemon, in PartySummaryScreen, and in BattleSystem."""
+        # 1. Test Pokemon entity swap_moves
+        scyther = Pokemon("Scyther", level=42)
+        self.assertGreaterEqual(len(scyther.moves), 3)
+        m0_name = scyther.moves[0]["name"]
+        m1_name = scyther.moves[1]["name"]
+
+        ok = scyther.swap_moves(0, 1)
+        self.assertTrue(ok)
+        self.assertEqual(scyther.moves[0]["name"], m1_name)
+        self.assertEqual(scyther.moves[1]["name"], m0_name)
+
+        # Invalid swaps return False
+        self.assertFalse(scyther.swap_moves(0, 0))
+        self.assertFalse(scyther.swap_moves(-1, 2))
+        self.assertFalse(scyther.swap_moves(0, 99))
+
+        # 2. Test PartySummaryScreen Move Reorder Interface
+        from ui_screens import PartySummaryScreen
+        party = [scyther, Pokemon("Pikachu", level=20)]
+        screen = PartySummaryScreen(party)
+        self.assertEqual(screen.mode, "PARTY_LIST")
+
+        # Press Enter on Scyther -> enters SUMMARY_MOVES
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertEqual(screen.mode, "SUMMARY_MOVES")
+        self.assertEqual(screen.selected_move_idx, 0)
+        self.assertIsNone(screen.move_swap_source)
+
+        # Pick up Move 0
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertEqual(screen.move_swap_source, 0)
+
+        # Navigate down to Move 1
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
+        self.assertEqual(screen.selected_move_idx, 1)
+
+        # Confirm swap with Move 1
+        screen.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_z))
+        self.assertIsNone(screen.move_swap_source)
+        self.assertEqual(scyther.moves[0]["name"], m0_name)
+        self.assertEqual(scyther.moves[1]["name"], m1_name)
+
+        # Draw summary screen with move list
+        surf = pygame.Surface((800, 600))
+        screen.draw(surf)
+
+        # 3. Test BattleSystem in-battle move swapping
+        from battle_system import BattleSystem, BattlePhase
+        battle = BattleSystem(party, Pokemon("Geodude", level=15), is_trainer=False)
+        battle.phase = BattlePhase.MOVE_SELECT
+        battle.move_index = 0
+        self.assertIsNone(battle.move_swap_source)
+
+        # Press Shift to initiate swap
+        battle.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LSHIFT))
+        self.assertEqual(battle.move_swap_source, 0)
+
+        # Move to move 1 and confirm swap
+        battle.move_index = 1
+        battle.handle_input(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+        self.assertIsNone(battle.move_swap_source)
+        self.assertEqual(scyther.moves[0]["name"], m1_name)
+        self.assertEqual(scyther.moves[1]["name"], m0_name)
+
+        # Draw battle move select with swap mode
+        battle.draw(surf)
 
 if __name__ == "__main__":
     unittest.main()

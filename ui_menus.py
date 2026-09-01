@@ -14,6 +14,7 @@ from constants import (
 from graphics_manager import gfx
 from sound_manager import sound_mgr
 from pokemon_data import POKEMON_SPECIES, ITEMS, MOVES, WILD_ENCOUNTERS, WILD_WATER_ENCOUNTERS
+from save_system import NUM_SAVE_SLOTS
 
 class TitleScreen:
     """
@@ -125,13 +126,9 @@ class TitleScreen:
             pygame.draw.rect(surf, (240, 140, 40) if is_sel_cont else UI_BORDER_LIGHT, (cx - 2, cy - 2, cw + 4, ch + 4), border_radius=12)
             pygame.draw.rect(surf, (255, 248, 230) if is_sel_cont else WHITE, (cx, cy, cw, ch), border_radius=10)
 
-            # Slot Header with Arrow Indicators & Dots
-            slot_dots = " ".join(["●" if i == self.slot_preview_idx else "○" for i in range(3)])
-            header_txt = gfx.fonts["large"].render(f"CONTINUE GAME  ◀  SLOT {cur_num} / 3  ▶", True, (220, 80, 0) if is_sel_cont else UI_TEXT)
+            # Slot Header with Arrow Indicators & Counter
+            header_txt = gfx.fonts["large"].render(f"CONTINUE GAME  ◀  SLOT {cur_num:02d} / {len(self.slots)}  ▶", True, (220, 80, 0) if is_sel_cont else UI_TEXT)
             surf.blit(header_txt, (cx + 20, cy + 12))
-            
-            dots_txt = gfx.fonts["small"].render(slot_dots, True, (200, 80, 0) if is_sel_cont else UI_TEXT_MUTED)
-            surf.blit(dots_txt, (cx + cw - dots_txt.get_width() - 20, cy + 16))
 
             if cur_slot.get("exists"):
                 # Lead Pokémon Sprite
@@ -150,7 +147,7 @@ class TitleScreen:
                 surf.blit(info_l3, (cx + 98, cy + 98))
             else:
                 # Empty Slot state
-                emp_txt = gfx.fonts["large"].render("- Empty Save Slot -", True, (160, 170, 185))
+                emp_txt = gfx.fonts["large"].render(f"- Empty Save Slot {cur_num} -", True, (160, 170, 185))
                 emp_sub = gfx.fonts["regular"].render("Press [Enter] to start a new adventure in Slot " + str(cur_num), True, UI_TEXT_MUTED)
                 surf.blit(emp_txt, (cx + (cw - emp_txt.get_width()) // 2, cy + 50))
                 surf.blit(emp_sub, (cx + (cw - emp_sub.get_width()) // 2, cy + 85))
@@ -161,7 +158,7 @@ class TitleScreen:
             bh_btn = 52
             pygame.draw.rect(surf, (240, 140, 40) if is_sel_all else UI_BORDER_LIGHT, (cx - 2, by_all - 2, cw + 4, bh_btn + 4), border_radius=10)
             pygame.draw.rect(surf, (255, 248, 230) if is_sel_all else WHITE, (cx, by_all, cw, bh_btn), border_radius=8)
-            all_txt = gfx.fonts["medium"].render("VIEW ALL 3 SAVE SLOTS", True, (220, 80, 0) if is_sel_all else UI_TEXT)
+            all_txt = gfx.fonts["medium"].render("VIEW ALL 99 SAVE SLOTS", True, (220, 80, 0) if is_sel_all else UI_TEXT)
             surf.blit(all_txt, (cx + (cw - all_txt.get_width()) // 2, by_all + 14))
 
             # 3. NEW GAME Button
@@ -172,7 +169,7 @@ class TitleScreen:
             new_txt = gfx.fonts["medium"].render("START NEW ADVENTURE", True, (220, 80, 0) if is_sel_new else UI_TEXT)
             surf.blit(new_txt, (cx + (cw - new_txt.get_width()) // 2, by_new + 14))
 
-            ctrl_hint = gfx.fonts["small"].render("Up/Down: Choose Menu  |  Left/Right: Switch Slot (1-3)  |  [Enter]: Start", True, LIGHT_GRAY)
+            ctrl_hint = gfx.fonts["small"].render("Up/Down: Choose Menu  |  Left/Right: Switch Slot (1-99)  |  [Enter]: Start", True, LIGHT_GRAY)
             surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 560))
 
         else:
@@ -207,8 +204,10 @@ class SaveSlotSelectScreen:
         self.world = world
         self.pc_box = pc_box
         self.quest_mgr = quest_mgr
-        self.selected_idx = max(0, min(2, active_slot - 1))
+        self.selected_idx = max(0, min(NUM_SAVE_SLOTS - 1, active_slot - 1))
+        self.scroll_offset = max(0, min(NUM_SAVE_SLOTS - 4, self.selected_idx - 1))
         self.slots = []
+        self.anim_timer = 0.0
         self.refresh_slots()
         
         # Overwrite Confirmation Modal
@@ -225,39 +224,68 @@ class SaveSlotSelectScreen:
         self.slots = SaveSystem.get_all_slots_summary()
 
     def handle_input(self, event):
-        if event.type != pygame.KEYDOWN:
+        if event.type not in [pygame.KEYDOWN, pygame.MOUSEWHEEL]:
             return None
 
         # Modal Input
         if self.confirm_modal:
-            if any(event.key == k for k in KEY_LEFT + KEY_RIGHT + KEY_UP + KEY_DOWN):
-                self.modal_selected_yes = not self.modal_selected_yes
-                sound_mgr.play_sfx("select")
-            elif any(event.key == k for k in KEY_CANCEL):
-                self.confirm_modal = False
-                sound_mgr.play_sfx("cancel")
-            elif any(event.key == k for k in KEY_CONFIRM):
-                if self.modal_selected_yes:
-                    self.confirm_modal = False
-                    sound_mgr.play_sfx("confirm")
-                    if self.mode == "NEW_GAME":
-                        return ("NEW_GAME", self.target_slot_for_modal)
-                    elif self.mode == "SAVE":
-                        from save_system import SaveSystem
-                        SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.target_slot_for_modal, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
-                        self.refresh_slots()
-                        return ("SAVED", self.target_slot_for_modal)
-                else:
+            if event.type == pygame.KEYDOWN:
+                if any(event.key == k for k in KEY_LEFT + KEY_RIGHT + KEY_UP + KEY_DOWN):
+                    self.modal_selected_yes = not self.modal_selected_yes
+                    sound_mgr.play_sfx("select")
+                elif any(event.key == k for k in KEY_CANCEL):
                     self.confirm_modal = False
                     sound_mgr.play_sfx("cancel")
+                elif any(event.key == k for k in KEY_CONFIRM):
+                    if self.modal_selected_yes:
+                        self.confirm_modal = False
+                        sound_mgr.play_sfx("confirm")
+                        if self.mode == "NEW_GAME":
+                            return ("NEW_GAME", self.target_slot_for_modal)
+                        elif self.mode == "SAVE":
+                            from save_system import SaveSystem
+                            SaveSystem.save_game(self.player, self.party, self.inventory, self.pokedex, self.world, slot=self.target_slot_for_modal, pc_box=self.pc_box, quest_mgr=self.quest_mgr)
+                            self.refresh_slots()
+                            return ("SAVED", self.target_slot_for_modal)
+                    else:
+                        self.confirm_modal = False
+                        sound_mgr.play_sfx("cancel")
             return None
 
-        # Main Slot Selection Input
+        # Mouse wheel scrolling
+        if event.type == pygame.MOUSEWHEEL:
+            if event.y != 0:
+                self.selected_idx = max(0, min(len(self.slots) - 1, self.selected_idx - event.y))
+                self._update_scroll_bounds()
+                sound_mgr.play_sfx("select")
+            return None
+
+        # Main Slot Selection Input (Keyboard)
         if any(event.key == k for k in KEY_UP):
             self.selected_idx = (self.selected_idx - 1) % len(self.slots)
+            self._update_scroll_bounds()
             sound_mgr.play_sfx("select")
         elif any(event.key == k for k in KEY_DOWN):
             self.selected_idx = (self.selected_idx + 1) % len(self.slots)
+            self._update_scroll_bounds()
+            sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_LEFT) or event.key == pygame.K_PAGEUP:
+            # Jump up 4 slots (1 page)
+            self.selected_idx = max(0, self.selected_idx - 4)
+            self._update_scroll_bounds()
+            sound_mgr.play_sfx("select")
+        elif any(event.key == k for k in KEY_RIGHT) or event.key == pygame.K_PAGEDOWN:
+            # Jump down 4 slots (1 page)
+            self.selected_idx = min(len(self.slots) - 1, self.selected_idx + 4)
+            self._update_scroll_bounds()
+            sound_mgr.play_sfx("select")
+        elif event.key == pygame.K_HOME:
+            self.selected_idx = 0
+            self._update_scroll_bounds()
+            sound_mgr.play_sfx("select")
+        elif event.key == pygame.K_END:
+            self.selected_idx = len(self.slots) - 1
+            self._update_scroll_bounds()
             sound_mgr.play_sfx("select")
         elif any(event.key == k for k in KEY_CANCEL):
             sound_mgr.play_sfx("cancel")
@@ -300,7 +328,16 @@ class SaveSlotSelectScreen:
 
         return None
 
+    def _update_scroll_bounds(self):
+        visible_count = 4
+        if self.selected_idx < self.scroll_offset:
+            self.scroll_offset = self.selected_idx
+        elif self.selected_idx >= self.scroll_offset + visible_count:
+            self.scroll_offset = self.selected_idx - visible_count + 1
+        self.scroll_offset = max(0, min(len(self.slots) - visible_count, self.scroll_offset))
+
     def update(self, dt):
+        self.anim_timer += dt
         if self.status_timer > 0:
             self.status_timer = max(0.0, self.status_timer - dt)
             if self.status_timer == 0:
@@ -311,117 +348,143 @@ class SaveSlotSelectScreen:
 
         # Header Titles based on mode
         if self.mode == "LOAD":
-            title_str = "LOAD SAVE FILE"
+            title_str = "LOAD SAVE FILE (SLOTS 1 - 99)"
             subtitle_str = "Select a save slot to continue your journey"
         elif self.mode == "NEW_GAME":
-            title_str = "NEW GAME - SELECT SLOT"
+            title_str = "NEW GAME - SELECT SLOT (1 - 99)"
             subtitle_str = "Select a slot to start your adventure"
         else: # SAVE
-            title_str = "SAVE GAME PROGRESS"
+            title_str = "SAVE GAME PROGRESS (SLOTS 1 - 99)"
             subtitle_str = f"Select a slot to save progress (Current: Slot {self.active_slot})"
 
         head = gfx.fonts["title"].render(title_str, True, (220, 80, 0) if self.mode == "SAVE" else UI_TEXT)
         sub = gfx.fonts["regular"].render(subtitle_str, True, UI_TEXT_MUTED)
-        surf.blit(head, (SCREEN_WIDTH // 2 - head.get_width() // 2, 24))
-        surf.blit(sub, (SCREEN_WIDTH // 2 - sub.get_width() // 2, 70))
+        surf.blit(head, (SCREEN_WIDTH // 2 - head.get_width() // 2, 20))
+        surf.blit(sub, (SCREEN_WIDTH // 2 - sub.get_width() // 2, 60))
 
-        # 3 Save Slot Cards
-        card_w, card_h = 700, 115
-        start_x = (SCREEN_WIDTH - card_w) // 2
+        # Top Right Slot Counter Pill
+        counter_txt = f"SLOT {self.selected_idx + 1} / {len(self.slots)}"
+        pill_surf = gfx.fonts["small"].render(counter_txt, True, WHITE)
+        pill_w = pill_surf.get_width() + 20
+        pygame.draw.rect(surf, (45, 60, 85), (SCREEN_WIDTH - pill_w - 40, 24, pill_w, 28), border_radius=14)
+        surf.blit(pill_surf, (SCREEN_WIDTH - pill_w - 40 + 10, 29))
 
-        for i, s_data in enumerate(self.slots):
+        # Scrollable 4 Visible Cards Window
+        card_w, card_h = 680, 96
+        start_x = (SCREEN_WIDTH - card_w) // 2 - 8
+        visible_count = 4
+
+        for vi in range(visible_count):
+            i = self.scroll_offset + vi
+            if i >= len(self.slots):
+                break
+
+            s_data = self.slots[i]
             slot_num = i + 1
-            card_y = 110 + i * 135
+            card_y = 96 + vi * 108
             is_sel = (i == self.selected_idx)
             is_active = (self.mode == "SAVE" and slot_num == self.active_slot)
 
             # Card border and fill
             bdr_col = (240, 140, 40) if is_sel else (UI_BORDER_DARK if is_active else UI_BORDER_LIGHT)
-            bg_col = (255, 248, 230) if is_sel else WHITE
-            pygame.draw.rect(surf, bdr_col, (start_x - 2, card_y - 2, card_w + 4, card_h + 4), border_radius=12)
-            pygame.draw.rect(surf, bg_col, (start_x, card_y, card_w, card_h), border_radius=10)
+            bg_col = (255, 250, 235) if is_sel else WHITE
+            pygame.draw.rect(surf, bdr_col, (start_x - 2, card_y - 2, card_w + 4, card_h + 4), border_radius=10)
+            pygame.draw.rect(surf, bg_col, (start_x, card_y, card_w, card_h), border_radius=8)
+
+            # Left Selection Accent Bar
+            if is_sel:
+                pygame.draw.rect(surf, (230, 80, 20), (start_x, card_y, 6, card_h), border_top_left_radius=8, border_bottom_left_radius=8)
 
             # Slot Pill Badge
-            slot_pill_col = (220, 80, 0) if is_sel else (40, 120, 220)
-            pygame.draw.rect(surf, slot_pill_col, (start_x + 16, card_y + 14, 80, 26), border_radius=6)
-            slot_lbl = gfx.fonts["small"].render(f"SLOT {slot_num}", True, WHITE)
-            surf.blit(slot_lbl, (start_x + 16 + (80 - slot_lbl.get_width()) // 2, card_y + 19))
+            slot_pill_col = (220, 80, 0) if is_sel else (45, 110, 200)
+            pygame.draw.rect(surf, slot_pill_col, (start_x + 16, card_y + 12, 76, 24), border_radius=5)
+            slot_lbl = gfx.fonts["small"].render(f"SLOT {slot_num:02d}", True, WHITE)
+            surf.blit(slot_lbl, (start_x + 16 + (76 - slot_lbl.get_width()) // 2, card_y + 16))
 
             if is_active:
                 # Active slot badge
-                pygame.draw.rect(surf, (40, 160, 60), (start_x + 104, card_y + 14, 90, 26), border_radius=6)
+                pygame.draw.rect(surf, (40, 160, 60), (start_x + 98, card_y + 12, 80, 24), border_radius=5)
                 act_lbl = gfx.fonts["small"].render("ACTIVE", True, WHITE)
-                surf.blit(act_lbl, (start_x + 104 + (90 - act_lbl.get_width()) // 2, card_y + 19))
+                surf.blit(act_lbl, (start_x + 98 + (80 - act_lbl.get_width()) // 2, card_y + 16))
 
             if s_data.get("exists"):
-                # Lead Pokemon Sprite
+                # Lead Pokemon Sprite with animated bobbing if selected
                 lead_species = s_data.get("lead_species", "Pikachu")
-                sp_surf = gfx.get_pokemon_sprite(lead_species, is_back=False, size=(75, 75))
-                surf.blit(sp_surf, (start_x + 22, card_y + 38))
+                sp_surf = gfx.get_pokemon_sprite(lead_species, is_back=False, size=(60, 60))
+                hop_y = -int(abs(math.sin(self.anim_timer * 4.0)) * 3) if is_sel else 0
+                surf.blit(sp_surf, (start_x + 16, card_y + 36 + hop_y))
 
                 # Main Details
                 lead_name = s_data.get("lead_name", "Pokémon")
                 lead_lvl = s_data.get("lead_level", 5)
                 loc_name = s_data.get("map", "Pallet Town")
-                lead_txt = gfx.fonts["large"].render(f"{lead_name} (Lv. {lead_lvl})", True, (200, 80, 0) if is_sel else UI_TEXT)
-                loc_txt = gfx.fonts["regular"].render(f"Location: {loc_name}", True, UI_TEXT)
-                surf.blit(lead_txt, (start_x + 115, card_y + 46))
-                surf.blit(loc_txt, (start_x + 115, card_y + 76))
+                lead_txt = gfx.fonts["regular"].render(f"{lead_name} (Lv. {lead_lvl})", True, (210, 70, 0) if is_sel else UI_TEXT)
+                loc_txt = gfx.fonts["small"].render(f"📍 {loc_name}", True, UI_TEXT_MUTED)
+                surf.blit(lead_txt, (start_x + 88, card_y + 40))
+                surf.blit(loc_txt, (start_x + 88, card_y + 66))
 
                 # Stats on the right
                 team_count = s_data.get("party_count", 1)
                 money_val = s_data.get("money", 0)
                 caught_val = s_data.get("caught_count", 0)
-                stats_str = f"Team: {team_count} | Money: ${money_val} | Dex: {caught_val}/151"
-                stats_txt = gfx.fonts["small"].render(stats_str, True, UI_TEXT_MUTED)
-                surf.blit(stats_txt, (start_x + 360, card_y + 48))
+                stats_str = f"Party: {team_count} | Money: ${money_val} | Dex: {caught_val}/151"
+                stats_txt = gfx.fonts["small"].render(stats_str, True, UI_TEXT)
+                surf.blit(stats_txt, (start_x + 340, card_y + 38))
 
                 # Timestamp
                 time_str = s_data.get("timestamp", "")
                 if time_str:
                     time_txt = gfx.fonts["small"].render(f"Saved: {time_str}", True, UI_TEXT_MUTED)
-                    surf.blit(time_txt, (start_x + 360, card_y + 76))
+                    surf.blit(time_txt, (start_x + 340, card_y + 66))
             else:
                 # Empty Slot presentation
-                empty_txt = gfx.fonts["large"].render("+ [ EMPTY SAVE SLOT ]", True, (200, 80, 0) if is_sel else UI_TEXT_MUTED)
-                sub_empty = gfx.fonts["regular"].render("No journey recorded. Ready for a new adventure!", True, UI_TEXT_MUTED)
-                surf.blit(empty_txt, (start_x + 115, card_y + 42))
-                surf.blit(sub_empty, (start_x + 115, card_y + 74))
+                empty_txt = gfx.fonts["regular"].render(f"+ [ EMPTY SAVE SLOT {slot_num} ]", True, (200, 80, 0) if is_sel else UI_TEXT_MUTED)
+                sub_empty = gfx.fonts["small"].render("No adventure recorded in this slot. Ready to begin!", True, UI_TEXT_MUTED)
+                surf.blit(empty_txt, (start_x + 104, card_y + 38))
+                surf.blit(sub_empty, (start_x + 104, card_y + 66))
+
+        # Vertical Scrollbar on Right
+        track_x = start_x + card_w + 14
+        track_y = 96
+        track_w = 8
+        track_h = visible_count * 108 - 12
+        pygame.draw.rect(surf, (215, 225, 238), (track_x, track_y, track_w, track_h), border_radius=4)
+
+        max_scroll = max(1, len(self.slots) - visible_count)
+        thumb_h = max(28, int(track_h * (visible_count / len(self.slots))))
+        thumb_y = track_y + int((track_h - thumb_h) * (self.scroll_offset / max_scroll))
+        thumb_col = (230, 110, 30) if self.selected_idx >= 0 else (150, 170, 195)
+        pygame.draw.rect(surf, thumb_col, (track_x, thumb_y, track_w, thumb_h), border_radius=4)
 
         # Status message
         if self.status_msg:
             st_surf = gfx.fonts["regular"].render(self.status_msg, True, (220, 40, 40))
-            surf.blit(st_surf, (SCREEN_WIDTH // 2 - st_surf.get_width() // 2, 525))
+            surf.blit(st_surf, (SCREEN_WIDTH // 2 - st_surf.get_width() // 2, 532))
 
         # Bottom Hint Bar
-        nav_hint = gfx.fonts["small"].render("Up/Down: Select Slot  |  [Z / Enter]: Confirm  |  [X / ESC]: Cancel", True, UI_TEXT_MUTED)
-        surf.blit(nav_hint, (SCREEN_WIDTH // 2 - nav_hint.get_width() // 2, 560))
+        nav_hint = gfx.fonts["small"].render("▲/▼: Scroll Slot  |  ◀/▶ or PgUp/PgDn: Jump Page (±4)  |  [Z / Enter]: Confirm  |  [X / ESC]: Cancel", True, UI_TEXT_MUTED)
+        surf.blit(nav_hint, (SCREEN_WIDTH // 2 - nav_hint.get_width() // 2, 564))
 
         # Overwrite Confirmation Modal Dialog
         if self.confirm_modal:
-            # Semi-transparent backdrop
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 160))
             surf.blit(overlay, (0, 0))
 
-            # Modal Box
             mw, mh = 480, 230
             mx = (SCREEN_WIDTH - mw) // 2
             my = (SCREEN_HEIGHT - mh) // 2
             pygame.draw.rect(surf, (220, 60, 60), (mx - 2, my - 2, mw + 4, mh + 4), border_radius=12)
             pygame.draw.rect(surf, WHITE, (mx, my, mw, mh), border_radius=10)
 
-            # Warning Header
             warn_title = gfx.fonts["large"].render(f"OVERWRITE SLOT {self.target_slot_for_modal}?", True, (220, 60, 60))
             surf.blit(warn_title, (mx + (mw - warn_title.get_width()) // 2, my + 24))
 
-            # Message
             m1 = gfx.fonts["regular"].render("This save slot already contains adventure data!", True, UI_TEXT)
-            m2 = gfx.fonts["small"].render("Overwriting will permanently erase the existing save.", True, UI_TEXT_MUTED)
+            m2 = gfx.fonts["small"].render("Overwriting will permanently replace the existing save.", True, UI_TEXT_MUTED)
             surf.blit(m1, (mx + (mw - m1.get_width()) // 2, my + 75))
             surf.blit(m2, (mx + (mw - m2.get_width()) // 2, my + 105))
 
-            # [YES - OVERWRITE] / [NO - CANCEL] buttons
             for i, opt in enumerate(["YES, OVERWRITE", "NO, CANCEL"]):
                 is_btn_sel = (i == 0 and self.modal_selected_yes) or (i == 1 and not self.modal_selected_yes)
                 btn_w, btn_h = 160, 40
@@ -430,7 +493,7 @@ class SaveSlotSelectScreen:
 
                 b_bdr = (220, 60, 60) if (is_btn_sel and i == 0) else ((240, 140, 40) if is_btn_sel else UI_BORDER_LIGHT)
                 b_bg = (255, 230, 230) if (is_btn_sel and i == 0) else ((255, 245, 220) if is_btn_sel else UI_BG)
-                pygame.draw.rect(surf, bdr_col if not is_btn_sel else b_bdr, (btn_x, btn_y, btn_w, btn_h), border_radius=6)
+                pygame.draw.rect(surf, b_bdr, (btn_x, btn_y, btn_w, btn_h), border_radius=6)
                 pygame.draw.rect(surf, b_bg, (btn_x + 1, btn_y + 1, btn_w - 2, btn_h - 2), border_radius=5)
 
                 btxt = gfx.fonts["regular"].render(opt, True, (200, 40, 40) if (is_btn_sel and i == 0) else UI_TEXT)

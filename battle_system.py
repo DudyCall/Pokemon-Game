@@ -14,6 +14,7 @@ from constants import (
 from graphics_manager import gfx
 from sound_manager import sound_mgr
 from pokemon_data import MOVES, ITEMS, POKEMON_SPECIES
+from battle_vfx import draw_battle_attack_vfx
 
 class BattlePhase:
     INTRO = "INTRO"
@@ -91,9 +92,13 @@ class BattleSystem:
         self.target_player_x = 100
         self.target_enemy_x = 520
         
+        # Move Reorder Mode
+        self.move_swap_source = None
+        
         # Attack FX
         self.active_fx = None
         self.fx_timer = 0.0
+        self.on_status_fx_done = None
         self.screen_shake = 0
         
         # HP drain animation
@@ -181,11 +186,22 @@ class BattleSystem:
                 if self.msg_char_index >= len(self.current_message):
                     self.msg_char_index = len(self.current_message)
 
+        # Screen shake decay
+        if self.screen_shake > 0:
+            self.screen_shake = max(0, self.screen_shake - int(dt * 15))
+
         # Attack Particle Effect update
         if self.phase == BattlePhase.ATTACK_ANIM:
             self.fx_timer += dt
-            if self.fx_timer >= 0.6: # FX duration
-                self.phase = BattlePhase.HP_ANIM
+            if self.fx_timer >= 0.65: # FX duration
+                if self.hp_target_pokemon is not None:
+                    self.phase = BattlePhase.HP_ANIM
+                elif self.on_status_fx_done:
+                    cb = self.on_status_fx_done
+                    self.on_status_fx_done = None
+                    cb()
+                else:
+                    self.phase = BattlePhase.MESSAGE_QUEUE
 
         # Smooth HP drain animation
         if self.phase == BattlePhase.HP_ANIM:
@@ -297,10 +313,30 @@ class BattleSystem:
             elif any(event.key == k for k in KEY_RIGHT):
                 self.move_index = (self.move_index + 1) % num_moves
                 sound_mgr.play_sfx("select")
+            elif event.key in [pygame.K_s, pygame.K_LSHIFT, pygame.K_RSHIFT, pygame.K_TAB]:
+                # Toggle Move Swap Mode
+                if self.move_swap_source is None:
+                    self.move_swap_source = self.move_index
+                    sound_mgr.play_sfx("select")
+                else:
+                    if self.move_swap_source != self.move_index:
+                        self.player_pokemon.swap_moves(self.move_swap_source, self.move_index)
+                        sound_mgr.play_sfx("confirm")
+                    self.move_swap_source = None
             elif any(event.key == k for k in KEY_CANCEL):
-                sound_mgr.play_sfx("cancel")
-                self.phase = BattlePhase.ACTION_MENU
+                if self.move_swap_source is not None:
+                    self.move_swap_source = None
+                    sound_mgr.play_sfx("cancel")
+                else:
+                    sound_mgr.play_sfx("cancel")
+                    self.phase = BattlePhase.ACTION_MENU
             elif any(event.key == k for k in KEY_CONFIRM):
+                if self.move_swap_source is not None:
+                    if self.move_swap_source != self.move_index:
+                        self.player_pokemon.swap_moves(self.move_swap_source, self.move_index)
+                        sound_mgr.play_sfx("confirm")
+                    self.move_swap_source = None
+                    return
                 chosen_move = self.player_pokemon.moves[self.move_index]
                 if chosen_move["pp"] <= 0:
                     sound_mgr.play_sfx("cancel")
@@ -550,7 +586,16 @@ class BattleSystem:
                 self.hp_target_pokemon = defender
                 self.hp_is_player = not is_player
                 self.screen_shake = 8 if is_crit or effectiveness > 1.0 else 4
-                self.phase = BattlePhase.HP_ANIM
+                self.active_fx = {
+                    "move_name": move.get("name", "Attack"),
+                    "move_type": m_type,
+                    "is_player_attacker": is_player,
+                    "is_crit": is_crit,
+                    "effectiveness": effectiveness,
+                    "category": category
+                }
+                self.fx_timer = 0.0
+                self.phase = BattlePhase.ATTACK_ANIM
                 
                 # Post attack comments
                 def on_damage_applied():
@@ -590,24 +635,39 @@ class BattleSystem:
                 self.on_hp_done = on_damage_applied
             else:
                 # Status only move (e.g. Growl, Tail Whip, Recover, Leech Seed)
-                on_next = next_attack if next_attack else self._check_end_of_turn_status
-                eff = move.get("effect") or {}
-                if "heal_percent" in eff:
-                    healed = attacker.heal(int(attacker.max_hp * (eff["heal_percent"] / 100)))
-                    self.queue_message(f"{attacker.nickname} restored {healed} HP!", on_done=on_next)
-                elif "status" in eff:
-                    if defender.apply_status(eff["status"]):
-                        self.queue_message(f"{defender.nickname} became {eff['status']}ed!", on_done=on_next)
+                self.hp_target_pokemon = None
+                self.active_fx = {
+                    "move_name": move.get("name", "Status"),
+                    "move_type": m_type,
+                    "is_player_attacker": is_player,
+                    "is_crit": False,
+                    "effectiveness": 1.0,
+                    "category": "Special"
+                }
+                self.fx_timer = 0.0
+
+                def apply_status_move_outcome():
+                    on_next = next_attack if next_attack else self._check_end_of_turn_status
+                    eff = move.get("effect") or {}
+                    if "heal_percent" in eff:
+                        healed = attacker.heal(int(attacker.max_hp * (eff["heal_percent"] / 100)))
+                        self.queue_message(f"{attacker.nickname} restored {healed} HP!", on_done=on_next)
+                    elif "status" in eff:
+                        if defender.apply_status(eff["status"]):
+                            self.queue_message(f"{defender.nickname} became {eff['status']}ed!", on_done=on_next)
+                        else:
+                            self.queue_message("But it failed!", on_done=on_next)
+                    elif "stat" in eff and "stages" in eff:
+                        stat_name = eff["stat"].upper()
+                        stages = eff["stages"]
+                        target = defender if stages < 0 else attacker
+                        change_word = "harshly fell" if stages <= -2 else ("fell" if stages < 0 else ("sharply rose" if stages >= 2 else "rose"))
+                        self.queue_message(f"{target.nickname}'s {stat_name} {change_word}!", on_done=on_next)
                     else:
-                        self.queue_message("But it failed!", on_done=on_next)
-                elif "stat" in eff and "stages" in eff:
-                    stat_name = eff["stat"].upper()
-                    stages = eff["stages"]
-                    target = defender if stages < 0 else attacker
-                    change_word = "harshly fell" if stages <= -2 else ("fell" if stages < 0 else ("sharply rose" if stages >= 2 else "rose"))
-                    self.queue_message(f"{target.nickname}'s {stat_name} {change_word}!", on_done=on_next)
-                else:
-                    self.queue_message(f"{attacker.nickname}'s {move['name']} was successful!", on_done=on_next)
+                        self.queue_message(f"{attacker.nickname}'s {move['name']} was successful!", on_done=on_next)
+
+                self.on_status_fx_done = apply_status_move_outcome
+                self.phase = BattlePhase.ATTACK_ANIM
 
         self.queue_message(f"{attacker.nickname} used {move['name']}!", on_done=perform_move)
 
@@ -850,6 +910,12 @@ class BattleSystem:
                 bx += math.sin(self.catch_timer * 15) * 6
             surf.blit(ball_icon, (int(bx), int(by)))
 
+        # Draw Attack Particle & Elemental Visual Effects Overlay
+        if self.phase == BattlePhase.ATTACK_ANIM and self.active_fx:
+            player_center = (int(self.player_pos_x) + 90, 200 + 90)
+            enemy_center = (int(self.enemy_pos_x) + 80, 70 + 80)
+            draw_battle_attack_vfx(surf, self.active_fx, self.fx_timer, player_center, enemy_center)
+
         # Draw HUD Cards (Enemy Top-Left, Player Bottom-Right)
         self._draw_enemy_hud(surf)
         self._draw_player_hud(surf)
@@ -974,19 +1040,37 @@ class BattleSystem:
                 rx = bx + lx
                 ry = by + ly
                 is_sel = (self.move_index == i)
-                bg_col = (255, 245, 210) if is_sel else WHITE
-                bdr_col = (240, 140, 40) if is_sel else UI_BORDER_LIGHT
-                pygame.draw.rect(surf, bdr_col, (rx, ry, btn_w, btn_h), border_radius=8)
+                is_swap = (self.move_swap_source == i)
+
+                if is_swap:
+                    bg_col = (255, 225, 225)
+                    bdr_col = (230, 50, 50)
+                elif is_sel:
+                    bg_col = (255, 245, 210)
+                    bdr_col = (240, 140, 40)
+                else:
+                    bg_col = WHITE
+                    bdr_col = UI_BORDER_LIGHT
+
+                pygame.draw.rect(surf, bdr_col, (rx, ry, btn_w, btn_h), 2 if (is_sel or is_swap) else 1, border_radius=8)
                 pygame.draw.rect(surf, bg_col, (rx + 2, ry + 2, btn_w - 4, btn_h - 4), border_radius=6)
                 
                 # Move Name
-                mtxt = gfx.fonts["regular"].render(move["name"], True, UI_TEXT)
+                mtxt = gfx.fonts["regular"].render(move["name"], True, (210, 60, 0) if is_sel else UI_TEXT)
                 surf.blit(mtxt, (rx + 12, ry + 10))
                 
                 # Type badge & PP
                 gfx.draw_type_badge(surf, move["type"], rx + 12, ry + 32, width=60, height=20)
                 pp_txt = gfx.fonts["small"].render(f"PP {move['pp']}/{move['max_pp']}", True, UI_TEXT_MUTED)
                 surf.blit(pp_txt, (rx + btn_w - pp_txt.get_width() - 12, ry + 34))
+
+                if is_swap:
+                    sw_lbl = gfx.fonts["small"].render("SWAP", True, (230, 50, 50))
+                    surf.blit(sw_lbl, (rx + btn_w - sw_lbl.get_width() - 12, ry + 10))
+
+            # Bottom Hint
+            swap_hint = gfx.fonts["small"].render("[S / Shift / Tab]: Swap Move Positions  |  [X]: Back", True, (40, 100, 180))
+            surf.blit(swap_hint, (bx + 20, by + bh - 18))
 
         # Bag Selection Sub-Menu with Live Item Explanation Tooltip
         elif self.phase == BattlePhase.BAG_SELECT:

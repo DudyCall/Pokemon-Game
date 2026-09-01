@@ -104,6 +104,13 @@ class Pokemon:
             "crit_bonus": data.get("crit_bonus", False)
         }
 
+    def swap_moves(self, idx1, idx2):
+        """Swaps the positions of two move slots on this Pokémon."""
+        if 0 <= idx1 < len(self.moves) and 0 <= idx2 < len(self.moves) and idx1 != idx2:
+            self.moves[idx1], self.moves[idx2] = self.moves[idx2], self.moves[idx1]
+            return True
+        return False
+
     def gain_exp(self, amount):
         """Gains EXP and returns a list of events: ('LEVEL_UP', lvl, stat_diffs), ('LEARN_MOVE', move_name), ('EVOLVE', target)"""
         events = []
