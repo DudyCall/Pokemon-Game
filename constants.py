@@ -142,6 +142,7 @@ KEY_CONFIRM = [pygame.K_z, pygame.K_RETURN, pygame.K_SPACE]
 KEY_CANCEL = [pygame.K_x, pygame.K_ESCAPE]
 KEY_MENU = [pygame.K_c, pygame.K_m, pygame.K_TAB]
 KEY_QUICKSAVE = [pygame.K_F5, pygame.K_k]
+KEY_RUN = [pygame.K_SPACE, pygame.K_LSHIFT, pygame.K_RSHIFT, pygame.K_b]
 
 # Walk-Through Wild Encounter Props
 ENCOUNTER_PROP_TILES = {

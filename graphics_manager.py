@@ -153,7 +153,11 @@ class GraphicsManager:
         return pygame.transform.scale(surf, size)
 
     def generate_player_sprites(self, gender="Boy", outfit_theme="Classic Red", hat_style="Trainer Cap", hair_color_name="Dark Brown"):
-        """Generates 4-directional 3-frame animated walking sprites based on trainer customization."""
+        """
+        Generates rich, authentic 16/32-bit GBA-style 4-directional 3-frame animated walking sprites
+        based on trainer customization, featuring multi-tone shading, expressive eyes, dynamic hair,
+        detailed backpacks, and natural walking strides.
+        """
         from constants import OUTFIT_THEMES, HAIR_COLORS
         theme = OUTFIT_THEMES.get(outfit_theme, OUTFIT_THEMES["Classic Red"])
         shirt_col = theme["shirt"]
@@ -163,138 +167,457 @@ class GraphicsManager:
         hair_col = HAIR_COLORS.get(hair_color_name, HAIR_COLORS["Dark Brown"])
         is_female = (str(gender).lower() in ["girl", "female"])
 
-        frames = {}
-        for dir_code in [Direction.DOWN, Direction.UP, Direction.LEFT, Direction.RIGHT]:
+        def _d(c, f=0.70):
+            return (max(0, int(c[0] * f)), max(0, int(c[1] * f)), max(0, int(c[2] * f)))
+
+        def _deep(c, f=0.45):
+            return (max(0, int(c[0] * f)), max(0, int(c[1] * f)), max(0, int(c[2] * f)))
+
+        def _l(c, f=0.35):
+            return (min(255, int(c[0] + (255 - c[0]) * f)), min(255, int(c[1] + (255 - c[1]) * f)), min(255, int(c[2] + (255 - c[2]) * f)))
+
+        shirt_d, shirt_dp, shirt_l = _d(shirt_col), _deep(shirt_col), _l(shirt_col)
+        pants_d, pants_dp, pants_l = _d(pants_col), _deep(pants_col), _l(pants_col)
+        hat_d, hat_dp, hat_l = _d(hat_col), _deep(hat_col), _l(hat_col)
+        accent_d = _d(accent_col, 0.8)
+        hair_d, hair_dp, hair_l = _d(hair_col, 0.65), _deep(hair_col, 0.4), _l(hair_col, 0.35)
+
+        skin_base = (255, 218, 185)
+        skin_shadow = (220, 170, 135)
+        skin_blush = (255, 150, 150)
+        eye_dark = (25, 28, 38)
+        white_c = (248, 248, 252)
+
+        pack_base = (60, 135, 70)
+        pack_light = (85, 165, 95)
+        pack_dark = (40, 95, 48)
+        pack_buckle = (235, 210, 80)
+        pack_strap = (35, 80, 42)
+
+        belt_col = (35, 35, 40)
+        buckle_col = (235, 210, 80)
+
+        shoe_upper = (195, 45, 45) if outfit_theme != "Ocean Blue" else (30, 90, 200)
+        shoe_sole = (245, 248, 252)
+        shoe_sole_d = (175, 180, 195)
+
+        frames = {Direction.DOWN: [], Direction.UP: [], Direction.LEFT: [], Direction.RIGHT: []}
+
+        # Generate DOWN, UP, LEFT
+        for dir_code in [Direction.DOWN, Direction.UP, Direction.LEFT]:
             frames[dir_code] = []
             for step in [0, 1, 2]:
                 surf = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-                cx, cy = TILE_SIZE // 2, TILE_SIZE // 2
-                
-                # Shadow
-                pygame.draw.ellipse(surf, (0, 0, 0, 70), (cx - 10, TILE_SIZE - 8, 20, 7))
-                
-                # Leg offset for walking
-                leg_offset = -3 if step == 1 else (3 if step == 2 else 0)
-                
-                # Pants / Legs
-                if is_female:
-                    # Skirt / Shorts
-                    pygame.draw.rect(surf, pants_col, (cx - 7, cy + 3, 14, 4), border_radius=1)
-                    # Legs
-                    pygame.draw.rect(surf, (255, 218, 185), (cx - 5, cy + 7, 4, 5 + (leg_offset if dir_code in [Direction.DOWN, Direction.UP] else 0)))
-                    pygame.draw.rect(surf, (255, 218, 185), (cx + 1, cy + 7, 4, 5 - (leg_offset if dir_code in [Direction.DOWN, Direction.UP] else 0)))
-                    # Socks & Shoes
-                    pygame.draw.rect(surf, WHITE, (cx - 5, cy + 10, 4, 2))
-                    pygame.draw.rect(surf, WHITE, (cx + 1, cy + 10, 4, 2))
-                    pygame.draw.rect(surf, hat_col, (cx - 6, cy + 11, 5, 3))
-                    pygame.draw.rect(surf, hat_col, (cx + 1, cy + 11, 5, 3))
-                else:
-                    # Pants
-                    pygame.draw.rect(surf, pants_col, (cx - 6, cy + 4, 5, 8 + (leg_offset if dir_code in [Direction.DOWN, Direction.UP] else 0)))
-                    pygame.draw.rect(surf, pants_col, (cx + 1, cy + 4, 5, 8 - (leg_offset if dir_code in [Direction.DOWN, Direction.UP] else 0)))
-                    # Shoes
-                    pygame.draw.rect(surf, (180, 40, 40), (cx - 7, cy + 11, 6, 3))
-                    pygame.draw.rect(surf, (180, 40, 40), (cx + 1, cy + 11, 6, 3))
-                
-                # Shirt / Jacket
-                pygame.draw.rect(surf, shirt_col, (cx - 7, cy - 4, 14, 9), border_radius=2)
-                pygame.draw.rect(surf, accent_col, (cx - 2, cy - 4, 4, 9)) # Accent stripe
-                
-                # Arms
-                arm_y_off = leg_offset if dir_code in [Direction.LEFT, Direction.RIGHT] else 0
-                if dir_code == Direction.LEFT:
-                    pygame.draw.rect(surf, shirt_col, (cx - 8, cy - 3 + arm_y_off, 4, 7))
-                    pygame.draw.circle(surf, (255, 218, 185), (cx - 6, cy + 4 + arm_y_off), 2)
-                elif dir_code == Direction.RIGHT:
-                    pygame.draw.rect(surf, shirt_col, (cx + 4, cy - 3 - arm_y_off, 4, 7))
-                    pygame.draw.circle(surf, (255, 218, 185), (cx + 6, cy + 4 - arm_y_off), 2)
-                else:
-                    pygame.draw.rect(surf, shirt_col, (cx - 9, cy - 3, 3, 7))
-                    pygame.draw.rect(surf, shirt_col, (cx + 6, cy - 3, 3, 7))
-                    pygame.draw.circle(surf, (255, 218, 185), (cx - 8, cy + 4), 2)
-                    pygame.draw.circle(surf, (255, 218, 185), (cx + 7, cy + 4), 2)
-                    
-                # Hair Back (drawn before head for long hair/female)
-                if is_female:
-                    if dir_code == Direction.UP:
-                        # Ponytail down the back
-                        pygame.draw.rect(surf, hair_col, (cx - 3, cy - 12, 6, 12), border_radius=3)
-                        pygame.draw.circle(surf, accent_col, (cx, cy - 11), 3) # Hair tie
-                    elif dir_code == Direction.LEFT:
-                        pygame.draw.rect(surf, hair_col, (cx + 2, cy - 11, 4, 9), border_radius=2)
-                    elif dir_code == Direction.RIGHT:
-                        pygame.draw.rect(surf, hair_col, (cx - 6, cy - 11, 4, 9), border_radius=2)
+                cx = TILE_SIZE // 2
+                bob_y = 1 if step in (1, 2) else 0
+
+                # -------------------------------------------------------------
+                # DIRECTION DOWN (Front View)
+                # -------------------------------------------------------------
+                if dir_code == Direction.DOWN:
+                    # Ground shadow
+                    pygame.draw.ellipse(surf, (0, 0, 0, 75), (cx - 8, 27, 16, 4))
+
+                    # Feet / Shoes
+                    y_l = 27 if step == 1 else (25 if step == 2 else 26)
+                    y_r = 25 if step == 1 else (27 if step == 2 else 26)
+
+                    # Left shoe
+                    pygame.draw.rect(surf, shoe_upper, (cx - 6, y_l, 5, 2))
+                    pygame.draw.rect(surf, white_c, (cx - 5, y_l, 3, 1))
+                    pygame.draw.rect(surf, shoe_sole, (cx - 6, y_l + 2, 5, 2))
+                    pygame.draw.line(surf, shoe_sole_d, (cx - 6, y_l + 3), (cx - 2, y_l + 3))
+
+                    # Right shoe
+                    pygame.draw.rect(surf, shoe_upper, (cx + 1, y_r, 5, 2))
+                    pygame.draw.rect(surf, white_c, (cx + 2, y_r, 3, 1))
+                    pygame.draw.rect(surf, shoe_sole, (cx + 1, y_r + 2, 5, 2))
+                    pygame.draw.line(surf, shoe_sole_d, (cx + 1, y_r + 3), (cx + 5, y_r + 3))
+
+                    # Legs / Pants / Skirt
+                    if is_female:
+                        # Skirt
+                        pygame.draw.rect(surf, pants_col, (cx - 7, 18 + bob_y, 14, 4), border_radius=1)
+                        pygame.draw.rect(surf, pants_d, (cx - 7, 21 + bob_y, 14, 1))
+                        pygame.draw.line(surf, pants_dp, (cx - 3, 18 + bob_y), (cx - 3, 21 + bob_y))
+                        pygame.draw.line(surf, pants_dp, (cx + 2, 18 + bob_y), (cx + 2, 21 + bob_y))
+                        # Bare skin legs
+                        len_l = 4 if step == 1 else (2 if step == 2 else 3)
+                        len_r = 2 if step == 1 else (4 if step == 2 else 3)
+                        pygame.draw.rect(surf, skin_base, (cx - 5, 22 + bob_y, 4, len_l))
+                        pygame.draw.rect(surf, skin_base, (cx + 1, 22 + bob_y, 4, len_r))
+                        # Socks
+                        sock_y_l = y_l - 2
+                        sock_y_r = y_r - 2
+                        pygame.draw.rect(surf, hat_col, (cx - 5, sock_y_l, 4, 1))
+                        pygame.draw.rect(surf, white_c, (cx - 5, sock_y_l + 1, 4, 1))
+                        pygame.draw.rect(surf, hat_col, (cx + 1, sock_y_r, 4, 1))
+                        pygame.draw.rect(surf, white_c, (cx + 1, sock_y_r + 1, 4, 1))
                     else:
+                        # Belt
+                        pygame.draw.rect(surf, belt_col, (cx - 6, 17 + bob_y, 12, 2))
+                        pygame.draw.rect(surf, buckle_col, (cx - 1, 17 + bob_y, 2, 2))
+                        # Left leg
+                        p_len_l = 8 if step == 1 else (6 if step == 2 else 7)
+                        pygame.draw.rect(surf, pants_col, (cx - 6, 19 + bob_y, 5, p_len_l))
+                        pygame.draw.rect(surf, pants_dp, (cx - 2, 19 + bob_y, 1, p_len_l))
+                        pygame.draw.rect(surf, pants_l, (cx - 5, 21 + bob_y, 3, 2))
+                        pygame.draw.rect(surf, pants_d, (cx - 6, 18 + bob_y + p_len_l, 5, 1))
+                        # Right leg
+                        p_len_r = 6 if step == 1 else (8 if step == 2 else 7)
+                        pygame.draw.rect(surf, pants_col, (cx + 1, 19 + bob_y, 5, p_len_r))
+                        pygame.draw.rect(surf, pants_dp, (cx + 1, 19 + bob_y, 1, p_len_r))
+                        pygame.draw.rect(surf, pants_l, (cx + 2, 21 + bob_y, 3, 2))
+                        pygame.draw.rect(surf, pants_d, (cx + 1, 18 + bob_y + p_len_r, 5, 1))
+                        # Center leg division
+                        pygame.draw.line(surf, (0, 0, 0, 80), (cx, 19 + bob_y), (cx, 25 + bob_y))
+
+                    # Torso / Jacket
+                    pygame.draw.rect(surf, shirt_col, (cx - 7, 11 + bob_y, 14, 7), border_radius=2)
+                    # Outer shading
+                    pygame.draw.rect(surf, shirt_d, (cx - 7, 11 + bob_y, 1, 7))
+                    pygame.draw.rect(surf, shirt_d, (cx + 6, 11 + bob_y, 1, 7))
+                    # Shoulder highlights
+                    pygame.draw.rect(surf, shirt_l, (cx - 6, 11 + bob_y, 4, 1))
+                    pygame.draw.rect(surf, shirt_l, (cx + 2, 11 + bob_y, 4, 1))
+                    # Inner shirt V-neck
+                    pygame.draw.rect(surf, white_c, (cx - 2, 11 + bob_y, 4, 3))
+                    pygame.draw.rect(surf, (200, 205, 215), (cx - 2, 11 + bob_y, 4, 1))
+                    # Zipper placket
+                    pygame.draw.rect(surf, accent_col, (cx - 1, 13 + bob_y, 2, 5))
+                    # Pockets
+                    pygame.draw.rect(surf, shirt_d, (cx - 5, 15 + bob_y, 3, 2))
+                    pygame.draw.rect(surf, shirt_l, (cx - 5, 15 + bob_y, 3, 1))
+                    pygame.draw.rect(surf, shirt_d, (cx + 2, 15 + bob_y, 3, 2))
+                    pygame.draw.rect(surf, shirt_l, (cx + 2, 15 + bob_y, 3, 1))
+                    # Backpack straps
+                    pygame.draw.rect(surf, pack_strap, (cx - 5, 11 + bob_y, 2, 6))
+                    pygame.draw.rect(surf, pack_buckle, (cx - 5, 14 + bob_y, 2, 1))
+                    pygame.draw.rect(surf, pack_strap, (cx + 3, 11 + bob_y, 2, 6))
+                    pygame.draw.rect(surf, pack_buckle, (cx + 3, 14 + bob_y, 2, 1))
+
+                    # Arms & Hands
+                    arm_off_l = -1 if step == 1 else (1 if step == 2 else 0)
+                    arm_off_r = 1 if step == 1 else (-1 if step == 2 else 0)
+                    # Left arm
+                    pygame.draw.rect(surf, shirt_col, (cx - 9, 12 + bob_y + arm_off_l, 3, 5))
+                    pygame.draw.rect(surf, shirt_d, (cx - 9, 16 + bob_y + arm_off_l, 3, 1))
+                    pygame.draw.rect(surf, belt_col, (cx - 9, 17 + bob_y + arm_off_l, 3, 1))
+                    pygame.draw.circle(surf, skin_base, (cx - 8, 18 + bob_y + arm_off_l), 1)
+                    # Right arm
+                    pygame.draw.rect(surf, shirt_col, (cx + 6, 12 + bob_y + arm_off_r, 3, 5))
+                    pygame.draw.rect(surf, shirt_d, (cx + 6, 16 + bob_y + arm_off_r, 3, 1))
+                    pygame.draw.rect(surf, belt_col, (cx + 6, 17 + bob_y + arm_off_r, 3, 1))
+                    pygame.draw.circle(surf, skin_base, (cx + 7, 18 + bob_y + arm_off_r), 1)
+
+                    # Neck
+                    pygame.draw.rect(surf, skin_base, (cx - 2, 9 + bob_y, 4, 3))
+                    pygame.draw.rect(surf, skin_shadow, (cx - 2, 9 + bob_y, 4, 1))
+
+                    # Head & Face
+                    pygame.draw.rect(surf, skin_base, (cx - 6, 4 + bob_y, 12, 6))
+                    pygame.draw.rect(surf, skin_base, (cx - 4, 10 + bob_y, 8, 2), border_radius=1)
+                    pygame.draw.line(surf, skin_shadow, (cx - 4, 11 + bob_y), (cx + 3, 11 + bob_y))
+                    # Ears
+                    pygame.draw.rect(surf, skin_base, (cx - 7, 6 + bob_y, 2, 3), border_radius=1)
+                    pygame.draw.rect(surf, skin_base, (cx + 5, 6 + bob_y, 2, 3), border_radius=1)
+                    pygame.draw.line(surf, skin_shadow, (cx - 6, 7 + bob_y), (cx - 6, 8 + bob_y))
+                    pygame.draw.line(surf, skin_shadow, (cx + 5, 7 + bob_y), (cx + 5, 8 + bob_y))
+                    # Cheek blush
+                    pygame.draw.rect(surf, skin_blush, (cx - 5, 8 + bob_y, 2, 1))
+                    pygame.draw.rect(surf, skin_blush, (cx + 3, 8 + bob_y, 2, 1))
+                    # Smile
+                    pygame.draw.line(surf, (185, 100, 80), (cx - 1, 9 + bob_y), (cx + 1, 9 + bob_y))
+                    # Expressive Eyes
+                    pygame.draw.rect(surf, eye_dark, (cx - 5, 6 + bob_y, 3, 2))
+                    pygame.draw.rect(surf, white_c, (cx - 4, 6 + bob_y, 1, 1))
+                    pygame.draw.rect(surf, eye_dark, (cx + 2, 6 + bob_y, 3, 2))
+                    pygame.draw.rect(surf, white_c, (cx + 3, 6 + bob_y, 1, 1))
+
+                    # Hair & Headgear
+                    if is_female:
                         # Side hair locks
-                        pygame.draw.rect(surf, hair_col, (cx - 8, cy - 11, 3, 9), border_radius=1)
-                        pygame.draw.rect(surf, hair_col, (cx + 5, cy - 11, 3, 9), border_radius=1)
-                
-                # Head / Face
-                pygame.draw.circle(surf, (255, 218, 185), (cx, cy - 8), 6) # Peach skin
-                
-                # Hat & Hair rendering
-                if hat_style == "Trainer Cap":
-                    # Cap body
-                    pygame.draw.arc(surf, hat_col, (cx - 7, cy - 16, 14, 12), 0, 3.14, 6)
-                    pygame.draw.rect(surf, hat_col, (cx - 6, cy - 14, 12, 5))
-                    if dir_code == Direction.DOWN:
-                        pygame.draw.rect(surf, accent_col, (cx - 5, cy - 10, 10, 2)) # Visor front
-                        pygame.draw.rect(surf, (40, 40, 40), (cx - 4, cy - 7, 2, 2))
-                        pygame.draw.rect(surf, (40, 40, 40), (cx + 2, cy - 7, 2, 2))
-                    elif dir_code == Direction.UP:
-                        pygame.draw.rect(surf, hat_col, (cx - 6, cy - 14, 12, 8))
-                        # Backpack
-                        pygame.draw.rect(surf, (60, 140, 60), (cx - 5, cy - 3, 10, 7), border_radius=2)
-                    elif dir_code == Direction.LEFT:
-                        pygame.draw.rect(surf, accent_col, (cx - 8, cy - 10, 5, 2))
-                        pygame.draw.rect(surf, (40, 40, 40), (cx - 4, cy - 7, 2, 2))
-                    elif dir_code == Direction.RIGHT:
-                        pygame.draw.rect(surf, accent_col, (cx + 3, cy - 10, 5, 2))
-                        pygame.draw.rect(surf, (40, 40, 40), (cx + 2, cy - 7, 2, 2))
+                        pygame.draw.rect(surf, hair_col, (cx - 8, 5 + bob_y, 2, 8), border_radius=1)
+                        pygame.draw.rect(surf, hair_d, (cx - 8, 11 + bob_y, 2, 2))
+                        pygame.draw.rect(surf, hair_col, (cx + 6, 5 + bob_y, 2, 8), border_radius=1)
+                        pygame.draw.rect(surf, hair_d, (cx + 6, 11 + bob_y, 2, 2))
+                        # Bangs
+                        pygame.draw.rect(surf, hair_col, (cx - 5, 4 + bob_y, 10, 2))
+                        pygame.draw.rect(surf, hair_l, (cx - 4, 4 + bob_y, 8, 1))
+                    else:
+                        # Sideburns
+                        pygame.draw.rect(surf, hair_col, (cx - 6, 5 + bob_y, 1, 4))
+                        pygame.draw.rect(surf, hair_col, (cx + 5, 5 + bob_y, 1, 4))
+                        # Bangs
+                        pygame.draw.rect(surf, hair_col, (cx - 4, 4 + bob_y, 3, 2))
+                        pygame.draw.rect(surf, hair_col, (cx, 4 + bob_y, 4, 2))
 
-                elif hat_style == "Bandana":
-                    pygame.draw.rect(surf, hat_col, (cx - 7, cy - 14, 14, 6), border_radius=2)
-                    pygame.draw.rect(surf, hair_col, (cx - 6, cy - 16, 12, 4), border_radius=2)
-                    if dir_code == Direction.DOWN:
-                        pygame.draw.rect(surf, (40, 40, 40), (cx - 4, cy - 7, 2, 2))
-                        pygame.draw.rect(surf, (40, 40, 40), (cx + 2, cy - 7, 2, 2))
-                    elif dir_code == Direction.UP:
-                        pygame.draw.rect(surf, accent_col, (cx - 3, cy - 13, 6, 4), border_radius=2)
-                        pygame.draw.rect(surf, (60, 140, 60), (cx - 5, cy - 3, 10, 7), border_radius=2)
-                    elif dir_code in [Direction.LEFT, Direction.RIGHT]:
-                        eye_x = (cx - 4) if dir_code == Direction.LEFT else (cx + 2)
-                        pygame.draw.rect(surf, (40, 40, 40), (eye_x, cy - 7, 2, 2))
+                    if hat_style == "Trainer Cap":
+                        # Crown
+                        pygame.draw.rect(surf, hat_col, (cx - 7, 1 + bob_y, 14, 4), border_radius=2)
+                        # White front crest panel
+                        pygame.draw.rect(surf, white_c, (cx - 4, 2 + bob_y, 8, 3))
+                        # Pokeball emblem
+                        pygame.draw.rect(surf, (220, 40, 40), (cx - 1, 2 + bob_y, 2, 1))
+                        pygame.draw.rect(surf, white_c, (cx - 1, 3 + bob_y, 2, 1))
+                        # Top button
+                        pygame.draw.rect(surf, hat_d, (cx - 1, 0 + bob_y, 2, 1))
+                        # Curved visor brim
+                        pygame.draw.rect(surf, accent_col, (cx - 8, 4 + bob_y, 16, 2), border_radius=1)
+                        # Visor shadow on face
+                        pygame.draw.rect(surf, (0, 0, 0, 70), (cx - 6, 5 + bob_y, 12, 1))
 
-                elif hat_style == "Beanie":
-                    pygame.draw.ellipse(surf, hat_col, (cx - 7, cy - 17, 14, 12))
-                    pygame.draw.circle(surf, accent_col, (cx, cy - 16), 3) # Pom-pom
-                    if dir_code == Direction.DOWN:
-                        pygame.draw.rect(surf, (40, 40, 40), (cx - 4, cy - 7, 2, 2))
-                        pygame.draw.rect(surf, (40, 40, 40), (cx + 2, cy - 7, 2, 2))
-                    elif dir_code == Direction.UP:
-                        pygame.draw.rect(surf, (60, 140, 60), (cx - 5, cy - 3, 10, 7), border_radius=2)
-                    elif dir_code in [Direction.LEFT, Direction.RIGHT]:
-                        eye_x = (cx - 4) if dir_code == Direction.LEFT else (cx + 2)
-                        pygame.draw.rect(surf, (40, 40, 40), (eye_x, cy - 7, 2, 2))
+                    elif hat_style == "Bandana":
+                        pygame.draw.rect(surf, hat_col, (cx - 7, 2 + bob_y, 14, 4), border_radius=1)
+                        pygame.draw.rect(surf, accent_col, (cx - 7, 5 + bob_y, 14, 1))
+                        # Spikes above bandana
+                        pygame.draw.rect(surf, hair_col, (cx - 5, 0 + bob_y, 10, 3), border_radius=1)
+                        pygame.draw.rect(surf, hair_l, (cx - 3, 0 + bob_y, 6, 1))
 
-                else: # No Hat / Styled Hair
-                    pygame.draw.circle(surf, hair_col, (cx, cy - 10), 7)
-                    if dir_code == Direction.DOWN:
-                        pygame.draw.rect(surf, hair_col, (cx - 6, cy - 12, 12, 4), border_radius=1)
-                        pygame.draw.rect(surf, (40, 40, 40), (cx - 4, cy - 7, 2, 2))
-                        pygame.draw.rect(surf, (40, 40, 40), (cx + 2, cy - 7, 2, 2))
-                    elif dir_code == Direction.UP:
-                        pygame.draw.rect(surf, hair_col, (cx - 6, cy - 14, 12, 8), border_radius=3)
-                        pygame.draw.rect(surf, (60, 140, 60), (cx - 5, cy - 3, 10, 7), border_radius=2)
-                    elif dir_code in [Direction.LEFT, Direction.RIGHT]:
-                        eye_x = (cx - 4) if dir_code == Direction.LEFT else (cx + 2)
-                        pygame.draw.rect(surf, (40, 40, 40), (eye_x, cy - 7, 2, 2))
+                    elif hat_style == "Beanie":
+                        pygame.draw.rect(surf, hat_col, (cx - 7, 0 + bob_y, 14, 5), border_radius=3)
+                        pygame.draw.rect(surf, hat_d, (cx - 8, 4 + bob_y, 16, 2), border_radius=1)
+                        pygame.draw.circle(surf, accent_col, (cx, -1 + bob_y), 3)
+
+                    else: # No Hat / Styled Hair
+                        pygame.draw.rect(surf, hair_col, (cx - 8, 0 + bob_y, 16, 6), border_radius=3)
+                        pygame.draw.rect(surf, hair_l, (cx - 5, 1 + bob_y, 10, 1))
+                        # Top hair clumps
+                        pygame.draw.rect(surf, hair_col, (cx - 6, -1 + bob_y, 4, 2))
+                        pygame.draw.rect(surf, hair_col, (cx - 1, -2 + bob_y, 4, 2))
+                        pygame.draw.rect(surf, hair_col, (cx + 3, -1 + bob_y, 4, 2))
+
+                # -------------------------------------------------------------
+                # DIRECTION UP (Back View)
+                # -------------------------------------------------------------
+                elif dir_code == Direction.UP:
+                    # Ground shadow
+                    pygame.draw.ellipse(surf, (0, 0, 0, 75), (cx - 8, 27, 16, 4))
+
+                    # Sneaker heels
+                    y_l = 25 if step == 1 else (27 if step == 2 else 26)
+                    y_r = 27 if step == 1 else (25 if step == 2 else 26)
+
+                    # Left shoe
+                    pygame.draw.rect(surf, shoe_upper, (cx - 6, y_l, 5, 2))
+                    pygame.draw.rect(surf, shoe_sole, (cx - 6, y_l + 2, 5, 2))
+                    pygame.draw.line(surf, shoe_sole_d, (cx - 6, y_l + 3), (cx - 2, y_l + 3))
+
+                    # Right shoe
+                    pygame.draw.rect(surf, shoe_upper, (cx + 1, y_r, 5, 2))
+                    pygame.draw.rect(surf, shoe_sole, (cx + 1, y_r + 2, 5, 2))
+                    pygame.draw.line(surf, shoe_sole_d, (cx + 1, y_r + 3), (cx + 5, y_r + 3))
+
+                    # Pants / Skirt
+                    if is_female:
+                        pygame.draw.rect(surf, pants_col, (cx - 7, 18 + bob_y, 14, 4), border_radius=1)
+                        pygame.draw.rect(surf, pants_d, (cx - 7, 21 + bob_y, 14, 1))
+                        # Bare skin legs
+                        len_l = 2 if step == 1 else (4 if step == 2 else 3)
+                        len_r = 4 if step == 1 else (2 if step == 2 else 3)
+                        pygame.draw.rect(surf, skin_base, (cx - 5, 22 + bob_y, 4, len_l))
+                        pygame.draw.rect(surf, skin_base, (cx + 1, 22 + bob_y, 4, len_r))
+                        # Socks
+                        sock_y_l = y_l - 2
+                        sock_y_r = y_r - 2
+                        pygame.draw.rect(surf, hat_col, (cx - 5, sock_y_l, 4, 1))
+                        pygame.draw.rect(surf, white_c, (cx - 5, sock_y_l + 1, 4, 1))
+                        pygame.draw.rect(surf, hat_col, (cx + 1, sock_y_r, 4, 1))
+                        pygame.draw.rect(surf, white_c, (cx + 1, sock_y_r + 1, 4, 1))
+                    else:
+                        p_len_l = 6 if step == 1 else (8 if step == 2 else 7)
+                        p_len_r = 8 if step == 1 else (6 if step == 2 else 7)
+                        pygame.draw.rect(surf, pants_col, (cx - 6, 18 + bob_y, 5, p_len_l))
+                        pygame.draw.rect(surf, pants_d, (cx - 6, 17 + bob_y + p_len_l, 5, 1))
+                        pygame.draw.rect(surf, pants_col, (cx + 1, 18 + bob_y, 5, p_len_r))
+                        pygame.draw.rect(surf, pants_d, (cx + 1, 17 + bob_y + p_len_r, 5, 1))
+                        pygame.draw.line(surf, pants_dp, (cx, 18 + bob_y), (cx, 25 + bob_y))
+
+                    # Upper jacket shoulders & collar
+                    pygame.draw.rect(surf, shirt_col, (cx - 7, 10 + bob_y, 14, 3), border_radius=2)
+                    pygame.draw.rect(surf, shirt_d, (cx - 4, 9 + bob_y, 8, 2))
+
+                    # Adventure Backpack (Rear centerpiece!)
+                    pygame.draw.rect(surf, pack_base, (cx - 6, 12 + bob_y, 12, 7), border_radius=2)
+                    # Flap lid
+                    pygame.draw.rect(surf, pack_light, (cx - 6, 11 + bob_y, 12, 3), border_radius=1)
+                    # Dual straps & buckles
+                    pygame.draw.rect(surf, pack_strap, (cx - 4, 12 + bob_y, 2, 6))
+                    pygame.draw.rect(surf, pack_buckle, (cx - 4, 14 + bob_y, 2, 1))
+                    pygame.draw.rect(surf, pack_strap, (cx + 2, 12 + bob_y, 2, 6))
+                    pygame.draw.rect(surf, pack_buckle, (cx + 2, 14 + bob_y, 2, 1))
+                    # Side bottle pouch
+                    pygame.draw.rect(surf, pack_dark, (cx + 6, 13 + bob_y, 2, 4))
+                    # Bottom seam
+                    pygame.draw.rect(surf, pack_dark, (cx - 6, 18 + bob_y, 12, 1))
+
+                    # Sleeves
+                    arm_off_l = 1 if step == 1 else (-1 if step == 2 else 0)
+                    arm_off_r = -1 if step == 1 else (1 if step == 2 else 0)
+                    pygame.draw.rect(surf, shirt_col, (cx - 9, 11 + bob_y + arm_off_l, 3, 5))
+                    pygame.draw.rect(surf, belt_col, (cx - 9, 16 + bob_y + arm_off_l, 3, 2))
+                    pygame.draw.rect(surf, shirt_col, (cx + 6, 11 + bob_y + arm_off_r, 3, 5))
+                    pygame.draw.rect(surf, belt_col, (cx + 6, 16 + bob_y + arm_off_r, 3, 2))
+
+                    # Head & Hat (Back View)
+                    pygame.draw.rect(surf, skin_shadow, (cx - 3, 7 + bob_y, 6, 3))
+
+                    if is_female:
+                        # High Ponytail
+                        pygame.draw.circle(surf, accent_col, (cx, 4 + bob_y), 3)
+                        pygame.draw.rect(surf, hair_col, (cx - 3, 6 + bob_y, 6, 7), border_radius=2)
+                        pygame.draw.rect(surf, hair_l, (cx - 1, 6 + bob_y, 2, 6))
+                        pygame.draw.rect(surf, hair_d, (cx - 2, 12 + bob_y, 4, 1))
+                    else:
+                        # Nape hair
+                        pygame.draw.rect(surf, hair_col, (cx - 5, 6 + bob_y, 10, 4), border_radius=1)
+                        pygame.draw.rect(surf, hair_d, (cx - 4, 9 + bob_y, 8, 1))
+
+                    if hat_style == "Trainer Cap":
+                        pygame.draw.rect(surf, hat_col, (cx - 7, 1 + bob_y, 14, 6), border_radius=2)
+                        pygame.draw.rect(surf, hat_d, (cx - 1, 0 + bob_y, 2, 1))
+                        # Rear plastic strap arch
+                        pygame.draw.rect(surf, (35, 35, 40), (cx - 3, 5 + bob_y, 6, 2))
+                        pygame.draw.rect(surf, hair_col, (cx - 2, 5 + bob_y, 4, 2))
+
+                    elif hat_style == "Bandana":
+                        pygame.draw.rect(surf, hat_col, (cx - 7, 2 + bob_y, 14, 4), border_radius=1)
+                        pygame.draw.circle(surf, hat_d, (cx, 4 + bob_y), 2)
+                        # Fluttering knot tails
+                        pygame.draw.rect(surf, hat_col, (cx - 3, 6 + bob_y, 3, 5))
+                        pygame.draw.rect(surf, hat_col, (cx + 1, 6 + bob_y, 3, 6))
+
+                    elif hat_style == "Beanie":
+                        pygame.draw.rect(surf, hat_col, (cx - 7, 0 + bob_y, 14, 6), border_radius=3)
+                        pygame.draw.rect(surf, hat_d, (cx - 7, 4 + bob_y, 14, 2))
+                        pygame.draw.circle(surf, accent_col, (cx, -1 + bob_y), 3)
+
+                    else: # No Hat
+                        pygame.draw.rect(surf, hair_col, (cx - 8, 0 + bob_y, 16, 7), border_radius=3)
+                        pygame.draw.rect(surf, hair_l, (cx - 5, 1 + bob_y, 10, 1))
+                        pygame.draw.rect(surf, hair_d, (cx - 6, 6 + bob_y, 12, 2))
+
+                # -------------------------------------------------------------
+                # DIRECTION LEFT (Side Profile)
+                # -------------------------------------------------------------
+                else: # Direction.LEFT
+                    # Ground shadow
+                    pygame.draw.ellipse(surf, (0, 0, 0, 75), (cx - 7, 27, 14, 4))
+
+                    # Legs & Feet in Profile
+                    if step == 0: # Idle profile
+                        # Rear leg
+                        pygame.draw.rect(surf, pants_d, (cx, 19 + bob_y, 4, 7))
+                        pygame.draw.rect(surf, shoe_upper, (cx - 2, 26 + bob_y, 6, 2))
+                        pygame.draw.rect(surf, shoe_sole, (cx - 2, 28 + bob_y, 6, 2))
+                        # Front leg
+                        pygame.draw.rect(surf, pants_col, (cx - 4, 19 + bob_y, 4, 7))
+                        pygame.draw.rect(surf, pants_l, (cx - 4, 21 + bob_y, 2, 2))
+                        pygame.draw.rect(surf, shoe_upper, (cx - 6, 26 + bob_y, 6, 2))
+                        pygame.draw.rect(surf, white_c, (cx - 6, 26 + bob_y, 2, 1))
+                        pygame.draw.rect(surf, shoe_sole, (cx - 6, 28 + bob_y, 6, 2))
+                    elif step == 1: # Left stride (front leg forward to left, rear leg back to right)
+                        # Rear leg back
+                        pygame.draw.rect(surf, pants_d, (cx + 1, 19 + bob_y, 4, 6))
+                        pygame.draw.rect(surf, shoe_upper, (cx + 2, 25 + bob_y, 5, 2))
+                        pygame.draw.rect(surf, shoe_sole, (cx + 2, 27 + bob_y, 5, 2))
+                        # Front leg forward
+                        pygame.draw.rect(surf, pants_col, (cx - 7, 19 + bob_y, 4, 7))
+                        pygame.draw.rect(surf, shoe_upper, (cx - 9, 26 + bob_y, 6, 2))
+                        pygame.draw.rect(surf, white_c, (cx - 9, 26 + bob_y, 2, 1))
+                        pygame.draw.rect(surf, shoe_sole, (cx - 9, 28 + bob_y, 6, 2))
+                    else: # step == 2 (right stride - front leg back, rear leg forward)
+                        # Rear leg forward
+                        pygame.draw.rect(surf, pants_d, (cx - 6, 19 + bob_y, 4, 6))
+                        pygame.draw.rect(surf, shoe_upper, (cx - 8, 25 + bob_y, 5, 2))
+                        pygame.draw.rect(surf, shoe_sole, (cx - 8, 27 + bob_y, 5, 2))
+                        # Front leg back
+                        pygame.draw.rect(surf, pants_col, (cx - 2, 20 + bob_y, 4, 6))
+                        pygame.draw.rect(surf, shoe_upper, (cx - 3, 26 + bob_y, 6, 2))
+                        pygame.draw.rect(surf, white_c, (cx - 3, 26 + bob_y, 2, 1))
+                        pygame.draw.rect(surf, shoe_sole, (cx - 3, 28 + bob_y, 6, 2))
+
+                    # Backpack on character's back (right side)
+                    pygame.draw.rect(surf, pack_base, (cx + 2, 11 + bob_y, 4, 7), border_radius=1)
+                    pygame.draw.rect(surf, pack_light, (cx + 2, 10 + bob_y, 4, 3))
+                    pygame.draw.rect(surf, pack_dark, (cx + 5, 11 + bob_y, 1, 7))
+
+                    # Torso
+                    pygame.draw.rect(surf, shirt_col, (cx - 4, 11 + bob_y, 7, 7), border_radius=1)
+                    pygame.draw.rect(surf, shirt_l, (cx - 4, 11 + bob_y, 1, 7)) # Chest curve
+                    # Backpack shoulder strap
+                    pygame.draw.rect(surf, pack_strap, (cx - 2, 11 + bob_y, 2, 6))
+                    pygame.draw.rect(surf, pack_buckle, (cx - 2, 14 + bob_y, 2, 1))
+
+                    # Arm & Hand
+                    arm_x = (cx - 2) if step == 0 else ((cx + 1) if step == 1 else (cx - 4))
+                    pygame.draw.rect(surf, shirt_col, (arm_x, 12 + bob_y, 3, 5))
+                    pygame.draw.rect(surf, shirt_d, (arm_x, 16 + bob_y, 3, 1))
+                    pygame.draw.rect(surf, belt_col, (arm_x, 17 + bob_y, 3, 1))
+                    pygame.draw.circle(surf, skin_base, (arm_x + 1, 18 + bob_y), 1)
+
+                    # Neck
+                    pygame.draw.rect(surf, skin_base, (cx - 2, 9 + bob_y, 4, 2))
+
+                    # Head & Profile Face
+                    pygame.draw.rect(surf, skin_base, (cx - 5, 4 + bob_y, 8, 7), border_radius=1)
+                    # Nose tip
+                    pygame.draw.rect(surf, skin_base, (cx - 6, 7 + bob_y, 2, 1))
+                    # Chin / jaw
+                    pygame.draw.line(surf, skin_shadow, (cx - 4, 11 + bob_y), (cx + 1, 11 + bob_y))
+                    # Ear
+                    pygame.draw.rect(surf, skin_base, (cx + 1, 6 + bob_y, 2, 3), border_radius=1)
+                    pygame.draw.line(surf, skin_shadow, (cx + 1, 7 + bob_y), (cx + 1, 8 + bob_y))
+                    # Profile Eye
+                    pygame.draw.rect(surf, eye_dark, (cx - 5, 6 + bob_y, 2, 2))
+                    pygame.draw.rect(surf, white_c, (cx - 4, 6 + bob_y, 1, 1))
+                    # Cheek blush
+                    pygame.draw.rect(surf, skin_blush, (cx - 4, 8 + bob_y, 2, 1))
+
+                    # Hair & Hat in Profile
+                    if is_female:
+                        pygame.draw.circle(surf, accent_col, (cx + 3, 4 + bob_y), 2) # Hair tie
+                        pygame.draw.rect(surf, hair_col, (cx + 3, 5 + bob_y, 4, 8), border_radius=1)
+                        pygame.draw.rect(surf, hair_l, (cx + 4, 5 + bob_y, 2, 6))
+
+                    if hat_style == "Trainer Cap":
+                        # Crown
+                        pygame.draw.rect(surf, hat_col, (cx - 4, 1 + bob_y, 8, 5), border_radius=2)
+                        pygame.draw.rect(surf, white_c, (cx - 4, 2 + bob_y, 3, 3))
+                        pygame.draw.rect(surf, hat_d, (cx - 1, 0 + bob_y, 2, 1))
+                        # Projecting Visor Brim
+                        pygame.draw.rect(surf, accent_col, (cx - 8, 4 + bob_y, 5, 2), border_radius=1)
+                        pygame.draw.rect(surf, (0, 0, 0, 70), (cx - 7, 5 + bob_y, 4, 1))
+
+                    elif hat_style == "Bandana":
+                        pygame.draw.rect(surf, hat_col, (cx - 6, 2 + bob_y, 9, 4), border_radius=1)
+                        pygame.draw.rect(surf, accent_col, (cx - 6, 5 + bob_y, 9, 1))
+                        pygame.draw.rect(surf, hat_col, (cx + 3, 4 + bob_y, 4, 4))
+                        pygame.draw.rect(surf, hair_col, (cx - 3, 0 + bob_y, 7, 3), border_radius=1)
+
+                    elif hat_style == "Beanie":
+                        pygame.draw.rect(surf, hat_col, (cx - 5, 0 + bob_y, 9, 6), border_radius=3)
+                        pygame.draw.rect(surf, hat_d, (cx - 6, 4 + bob_y, 10, 2))
+                        pygame.draw.circle(surf, accent_col, (cx + 2, -1 + bob_y), 3)
+
+                    else: # No Hat
+                        pygame.draw.rect(surf, hair_col, (cx - 6, 0 + bob_y, 10, 6), border_radius=2)
+                        pygame.draw.rect(surf, hair_l, (cx - 3, 0 + bob_y, 6, 1))
+                        pygame.draw.rect(surf, hair_col, (cx + 3, 2 + bob_y, 3, 4))
 
                 frames[dir_code].append(surf)
+
+        # Direction.RIGHT is mirrored from Direction.LEFT
+        for step_surf in frames[Direction.LEFT]:
+            frames[Direction.RIGHT].append(pygame.transform.flip(step_surf, True, False))
+
         return frames
 
     def get_trainer_preview_sprite(self, gender="Boy", outfit_theme="Classic Red", hat_style="Trainer Cap", hair_color_name="Dark Brown", size=(160, 160)):
-        """Renders a high-resolution detailed front portrait/standing sprite for the customization menu."""
+        """
+        Renders a high-resolution detailed front portrait/standing sprite for the customization menu
+        and Trainer Card with layered clothing, shaded eyes with specular glints, and crisp accessories.
+        """
         from constants import OUTFIT_THEMES, HAIR_COLORS
         theme = OUTFIT_THEMES.get(outfit_theme, OUTFIT_THEMES["Classic Red"])
         shirt_col = theme["shirt"]
@@ -303,88 +626,243 @@ class GraphicsManager:
         accent_col = theme.get("accent", WHITE)
         hair_col = HAIR_COLORS.get(hair_color_name, HAIR_COLORS["Dark Brown"])
         is_female = (str(gender).lower() in ["girl", "female"])
+
+        def _d(c, f=0.70):
+            return (max(0, int(c[0] * f)), max(0, int(c[1] * f)), max(0, int(c[2] * f)))
+
+        def _deep(c, f=0.45):
+            return (max(0, int(c[0] * f)), max(0, int(c[1] * f)), max(0, int(c[2] * f)))
+
+        def _l(c, f=0.35):
+            return (min(255, int(c[0] + (255 - c[0]) * f)), min(255, int(c[1] + (255 - c[1]) * f)), min(255, int(c[2] + (255 - c[2]) * f)))
+
+        shirt_d, shirt_dp, shirt_l = _d(shirt_col), _deep(shirt_col), _l(shirt_col)
+        pants_d, pants_dp, pants_l = _d(pants_col), _deep(pants_col), _l(pants_col)
+        hat_d, hat_dp, hat_l = _d(hat_col), _deep(hat_col), _l(hat_col)
+        accent_d = _d(accent_col, 0.8)
+        hair_d, hair_dp, hair_l = _d(hair_col, 0.65), _deep(hair_col, 0.4), _l(hair_col, 0.35)
+
+        skin_base = (255, 218, 185)
+        skin_shadow = (220, 170, 135)
+        skin_blush = (255, 150, 150)
+        eye_dark = (25, 28, 38)
+        white_c = (248, 248, 252)
+
+        pack_strap = (35, 80, 42)
+        pack_buckle = (235, 210, 80)
+        belt_col = (35, 35, 42)
+        buckle_col = (235, 215, 90)
+
+        shoe_upper = (195, 45, 45) if outfit_theme != "Ocean Blue" else (30, 90, 200)
+        shoe_sole = (245, 248, 252)
+        shoe_sole_d = (170, 175, 190)
 
         base_w, base_h = 64, 64
         surf = pygame.Surface((base_w, base_h), pygame.SRCALPHA)
         cx, cy = 32, 32
 
-        # Shadow
-        pygame.draw.ellipse(surf, (0, 0, 0, 60), (cx - 20, base_h - 10, 40, 10))
+        # 1. Ground Shadow
+        pygame.draw.ellipse(surf, (0, 0, 0, 45), (cx - 20, 54, 40, 8))
+        pygame.draw.ellipse(surf, (0, 0, 0, 80), (cx - 15, 55, 30, 5))
 
-        # Legs / Pants
+        # 2. Shoes / Sneakers
+        # Left shoe
+        pygame.draw.rect(surf, shoe_upper, (cx - 13, 47, 11, 5), border_radius=1)
+        pygame.draw.rect(surf, white_c, (cx - 13, 49, 4, 3)) # Toe cap
+        pygame.draw.rect(surf, white_c, (cx - 8, 48, 3, 2)) # Laces
+        pygame.draw.rect(surf, shoe_sole, (cx - 13, 52, 11, 3), border_radius=1)
+        pygame.draw.line(surf, shoe_sole_d, (cx - 13, 54), (cx - 3, 54))
+
+        # Right shoe
+        pygame.draw.rect(surf, shoe_upper, (cx + 2, 47, 11, 5), border_radius=1)
+        pygame.draw.rect(surf, white_c, (cx + 9, 49, 4, 3)) # Toe cap
+        pygame.draw.rect(surf, white_c, (cx + 5, 48, 3, 2)) # Laces
+        pygame.draw.rect(surf, shoe_sole, (cx + 2, 52, 11, 3), border_radius=1)
+        pygame.draw.line(surf, shoe_sole_d, (cx + 2, 54), (cx + 12, 54))
+
+        # 3. Pants / Skirt
         if is_female:
-            # Skirt / Shorts
-            pygame.draw.rect(surf, pants_col, (cx - 14, cy + 6, 28, 10), border_radius=2)
-            # Legs
-            pygame.draw.rect(surf, (255, 218, 185), (cx - 10, cy + 16, 8, 12))
-            pygame.draw.rect(surf, (255, 218, 185), (cx + 2, cy + 16, 8, 12))
-            # Socks & Shoes
-            pygame.draw.rect(surf, WHITE, (cx - 10, cy + 22, 8, 4))
-            pygame.draw.rect(surf, WHITE, (cx + 2, cy + 22, 8, 4))
-            pygame.draw.rect(surf, hat_col, (cx - 12, cy + 25, 10, 6), border_radius=2)
-            pygame.draw.rect(surf, hat_col, (cx + 2, cy + 25, 10, 6), border_radius=2)
+            # Skirt
+            pygame.draw.rect(surf, pants_col, (cx - 14, cy + 5, 28, 11), border_radius=2)
+            pygame.draw.rect(surf, pants_d, (cx - 14, cy + 14, 28, 2))
+            pygame.draw.line(surf, pants_dp, (cx - 7, cy + 6), (cx - 7, cy + 14))
+            pygame.draw.line(surf, pants_dp, (cx, cy + 6), (cx, cy + 14))
+            pygame.draw.line(surf, pants_dp, (cx + 7, cy + 6), (cx + 7, cy + 14))
+            # Bare legs
+            pygame.draw.rect(surf, skin_base, (cx - 10, cy + 16, 7, 7))
+            pygame.draw.rect(surf, skin_base, (cx + 3, cy + 16, 7, 7))
+            pygame.draw.line(surf, skin_shadow, (cx - 10, cy + 16), (cx - 4, cy + 16))
+            pygame.draw.line(surf, skin_shadow, (cx + 3, cy + 16), (cx + 9, cy + 16))
+            # Socks with themed cuff
+            pygame.draw.rect(surf, hat_col, (cx - 10, cy + 23, 7, 2))
+            pygame.draw.rect(surf, white_c, (cx - 10, cy + 25, 7, 6))
+            pygame.draw.rect(surf, hat_col, (cx + 3, cy + 23, 7, 2))
+            pygame.draw.rect(surf, white_c, (cx + 3, cy + 25, 7, 6))
         else:
-            # Pants
-            pygame.draw.rect(surf, pants_col, (cx - 12, cy + 8, 10, 18), border_radius=2)
-            pygame.draw.rect(surf, pants_col, (cx + 2, cy + 8, 10, 18), border_radius=2)
-            # Shoes
-            pygame.draw.rect(surf, (180, 40, 40), (cx - 14, cy + 24, 12, 7), border_radius=2)
-            pygame.draw.rect(surf, (180, 40, 40), (cx + 2, cy + 24, 12, 7), border_radius=2)
+            # Denim cargo jeans
+            # Left leg
+            pygame.draw.rect(surf, pants_col, (cx - 12, cy + 7, 10, 18), border_radius=1)
+            pygame.draw.rect(surf, pants_dp, (cx - 3, cy + 7, 1, 18))
+            pygame.draw.rect(surf, pants_l, (cx - 10, cy + 11, 6, 6), border_radius=1)
+            pygame.draw.rect(surf, pants_d, (cx - 12, cy + 23, 10, 2)) # Cuff fold
+            # Right leg
+            pygame.draw.rect(surf, pants_col, (cx + 2, cy + 7, 10, 18), border_radius=1)
+            pygame.draw.rect(surf, pants_dp, (cx + 2, cy + 7, 1, 18))
+            pygame.draw.rect(surf, pants_l, (cx + 4, cy + 11, 6, 6), border_radius=1)
+            pygame.draw.rect(surf, pants_d, (cx + 2, cy + 23, 10, 2)) # Cuff fold
+            # Inner crotch divider
+            pygame.draw.line(surf, (0, 0, 0, 90), (cx, cy + 9), (cx, cy + 24))
 
-        # Torso / Jacket
-        pygame.draw.rect(surf, shirt_col, (cx - 14, cy - 8, 28, 18), border_radius=4)
-        pygame.draw.rect(surf, accent_col, (cx - 4, cy - 8, 8, 18)) # Accent zipper
-        # Belt
-        pygame.draw.rect(surf, (30, 30, 35), (cx - 14, cy + 6, 28, 4))
-        pygame.draw.rect(surf, (220, 200, 80), (cx - 3, cy + 5, 6, 6), border_radius=1)
+        # 4. Belt & Pokeball Clip
+        pygame.draw.rect(surf, belt_col, (cx - 14, cy + 4, 28, 3))
+        pygame.draw.rect(surf, buckle_col, (cx - 3, cy + 3, 6, 5), border_radius=1)
+        pygame.draw.rect(surf, (40, 40, 45), (cx - 1, cy + 4, 2, 3))
+        # Pokeball clipped to belt
+        pygame.draw.circle(surf, (220, 40, 40), (cx + 9, cy + 5), 3)
+        pygame.draw.arc(surf, white_c, (cx + 6, cy + 2, 6, 6), 3.14, 0, 3)
+        pygame.draw.circle(surf, (30, 30, 35), (cx + 9, cy + 5), 1)
 
-        # Arms
-        pygame.draw.rect(surf, shirt_col, (cx - 18, cy - 6, 6, 14), border_radius=2)
-        pygame.draw.rect(surf, shirt_col, (cx + 12, cy - 6, 6, 14), border_radius=2)
-        pygame.draw.circle(surf, (255, 218, 185), (cx - 15, cy + 8), 4)
-        pygame.draw.circle(surf, (255, 218, 185), (cx + 15, cy + 8), 4)
+        # 5. Torso / Jacket
+        pygame.draw.rect(surf, shirt_col, (cx - 14, cy - 9, 28, 14), border_radius=3)
+        # Shading & highlights
+        pygame.draw.rect(surf, shirt_d, (cx - 14, cy - 9, 2, 14))
+        pygame.draw.rect(surf, shirt_d, (cx + 12, cy - 9, 2, 14))
+        pygame.draw.rect(surf, shirt_l, (cx - 12, cy - 9, 8, 2))
+        pygame.draw.rect(surf, shirt_l, (cx + 4, cy - 9, 8, 2))
+        # Undershirt V-neck
+        pygame.draw.polygon(surf, white_c, [(cx - 4, cy - 9), (cx + 4, cy - 9), (cx, cy - 4)])
+        pygame.draw.polygon(surf, (200, 205, 215), [(cx - 3, cy - 9), (cx + 3, cy - 9), (cx, cy - 6)])
+        # Zipper track
+        pygame.draw.line(surf, accent_col, (cx, cy - 3), (cx, cy + 4), 2)
+        pygame.draw.rect(surf, (220, 220, 230), (cx - 1, cy - 4, 2, 2)) # Slider pull
+        # Pocket flaps
+        pygame.draw.rect(surf, shirt_d, (cx - 11, cy - 2, 6, 3), border_radius=1)
+        pygame.draw.rect(surf, shirt_l, (cx - 11, cy - 2, 6, 1))
+        pygame.draw.circle(surf, pack_buckle, (cx - 8, cy - 1), 1)
+        pygame.draw.rect(surf, shirt_d, (cx + 5, cy - 2, 6, 3), border_radius=1)
+        pygame.draw.rect(surf, shirt_l, (cx + 5, cy - 2, 6, 1))
+        pygame.draw.circle(surf, pack_buckle, (cx + 8, cy - 1), 1)
+        # Backpack straps
+        pygame.draw.rect(surf, pack_strap, (cx - 10, cy - 9, 3, 13))
+        pygame.draw.rect(surf, pack_buckle, (cx - 10, cy - 2, 3, 2))
+        pygame.draw.rect(surf, pack_strap, (cx + 7, cy - 9, 3, 13))
+        pygame.draw.rect(surf, pack_buckle, (cx + 7, cy - 2, 3, 2))
 
-        # Hair Back / Locks
-        if is_female:
-            pygame.draw.rect(surf, hair_col, (cx - 16, cy - 20, 6, 20), border_radius=3)
-            pygame.draw.rect(surf, hair_col, (cx + 10, cy - 20, 6, 20), border_radius=3)
+        # 6. Arms & Gloves
+        # Left arm
+        pygame.draw.rect(surf, shirt_col, (cx - 18, cy - 8, 5, 14), border_radius=2)
+        pygame.draw.rect(surf, shirt_d, (cx - 18, cy + 4, 5, 2))
+        pygame.draw.rect(surf, belt_col, (cx - 18, cy + 6, 5, 4), border_radius=1) # Glove body
+        pygame.draw.line(surf, accent_col, (cx - 18, cy + 6), (cx - 14, cy + 6)) # Wrist band
+        pygame.draw.circle(surf, skin_base, (cx - 16, cy + 11), 3) # Fingers
+        # Right arm
+        pygame.draw.rect(surf, shirt_col, (cx + 13, cy - 8, 5, 14), border_radius=2)
+        pygame.draw.rect(surf, shirt_d, (cx + 13, cy + 4, 5, 2))
+        pygame.draw.rect(surf, belt_col, (cx + 13, cy + 6, 5, 4), border_radius=1) # Glove body
+        pygame.draw.line(surf, accent_col, (cx + 13, cy + 6), (cx + 17, cy + 6)) # Wrist band
+        pygame.draw.circle(surf, skin_base, (cx + 15, cy + 11), 3) # Fingers
 
-        # Head / Neck
-        pygame.draw.rect(surf, (255, 218, 185), (cx - 4, cy - 10, 8, 4))
-        pygame.draw.circle(surf, (255, 218, 185), (cx, cy - 16), 12)
-
-        # Eyes & Smile
-        pygame.draw.rect(surf, (30, 40, 50), (cx - 8, cy - 17, 4, 4), border_radius=1)
-        pygame.draw.rect(surf, (30, 40, 50), (cx + 4, cy - 17, 4, 4), border_radius=1)
-        pygame.draw.rect(surf, WHITE, (cx - 7, cy - 18, 2, 2))
-        pygame.draw.rect(surf, WHITE, (cx + 5, cy - 18, 2, 2))
-        # Blush
-        pygame.draw.circle(surf, (255, 170, 170), (cx - 9, cy - 12), 3)
-        pygame.draw.circle(surf, (255, 170, 170), (cx + 9, cy - 12), 3)
+        # 7. Neck & Face
+        pygame.draw.rect(surf, skin_base, (cx - 4, cy - 12, 8, 4))
+        pygame.draw.rect(surf, skin_shadow, (cx - 4, cy - 12, 8, 2))
+        # Head contour
+        pygame.draw.rect(surf, skin_base, (cx - 11, cy - 22, 22, 12), border_radius=4)
+        pygame.draw.rect(surf, skin_base, (cx - 8, cy - 11, 16, 3), border_radius=2)
+        pygame.draw.line(surf, skin_shadow, (cx - 7, cy - 9), (cx + 6, cy - 9))
+        # Ears
+        pygame.draw.rect(surf, skin_base, (cx - 13, cy - 18, 3, 6), border_radius=2)
+        pygame.draw.rect(surf, skin_base, (cx + 10, cy - 18, 3, 6), border_radius=2)
+        pygame.draw.line(surf, skin_shadow, (cx - 12, cy - 17), (cx - 12, cy - 14))
+        pygame.draw.line(surf, skin_shadow, (cx + 11, cy - 17), (cx + 11, cy - 14))
+        # Cheeks blush
+        pygame.draw.ellipse(surf, (255, 160, 160), (cx - 9, cy - 13, 5, 2))
+        pygame.draw.ellipse(surf, (255, 160, 160), (cx + 4, cy - 13, 5, 2))
+        # Cute nose
+        pygame.draw.rect(surf, skin_shadow, (cx - 1, cy - 14, 2, 2))
         # Smile
-        pygame.draw.arc(surf, (160, 40, 40), (cx - 4, cy - 14, 8, 5), 3.14, 0, 2)
+        pygame.draw.arc(surf, (180, 90, 80), (cx - 4, cy - 12, 8, 4), 3.14, 0, 2)
 
-        # Hat / Hair Headgear
+        # 8. Large Expressive Anime Eyes
+        # Left eye
+        pygame.draw.rect(surf, eye_dark, (cx - 9, cy - 19, 6, 2), border_radius=1) # Lash
+        pygame.draw.rect(surf, (45, 55, 80), (cx - 8, cy - 17, 5, 4), border_radius=1) # Iris
+        pygame.draw.rect(surf, (80, 105, 150), (cx - 8, cy - 14, 5, 1)) # Iris highlight bottom
+        pygame.draw.rect(surf, eye_dark, (cx - 7, cy - 17, 3, 2)) # Pupil
+        pygame.draw.rect(surf, white_c, (cx - 8, cy - 18, 2, 2)) # Glint main
+        pygame.draw.rect(surf, white_c, (cx - 5, cy - 15, 1, 1)) # Glint sub
+        # Left eyebrow
+        pygame.draw.rect(surf, hair_d, (cx - 9, cy - 21, 6, 1))
+
+        # Right eye
+        pygame.draw.rect(surf, eye_dark, (cx + 3, cy - 19, 6, 2), border_radius=1) # Lash
+        pygame.draw.rect(surf, (45, 55, 80), (cx + 3, cy - 17, 5, 4), border_radius=1) # Iris
+        pygame.draw.rect(surf, (80, 105, 150), (cx + 3, cy - 14, 5, 1)) # Iris highlight bottom
+        pygame.draw.rect(surf, eye_dark, (cx + 4, cy - 17, 3, 2)) # Pupil
+        pygame.draw.rect(surf, white_c, (cx + 3, cy - 18, 2, 2)) # Glint main
+        pygame.draw.rect(surf, white_c, (cx + 6, cy - 15, 1, 1)) # Glint sub
+        # Right eyebrow
+        pygame.draw.rect(surf, hair_d, (cx + 3, cy - 21, 6, 1))
+
+        # 9. Hair & Hats
+        if is_female:
+            # Long flowing side locks
+            pygame.draw.rect(surf, hair_col, (cx - 15, cy - 20, 5, 20), border_radius=2)
+            pygame.draw.rect(surf, hair_l, (cx - 14, cy - 18, 2, 14))
+            pygame.draw.rect(surf, hair_d, (cx - 15, cy - 2, 5, 3))
+            pygame.draw.rect(surf, hair_col, (cx + 10, cy - 20, 5, 20), border_radius=2)
+            pygame.draw.rect(surf, hair_l, (cx + 11, cy - 18, 2, 14))
+            pygame.draw.rect(surf, hair_d, (cx + 10, cy - 2, 5, 3))
+            # Bangs
+            pygame.draw.rect(surf, hair_col, (cx - 9, cy - 22, 18, 3))
+            pygame.draw.rect(surf, hair_l, (cx - 7, cy - 22, 14, 1))
+        else:
+            # Sideburns
+            pygame.draw.rect(surf, hair_col, (cx - 11, cy - 18, 2, 7))
+            pygame.draw.rect(surf, hair_col, (cx + 9, cy - 18, 2, 7))
+            # Spiky bangs
+            pygame.draw.rect(surf, hair_col, (cx - 8, cy - 22, 6, 3), border_radius=1)
+            pygame.draw.rect(surf, hair_col, (cx + 1, cy - 22, 7, 3), border_radius=1)
+            pygame.draw.rect(surf, hair_l, (cx - 6, cy - 22, 4, 1))
+            pygame.draw.rect(surf, hair_l, (cx + 2, cy - 22, 5, 1))
+
         if hat_style == "Trainer Cap":
-            pygame.draw.arc(surf, hat_col, (cx - 14, cy - 30, 28, 22), 0, 3.14, 11)
-            pygame.draw.rect(surf, hat_col, (cx - 12, cy - 26, 24, 10))
-            pygame.draw.rect(surf, accent_col, (cx - 12, cy - 19, 24, 4), border_radius=2) # Visor
-            # Pokeball logo on cap
-            pygame.draw.circle(surf, WHITE, (cx, cy - 24), 4)
-            pygame.draw.circle(surf, (220, 40, 40), (cx, cy - 24), 2)
+            # Crown dome
+            pygame.draw.rect(surf, hat_col, (cx - 14, cy - 30, 28, 12), border_radius=4)
+            pygame.draw.rect(surf, hat_d, (cx - 2, cy - 31, 4, 2)) # Top button
+            # White front crest panel
+            pygame.draw.rect(surf, white_c, (cx - 9, cy - 28, 18, 9), border_radius=2)
+            # Pokeball Emblem
+            pygame.draw.circle(surf, (220, 40, 40), (cx, cy - 24), 4)
+            pygame.draw.rect(surf, white_c, (cx - 4, cy - 24, 8, 4), border_bottom_left_radius=4, border_bottom_right_radius=4)
+            pygame.draw.line(surf, (30, 30, 35), (cx - 4, cy - 24), (cx + 3, cy - 24))
+            pygame.draw.circle(surf, white_c, (cx, cy - 24), 2)
+            pygame.draw.circle(surf, (220, 40, 40), (cx, cy - 24), 1)
+            # 3D Curved Visor Brim
+            pygame.draw.rect(surf, accent_col, (cx - 15, cy - 20, 30, 4), border_radius=2)
+            pygame.draw.rect(surf, (0, 0, 0, 75), (cx - 12, cy - 16, 24, 2)) # Cast shadow
+
         elif hat_style == "Bandana":
-            pygame.draw.rect(surf, hat_col, (cx - 14, cy - 26, 28, 10), border_radius=3)
-            pygame.draw.rect(surf, hair_col, (cx - 12, cy - 30, 24, 6), border_radius=3)
-            pygame.draw.rect(surf, accent_col, (cx - 12, cy - 22, 24, 2))
+            pygame.draw.rect(surf, hat_col, (cx - 14, cy - 26, 28, 8), border_radius=2)
+            pygame.draw.rect(surf, accent_col, (cx - 14, cy - 20, 28, 2))
+            # Spikes above bandana
+            pygame.draw.rect(surf, hair_col, (cx - 11, cy - 31, 22, 6), border_radius=2)
+            pygame.draw.rect(surf, hair_l, (cx - 8, cy - 31, 16, 2))
+
         elif hat_style == "Beanie":
-            pygame.draw.ellipse(surf, hat_col, (cx - 14, cy - 32, 28, 24))
-            pygame.draw.circle(surf, accent_col, (cx, cy - 30), 5) # Pom-pom
-            pygame.draw.rect(surf, accent_col, (cx - 13, cy - 21, 26, 3))
+            pygame.draw.rect(surf, hat_col, (cx - 13, cy - 32, 26, 14), border_radius=6)
+            pygame.draw.rect(surf, hat_d, (cx - 14, cy - 21, 28, 4), border_radius=2)
+            pygame.draw.circle(surf, accent_col, (cx, cy - 34), 5)
+
         else: # No Hat / Styled Hair
-            pygame.draw.circle(surf, hair_col, (cx, cy - 20), 14)
-            pygame.draw.rect(surf, hair_col, (cx - 12, cy - 24, 24, 8), border_radius=2)
+            pygame.draw.rect(surf, hair_col, (cx - 15, cy - 31, 30, 15), border_radius=6)
+            pygame.draw.rect(surf, hair_l, (cx - 10, cy - 30, 20, 2)) # Highlight halo
+            # Dynamic top tufts
+            pygame.draw.rect(surf, hair_col, (cx - 11, cy - 33, 7, 4), border_radius=2)
+            pygame.draw.rect(surf, hair_col, (cx - 3, cy - 34, 7, 4), border_radius=2)
+            pygame.draw.rect(surf, hair_col, (cx + 5, cy - 33, 7, 4), border_radius=2)
 
         return pygame.transform.scale(surf, size)
+
 
     def get_trainer_portrait(self, identifier, size=(96, 96), is_talking=False):
         """Generates and caches character portraits."""
@@ -545,13 +1023,21 @@ class GraphicsManager:
         self.item_sprites["Super Potion"] = _make_potion_spray((240, 130, 30)) # Orange
         self.item_sprites["Max Potion"] = _make_potion_spray((40, 140, 240)) # Royal Blue
 
-        # 5. Revive (Golden Yellow Diamond Crystal)
+        # 5. Revive (Golden Yellow Diamond Crystal) & Max Revive
         rev = pygame.Surface((24, 24), pygame.SRCALPHA)
         pygame.draw.polygon(rev, (245, 190, 40), [(12, 2), (22, 12), (12, 22), (2, 12)])
         pygame.draw.polygon(rev, (255, 240, 120), [(12, 5), (19, 12), (12, 19), (5, 12)])
         pygame.draw.polygon(rev, (210, 140, 20), [(12, 12), (22, 12), (12, 22)])
         pygame.draw.polygon(rev, (255, 255, 220), [(12, 5), (15, 10), (12, 12), (9, 10)])
         self.item_sprites["Revive"] = rev
+
+        max_rev = pygame.Surface((24, 24), pygame.SRCALPHA)
+        pygame.draw.polygon(max_rev, (255, 215, 0), [(12, 1), (23, 12), (12, 23), (1, 12)])
+        pygame.draw.polygon(max_rev, (255, 255, 180), [(12, 4), (20, 12), (12, 20), (4, 12)])
+        pygame.draw.polygon(max_rev, (230, 160, 20), [(12, 12), (23, 12), (12, 23)])
+        pygame.draw.polygon(max_rev, (255, 255, 255), [(12, 4), (16, 9), (12, 12), (8, 9)])
+        pygame.draw.circle(max_rev, (255, 90, 90), (12, 12), 3)
+        self.item_sprites["Max Revive"] = max_rev
 
         # 6. Status Medicines
         # Antidote (Green serum bottle)

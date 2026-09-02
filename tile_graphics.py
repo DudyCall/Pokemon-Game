@@ -21,25 +21,141 @@ def generate_tiles(fonts):
         grass.set_at((rx + 1, ry), (90, 175, 60))
     cached_tiles["grass"] = grass
     
-    # 2. Tall Encounter Grass
-    tall_grass = grass.copy()
+    # 2. Tall Encounter Grass ('G') - Transparent blending overlay with contact shadows
+    tall_grass = pygame.Surface((T, T), pygame.SRCALPHA)
     for x in [4, 12, 20, 28]:
         for y in [6, 18]:
-            # Draw grass blades
-            pygame.draw.polygon(tall_grass, (45, 130, 40), [(x - 3, y + 10), (x, y), (x + 3, y + 10)])
-            pygame.draw.polygon(tall_grass, (75, 175, 60), [(x - 2, y + 10), (x, y + 2), (x + 2, y + 10)])
+            pygame.draw.ellipse(tall_grass, (0, 0, 0, 35), (x - 4, y + 7, 8, 4))
+            pygame.draw.polygon(tall_grass, (35, 105, 30), [(x - 3, y + 10), (x, y), (x + 3, y + 10)])
+            pygame.draw.polygon(tall_grass, (65, 165, 50), [(x - 2, y + 10), (x, y + 2), (x + 2, y + 10)])
+            pygame.draw.polygon(tall_grass, (120, 215, 85), [(x - 1, y + 9), (x, y + 3), (x + 1, y + 9)])
+    # Embedded river pebbles and autumn fleck (harmonizes with rubble & leaves across all biomes)
+    pygame.draw.circle(tall_grass, (0, 0, 0, 35), (16, 27), 3)
+    pygame.draw.circle(tall_grass, (135, 125, 115), (16, 26), 2)
+    pygame.draw.circle(tall_grass, (185, 175, 165), (15, 25), 1)
+    pygame.draw.ellipse(tall_grass, (220, 120, 35), (25, 14, 4, 3))
     cached_tiles["tall_grass"] = tall_grass
     
-    # 3. Path / Dirt Road
-    path = pygame.Surface((T, T))
-    path.fill((230, 210, 160)) # Sandy beige
-    for _ in range(12):
-        rx = random.randint(1, T - 2)
-        ry = random.randint(1, T - 2)
-        path.set_at((rx, ry), (210, 190, 140))
-        if random.random() < 0.3:
-            path.set_at((rx, ry), (245, 230, 190))
-    cached_tiles["path"] = path
+    # 3. Path / Cobblestone & Flagstone Town Road System
+    C_MORTAR       = (182, 158, 118) # Compacted earth/mortar groove
+    C_MORTAR_D     = (152, 128, 92)  # Deep shadow groove between stones
+    C_STONE_BASE   = (226, 204, 156) # Warm sunny sandstone
+    C_STONE_LIGHT  = (238, 220, 174) # Paver sunlit body
+    C_STONE_HILITE = (252, 238, 200) # Top/left highlight bevel
+    C_STONE_SHADOW = (192, 168, 122) # Bottom/right shadow bevel
+    C_PEBBLE_D     = (136, 114, 80)  # Embedded tiny gravel
+    C_PEBBLE_L     = (248, 240, 215) # Glinting mineral speck
+
+    def _draw_paver(surf, sx, sy, sw, sh, r=3):
+        # 3D shadow groove backing
+        pygame.draw.rect(surf, C_MORTAR_D, (sx - 1, sy - 1, sw + 2, sh + 2), border_radius=r + 1)
+        # Stone paver body
+        pygame.draw.rect(surf, C_STONE_BASE, (sx, sy, sw, sh), border_radius=r)
+        # Sunlit center
+        if sw > 4 and sh > 4:
+            pygame.draw.rect(surf, C_STONE_LIGHT, (sx + 1, sy + 1, sw - 2, sh - 2), border_radius=max(1, r - 1))
+        # Top & Left highlight bevel
+        pygame.draw.line(surf, C_STONE_HILITE, (sx + 1, sy), (sx + sw - 2, sy), 1)
+        pygame.draw.line(surf, C_STONE_HILITE, (sx, sy + 1), (sx, sy + sh - 2), 1)
+        # Bottom & Right shadow bevel
+        pygame.draw.line(surf, C_STONE_SHADOW, (sx + 1, sy + sh - 1), (sx + sw - 1, sy + sh - 1), 1)
+        pygame.draw.line(surf, C_STONE_SHADOW, (sx + sw - 1, sy + 1), (sx + sw - 1, sy + sh - 1), 1)
+
+    def _make_base_path(seed_num=0):
+        rnd = random.Random(42 + seed_num)
+        p = pygame.Surface((T, T))
+        p.fill(C_MORTAR)
+        # Fine soil/sand grain
+        for _ in range(50):
+            rx = rnd.randint(0, T - 1)
+            ry = rnd.randint(0, T - 1)
+            p.set_at((rx, ry), C_MORTAR_D if rnd.random() < 0.6 else C_STONE_BASE)
+        return p, rnd
+
+    # Variant 0: Staggered Flagstones (2 rows)
+    path_0, rnd0 = _make_base_path(0)
+    _draw_paver(path_0, 2, 2, 13, 12, r=3)
+    _draw_paver(path_0, 17, 2, 13, 12, r=3)
+    _draw_paver(path_0, 2, 17, 8, 12, r=2)
+    _draw_paver(path_0, 12, 17, 11, 12, r=3)
+    _draw_paver(path_0, 25, 17, 5, 12, r=2)
+    for px, py in [(15, 8), (10, 24), (23, 10), (1, 15), (16, 22)]:
+        path_0.set_at((px, py), C_PEBBLE_D)
+        path_0.set_at((px + 1, py), C_PEBBLE_L)
+
+    # Variant 1: Staggered Opposite Layout with Small River Stones
+    path_1, rnd1 = _make_base_path(1)
+    _draw_paver(path_1, 2, 2, 8, 12, r=2)
+    _draw_paver(path_1, 12, 2, 12, 12, r=3)
+    _draw_paver(path_1, 26, 2, 4, 12, r=2)
+    _draw_paver(path_1, 2, 17, 13, 12, r=3)
+    _draw_paver(path_1, 17, 17, 13, 12, r=3)
+    pygame.draw.circle(path_1, C_MORTAR_D, (10, 15), 3)
+    pygame.draw.circle(path_1, C_STONE_LIGHT, (10, 15), 2)
+    pygame.draw.circle(path_1, C_MORTAR_D, (25, 15), 3)
+    pygame.draw.circle(path_1, C_STONE_LIGHT, (25, 15), 2)
+    for px, py in [(6, 22), (21, 6), (28, 20)]:
+        path_1.set_at((px, py), C_PEBBLE_D)
+        path_1.set_at((px + 1, py), C_PEBBLE_L)
+
+    # Variant 2: 3-Row Cobblestone Texture
+    path_2, rnd2 = _make_base_path(2)
+    _draw_paver(path_2, 2, 2, 8, 8, r=2)
+    _draw_paver(path_2, 12, 2, 9, 8, r=2)
+    _draw_paver(path_2, 23, 2, 7, 8, r=2)
+    _draw_paver(path_2, 2, 12, 13, 8, r=2)
+    _draw_paver(path_2, 17, 12, 13, 8, r=2)
+    _draw_paver(path_2, 2, 22, 9, 8, r=2)
+    _draw_paver(path_2, 13, 22, 8, 8, r=2)
+    _draw_paver(path_2, 23, 22, 7, 8, r=2)
+    for px, py in [(11, 7), (16, 17), (22, 27), (5, 17)]:
+        path_2.set_at((px, py), C_PEBBLE_D)
+
+    # Variant 3: Broad Weathered Town Flagstones
+    path_3, rnd3 = _make_base_path(3)
+    _draw_paver(path_3, 2, 2, 16, 13, r=3)
+    _draw_paver(path_3, 20, 2, 10, 13, r=2)
+    _draw_paver(path_3, 2, 17, 11, 13, r=2)
+    _draw_paver(path_3, 15, 17, 15, 13, r=3)
+    pygame.draw.line(path_3, C_STONE_SHADOW, (8, 6), (12, 9), 1)
+    pygame.draw.line(path_3, C_STONE_SHADOW, (22, 22), (26, 25), 1)
+    for px, py in [(18, 10), (13, 22), (7, 26)]:
+        path_3.set_at((px, py), C_PEBBLE_D)
+
+    cached_tiles["path"] = path_0
+    cached_tiles["path_0"] = path_0
+    cached_tiles["path_1"] = path_1
+    cached_tiles["path_2"] = path_2
+    cached_tiles["path_3"] = path_3
+
+    # Stone Curb / Road Edge Transitions (SRCALPHA Overlays)
+    # Top edge curb
+    edge_top = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.line(edge_top, (135, 110, 72, 240), (0, 0), (T, 0), 1)
+    pygame.draw.line(edge_top, (246, 230, 185, 230), (0, 1), (T, 1), 1)
+    pygame.draw.line(edge_top, (170, 142, 98, 180), (0, 2), (T, 2), 1)
+    cached_tiles["path_edge_top"] = edge_top
+
+    # Bottom edge curb
+    edge_bot = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.line(edge_bot, (235, 215, 170, 190), (0, T - 3), (T, T - 3), 1)
+    pygame.draw.line(edge_bot, (155, 128, 88, 230), (0, T - 2), (T, T - 2), 1)
+    pygame.draw.line(edge_bot, (80, 65, 45, 210), (0, T - 1), (T, T - 1), 1)
+    cached_tiles["path_edge_bottom"] = edge_bot
+
+    # Left edge curb
+    edge_l = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.line(edge_l, (135, 110, 72, 240), (0, 0), (0, T), 1)
+    pygame.draw.line(edge_l, (246, 230, 185, 230), (1, 0), (1, T), 1)
+    pygame.draw.line(edge_l, (170, 142, 98, 180), (2, 0), (2, T), 1)
+    cached_tiles["path_edge_left"] = edge_l
+
+    # Right edge curb
+    edge_r = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.line(edge_r, (235, 215, 170, 190), (T - 3, 0), (T - 3, T), 1)
+    pygame.draw.line(edge_r, (155, 128, 88, 230), (T - 2, 0), (T - 2, T), 1)
+    pygame.draw.line(edge_r, (80, 65, 45, 210), (T - 1, 0), (T - 1, T), 1)
+    cached_tiles["path_edge_right"] = edge_r
     
     # 4. Water (4-frame ripple animation)
     water_frames = []
@@ -55,29 +171,186 @@ def generate_tiles(fonts):
         water_frames.append(ws)
     cached_tiles["water"] = water_frames
     
-    # 5. Tree (Top-Left, Top-Right, Bottom-Left, Bottom-Right 2x2)
-    tree_top = pygame.Surface((T * 2, T))
-    tree_top.fill((0, 0, 0))
-    tree_top.set_colorkey((0, 0, 0))
-    pygame.draw.circle(tree_top, (34, 120, 45), (T, T), T - 2)
-    pygame.draw.circle(tree_top, (50, 160, 65), (T - 6, T - 6), T - 8)
-    
-    tree_bot = pygame.Surface((T * 2, T))
-    tree_bot.fill((0, 0, 0))
-    tree_bot.set_colorkey((0, 0, 0))
-    pygame.draw.circle(tree_bot, (34, 120, 45), (T, 0), T - 2)
-    pygame.draw.circle(tree_bot, (50, 160, 65), (T - 6, 0), T - 8)
-    # Trunk
-    pygame.draw.rect(tree_bot, (130, 80, 40), (T - 6, 8, 12, T - 8))
-    pygame.draw.rect(tree_bot, (90, 50, 25), (T - 6, 8, 4, T - 8))
-    
-    cached_tiles["tree_tl"] = tree_top.subsurface((0, 0, T, T))
-    cached_tiles["tree_tr"] = tree_top.subsurface((T, 0, T, T))
-    cached_tiles["tree_bl"] = tree_bot.subsurface((0, 0, T, T))
-    cached_tiles["tree_br"] = tree_bot.subsurface((T, 0, T, T))
+    # 5. LUSH EXPANDED TREE & BORDER CANOPY SYSTEM
+    C_SHADOW = (18, 56, 26)       # Deep forest shadow outline
+    C_DEEP   = (28, 96, 40)       # Deep base foliage
+    C_MID    = (44, 146, 56)      # Mid foliage tone
+    C_LIGHT  = (76, 192, 78)      # Sunlit foliage highlight
+    C_GLINT  = (136, 228, 118)    # Top-left sun sparkle
+    C_BARK   = (118, 70, 36)      # Tree trunk wood
+    C_BARK_D = (74, 42, 18)       # Trunk shadow
+    C_BARK_L = (162, 106, 54)     # Trunk highlight
+
+    def _draw_leaf_puff(surf, cx, cy, radius, has_glint=True):
+        """Draws a multi-layered organic leaf cluster puff with natural spherical shading."""
+        pygame.draw.circle(surf, C_SHADOW, (cx, cy), radius + 1)
+        pygame.draw.circle(surf, C_DEEP, (cx, cy), radius)
+        pygame.draw.circle(surf, C_MID, (cx - 1, cy - 1), max(2, radius - 2))
+        pygame.draw.circle(surf, C_LIGHT, (cx - 2, cy - 2), max(1, radius - 4))
+        if has_glint and radius >= 6:
+            pygame.draw.circle(surf, C_GLINT, (cx - 3, cy - 3), max(1, radius // 4))
+
+    # A. 2x2 Large Forest Trees (tree_tl, tree_tr, tree_bl, tree_br)
+    tree_top_full = pygame.Surface((T * 2, T), pygame.SRCALPHA)
+    tree_bot_full = pygame.Surface((T * 2, T), pygame.SRCALPHA)
+
+    # Top Crown (spans 64x32)
+    _draw_leaf_puff(tree_top_full, 18, 24, 13)
+    _draw_leaf_puff(tree_top_full, 46, 24, 13)
+    _draw_leaf_puff(tree_top_full, 32, 16, 15)
+    _draw_leaf_puff(tree_top_full, 12, 16, 10)
+    _draw_leaf_puff(tree_top_full, 52, 16, 10)
+    _draw_leaf_puff(tree_top_full, 32, 8, 8)
+
+    # Bottom Canopy & Sturdy Trunk
+    pygame.draw.rect(tree_bot_full, C_BARK, (T - 8, 4, 16, T - 4), border_radius=2)
+    pygame.draw.rect(tree_bot_full, C_BARK_D, (T - 8, 4, 5, T - 4))
+    pygame.draw.rect(tree_bot_full, C_BARK_L, (T + 3, 4, 4, T - 4))
+    pygame.draw.polygon(tree_bot_full, C_BARK, [(T - 8, T - 6), (T - 12, T), (T - 6, T)])
+    pygame.draw.polygon(tree_bot_full, C_BARK, [(T + 8, T - 6), (T + 12, T), (T + 6, T)])
+    pygame.draw.line(tree_bot_full, C_BARK_D, (T - 2, 8), (T - 2, 22), 1)
+    pygame.draw.line(tree_bot_full, C_BARK_L, (T + 1, 10), (T + 1, 24), 1)
+
+    # Overhanging lower leaf canopy
+    _draw_leaf_puff(tree_bot_full, 16, 4, 12)
+    _draw_leaf_puff(tree_bot_full, 48, 4, 12)
+    _draw_leaf_puff(tree_bot_full, 32, 2, 10)
+
+    cached_tiles["tree_tl"] = tree_top_full.subsurface((0, 0, T, T))
+    cached_tiles["tree_tr"] = tree_top_full.subsurface((T, 0, T, T))
+    cached_tiles["tree_bl"] = tree_bot_full.subsurface((0, 0, T, T))
+    cached_tiles["tree_br"] = tree_bot_full.subsurface((T, 0, T, T))
+
+    # B. Standalone 1x1 Tree (tree_single)
+    tree_single = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(tree_single, (20, 50, 25, 120), (6, 24, 20, 7))
+    pygame.draw.rect(tree_single, C_BARK, (12, 16, 8, 14), border_radius=1)
+    pygame.draw.rect(tree_single, C_BARK_D, (12, 16, 3, 14))
+    pygame.draw.rect(tree_single, C_BARK_L, (17, 16, 3, 14))
+    pygame.draw.polygon(tree_single, C_BARK, [(12, 26), (9, 30), (14, 30)])
+    pygame.draw.polygon(tree_single, C_BARK, [(20, 26), (23, 30), (18, 30)])
+    _draw_leaf_puff(tree_single, 9, 15, 7)
+    _draw_leaf_puff(tree_single, 23, 15, 7)
+    _draw_leaf_puff(tree_single, 16, 9, 8)
+    _draw_leaf_puff(tree_single, 16, 14, 6)
+    cached_tiles["tree_single"] = tree_single
+
+    # C. Outer Canopy Corners (tree_corner_tl, tree_corner_tr, tree_corner_bl, tree_corner_br)
+    c_tl = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(c_tl, 20, 20, 11)
+    _draw_leaf_puff(c_tl, 14, 14, 9)
+    _draw_leaf_puff(c_tl, 26, 12, 7)
+    _draw_leaf_puff(c_tl, 12, 26, 7)
+    cached_tiles["tree_corner_tl"] = c_tl
+
+    c_tr = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(c_tr, 12, 20, 11)
+    _draw_leaf_puff(c_tr, 18, 14, 9)
+    _draw_leaf_puff(c_tr, 6, 12, 7)
+    _draw_leaf_puff(c_tr, 20, 26, 7)
+    cached_tiles["tree_corner_tr"] = c_tr
+
+    c_bl = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.rect(c_bl, C_BARK, (14, 12, 6, 18), border_radius=1)
+    pygame.draw.rect(c_bl, C_BARK_D, (14, 12, 2, 18))
+    _draw_leaf_puff(c_bl, 18, 10, 11)
+    _draw_leaf_puff(c_bl, 10, 16, 8)
+    _draw_leaf_puff(c_bl, 26, 14, 8)
+    cached_tiles["tree_corner_bl"] = c_bl
+
+    c_br = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.rect(c_br, C_BARK, (12, 12, 6, 18), border_radius=1)
+    pygame.draw.rect(c_br, C_BARK_L, (16, 12, 2, 18))
+    _draw_leaf_puff(c_br, 14, 10, 11)
+    _draw_leaf_puff(c_br, 22, 16, 8)
+    _draw_leaf_puff(c_br, 6, 14, 8)
+    cached_tiles["tree_corner_br"] = c_br
+
+    # D. Outer Straight Borders
+    t_top_0 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_top_0, 8, 16, 9)
+    _draw_leaf_puff(t_top_0, 24, 16, 9)
+    _draw_leaf_puff(t_top_0, 16, 10, 8)
+    cached_tiles["tree_border_top_0"] = t_top_0
+
+    t_top_1 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_top_1, 16, 16, 10)
+    _draw_leaf_puff(t_top_1, 6, 12, 7)
+    _draw_leaf_puff(t_top_1, 26, 12, 7)
+    cached_tiles["tree_border_top_1"] = t_top_1
+
+    t_bot_0 = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.rect(t_bot_0, C_BARK, (13, 8, 6, 22), border_radius=1)
+    pygame.draw.rect(t_bot_0, C_BARK_D, (13, 8, 2, 22))
+    pygame.draw.rect(t_bot_0, C_BARK_L, (17, 8, 2, 22))
+    _draw_leaf_puff(t_bot_0, 8, 8, 9)
+    _draw_leaf_puff(t_bot_0, 24, 8, 9)
+    _draw_leaf_puff(t_bot_0, 16, 4, 8)
+    cached_tiles["tree_border_bot_0"] = t_bot_0
+
+    t_bot_1 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_bot_1, 16, 8, 11)
+    _draw_leaf_puff(t_bot_1, 6, 6, 8)
+    _draw_leaf_puff(t_bot_1, 26, 6, 8)
+    cached_tiles["tree_border_bot_1"] = t_bot_1
+
+    t_left_0 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_left_0, 16, 10, 10)
+    _draw_leaf_puff(t_left_0, 14, 24, 9)
+    _draw_leaf_puff(t_left_0, 26, 16, 8)
+    cached_tiles["tree_border_left_0"] = t_left_0
+
+    t_left_1 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_left_1, 14, 8, 9)
+    _draw_leaf_puff(t_left_1, 16, 22, 10)
+    _draw_leaf_puff(t_left_1, 26, 16, 8)
+    cached_tiles["tree_border_left_1"] = t_left_1
+
+    t_right_0 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_right_0, 16, 10, 10)
+    _draw_leaf_puff(t_right_0, 18, 24, 9)
+    _draw_leaf_puff(t_right_0, 6, 16, 8)
+    cached_tiles["tree_border_right_0"] = t_right_0
+
+    t_right_1 = pygame.Surface((T, T), pygame.SRCALPHA)
+    _draw_leaf_puff(t_right_1, 18, 8, 9)
+    _draw_leaf_puff(t_right_1, 16, 22, 10)
+    _draw_leaf_puff(t_right_1, 6, 16, 8)
+    cached_tiles["tree_border_right_1"] = t_right_1
+
+    # E. Dense Interior Canopy
+    d_0 = pygame.Surface((T, T))
+    d_0.fill(C_DEEP)
+    _draw_leaf_puff(d_0, 8, 8, 7)
+    _draw_leaf_puff(d_0, 24, 8, 7)
+    _draw_leaf_puff(d_0, 8, 24, 7)
+    _draw_leaf_puff(d_0, 24, 24, 7)
+    _draw_leaf_puff(d_0, 16, 16, 8)
+    cached_tiles["tree_dense_canopy_0"] = d_0
+
+    d_1 = d_0.copy()
+    _draw_leaf_puff(d_1, 14, 18, 7)
+    pygame.draw.circle(d_1, (225, 45, 45), (10, 14), 2)
+    pygame.draw.circle(d_1, (255, 120, 120), (9, 13), 1)
+    pygame.draw.circle(d_1, (225, 45, 45), (22, 22), 2)
+    pygame.draw.circle(d_1, (255, 120, 120), (21, 21), 1)
+    pygame.draw.circle(d_1, (240, 180, 40), (20, 10), 2)
+    cached_tiles["tree_dense_canopy_1"] = d_1
+
+    d_2 = pygame.Surface((T, T))
+    d_2.fill(C_DEEP)
+    _draw_leaf_puff(d_2, 16, 8, 8)
+    _draw_leaf_puff(d_2, 8, 20, 8)
+    _draw_leaf_puff(d_2, 24, 20, 8)
+    _draw_leaf_puff(d_2, 16, 28, 6)
+    cached_tiles["tree_dense_canopy_2"] = d_2
     
     # 6. Flowers
-    flower_red = grass.copy()
+    flower_red = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(flower_red, (0, 0, 0, 35), (7, 16, 7, 4))
+    pygame.draw.ellipse(flower_red, (0, 0, 0, 35), (19, 26, 7, 4))
+    pygame.draw.line(flower_red, (35, 110, 30), (10, 14), (10, 18), 2)
+    pygame.draw.line(flower_red, (35, 110, 30), (22, 24), (22, 28), 2)
     pygame.draw.circle(flower_red, (240, 60, 60), (10, 12), 4)
     pygame.draw.circle(flower_red, (255, 230, 60), (10, 12), 2)
     pygame.draw.circle(flower_red, (240, 60, 60), (22, 22), 4)
@@ -85,7 +358,9 @@ def generate_tiles(fonts):
     cached_tiles["flower_red"] = flower_red
     
     # 7. Wooden Fence
-    fence = grass.copy()
+    fence = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(fence, (0, 0, 0, 45), (3, 26, 8, 4))
+    pygame.draw.ellipse(fence, (0, 0, 0, 45), (21, 26, 8, 4))
     pygame.draw.rect(fence, (160, 110, 60), (0, 10, T, 4))
     pygame.draw.rect(fence, (160, 110, 60), (0, 20, T, 4))
     pygame.draw.rect(fence, (120, 75, 35), (4, 6, 6, 22), border_radius=1)
@@ -734,11 +1009,15 @@ def generate_tiles(fonts):
         savanna_grass.set_at((rx + 1, ry), (185, 160, 90))
     cached_tiles["savanna_grass"] = savanna_grass
 
-    savanna_tall_grass = savanna_grass.copy()
+    savanna_tall_grass = pygame.Surface((T, T), pygame.SRCALPHA)
     for x in [4, 12, 20, 28]:
         for y in [6, 18]:
-            pygame.draw.polygon(savanna_tall_grass, (165, 135, 55), [(x - 3, y + 10), (x, y), (x + 3, y + 10)])
-            pygame.draw.polygon(savanna_tall_grass, (200, 170, 75), [(x - 2, y + 10), (x, y + 2), (x + 2, y + 10)])
+            pygame.draw.ellipse(savanna_tall_grass, (0, 0, 0, 30), (x - 4, y + 7, 8, 4))
+            pygame.draw.polygon(savanna_tall_grass, (145, 115, 45), [(x - 3, y + 10), (x, y), (x + 3, y + 10)])
+            pygame.draw.polygon(savanna_tall_grass, (195, 165, 70), [(x - 2, y + 10), (x, y + 2), (x + 2, y + 10)])
+            pygame.draw.polygon(savanna_tall_grass, (235, 205, 110), [(x - 1, y + 9), (x, y + 3), (x + 1, y + 9)])
+    pygame.draw.circle(savanna_tall_grass, (0, 0, 0, 30), (16, 27), 3)
+    pygame.draw.circle(savanna_tall_grass, (145, 125, 100), (16, 26), 2)
     cached_tiles["savanna_tall_grass"] = savanna_tall_grass
 
     acacia_tree = savanna_grass.copy()
@@ -769,9 +1048,10 @@ def generate_tiles(fonts):
     # ==========================================
     # 23. WALK-THROUGH ENCOUNTER PROPS
     # ==========================================
-    # A. Wildflower Meadow ('F' / '*')
-    flower_meadow = grass.copy()
-    # Stems and leafy foliage
+    # A. Wildflower Meadow ('F' / '*') - Transparent meadow blooms
+    flower_meadow = pygame.Surface((T, T), pygame.SRCALPHA)
+    for fx, fy in [(8, 14), (22, 10), (15, 20), (25, 24), (5, 25)]:
+        pygame.draw.ellipse(flower_meadow, (0, 0, 0, 32), (fx - 4, fy + 6, 8, 4))
     pygame.draw.line(flower_meadow, (35, 110, 30), (8, 14), (8, 22), 2)
     pygame.draw.line(flower_meadow, (35, 110, 30), (22, 10), (22, 18), 2)
     pygame.draw.line(flower_meadow, (35, 110, 30), (15, 20), (15, 28), 2)
@@ -789,76 +1069,118 @@ def generate_tiles(fonts):
     pygame.draw.circle(flower_meadow, WHITE, (25, 24), 1)
     pygame.draw.circle(flower_meadow, (255, 120, 190), (5, 25), 3)
     pygame.draw.circle(flower_meadow, WHITE, (5, 25), 1)
+    # River pebble in meadow
+    pygame.draw.circle(flower_meadow, (135, 125, 115), (18, 12), 2)
     cached_tiles["flower_meadow"] = flower_meadow
 
-    # B. Autumn Leaf Pile ('L')
-    leaf_pile = grass.copy()
-    # Scattered autumn leaves
+    # B. Autumn Leaf Pile ('L') - Transparent natural scatter blending with all terrains
+    leaf_pile = pygame.Surface((T, T), pygame.SRCALPHA)
+    # Subtle organic ground shade
+    pygame.draw.ellipse(leaf_pile, (0, 0, 0, 38), (3, 8, 26, 18))
+    pygame.draw.ellipse(leaf_pile, (0, 0, 0, 25), (1, 5, 30, 22))
+
+    # Smooth river pebbles nestled with leaves (bridges with cave rubble)
+    pygame.draw.circle(leaf_pile, (0, 0, 0, 45), (6, 21), 3)
+    pygame.draw.circle(leaf_pile, (135, 125, 120), (6, 20), 2)
+    pygame.draw.circle(leaf_pile, (175, 168, 160), (5, 19), 1)
+
+    pygame.draw.circle(leaf_pile, (0, 0, 0, 40), (25, 11), 3)
+    pygame.draw.circle(leaf_pile, (120, 110, 105), (25, 10), 2)
+    pygame.draw.circle(leaf_pile, (160, 150, 145), (24, 9), 1)
+
+    # Delicate wild grass blades nestled with leaves
+    pygame.draw.line(leaf_pile, (55, 120, 45), (11, 14), (13, 8), 1)
+    pygame.draw.line(leaf_pile, (80, 155, 60), (12, 14), (15, 9), 1)
+    pygame.draw.line(leaf_pile, (60, 130, 50), (20, 24), (18, 18), 1)
+    pygame.draw.line(leaf_pile, (90, 165, 70), (20, 24), (22, 19), 1)
+
+    # Scattered autumn leaves with 3D drop-shadows and vein ribs
     # Orange maple leaf
+    pygame.draw.polygon(leaf_pile, (0, 0, 0, 60), [(9, 7), (13, 13), (11, 17), (5, 15), (5, 9)])
     pygame.draw.polygon(leaf_pile, (230, 115, 35), [(8, 6), (12, 12), (10, 16), (4, 14), (4, 8)])
+    pygame.draw.polygon(leaf_pile, (255, 145, 55), [(7, 7), (11, 11), (9, 14), (5, 13)])
     pygame.draw.line(leaf_pile, (170, 70, 20), (8, 8), (10, 16), 1)
+
     # Crimson oak leaf
-    pygame.draw.polygon(leaf_pile, (200, 45, 40), [(22, 14), (26, 8), (28, 14), (24, 20), (20, 16)])
+    pygame.draw.polygon(leaf_pile, (0, 0, 0, 60), [(23, 15), (27, 9), (29, 15), (25, 21), (21, 17)])
+    pygame.draw.polygon(leaf_pile, (205, 45, 40), [(22, 14), (26, 8), (28, 14), (24, 20), (20, 16)])
+    pygame.draw.polygon(leaf_pile, (235, 75, 65), [(23, 13), (26, 9), (27, 13), (24, 17)])
     pygame.draw.line(leaf_pile, (140, 25, 20), (24, 10), (22, 18), 1)
+
     # Golden aspen leaf
-    pygame.draw.polygon(leaf_pile, (240, 195, 45), [(14, 18), (18, 14), (20, 22), (16, 26), (12, 22)])
+    pygame.draw.polygon(leaf_pile, (0, 0, 0, 60), [(15, 19), (19, 15), (21, 23), (17, 27), (13, 23)])
+    pygame.draw.polygon(leaf_pile, (245, 195, 45), [(14, 18), (18, 14), (20, 22), (16, 26), (12, 22)])
+    pygame.draw.polygon(leaf_pile, (255, 225, 80), [(15, 17), (18, 15), (19, 20), (16, 23)])
     pygame.draw.line(leaf_pile, (180, 130, 25), (16, 16), (16, 24), 1)
-    # Russet small leaves
-    pygame.draw.ellipse(leaf_pile, (145, 75, 35), (4, 22, 7, 5))
-    pygame.draw.ellipse(leaf_pile, (225, 140, 50), (22, 24, 6, 4))
+
+    # Russet accent leaves
+    pygame.draw.ellipse(leaf_pile, (155, 75, 35), (3, 21, 7, 5))
+    pygame.draw.ellipse(leaf_pile, (225, 140, 50), (21, 23, 6, 4))
+    pygame.draw.ellipse(leaf_pile, (210, 160, 40), (14, 6, 5, 4))
     cached_tiles["leaf_pile"] = leaf_pile
 
-    # C. Cave Rubble / Crags ('r')
-    cave_rubble = cave_floor.copy()
-    # Large jagged stone
-    pygame.draw.polygon(cave_rubble, (125, 115, 110), [(6, 10), (14, 6), (18, 12), (12, 18), (4, 14)])
-    pygame.draw.polygon(cave_rubble, (160, 150, 145), [(7, 9), (13, 7), (16, 11), (12, 12)])
-    pygame.draw.polygon(cave_rubble, (55, 48, 45), [(4, 14), (12, 18), (10, 20), (3, 16)])
-    # Medium rock
-    pygame.draw.polygon(cave_rubble, (110, 100, 95), [(20, 16), (27, 13), (29, 21), (22, 25)])
-    pygame.draw.polygon(cave_rubble, (145, 135, 130), [(21, 15), (26, 14), (27, 19)])
-    # Small gravel & quartz chips
+    # C. Cave Rubble / Natural Crags & Stones ('r') - Transparent blending stones
+    cave_rubble = pygame.Surface((T, T), pygame.SRCALPHA)
+    # Ground contact shadows
+    pygame.draw.ellipse(cave_rubble, (0, 0, 0, 65), (3, 11, 18, 10))
+    pygame.draw.ellipse(cave_rubble, (0, 0, 0, 55), (18, 17, 13, 9))
+    pygame.draw.ellipse(cave_rubble, (0, 0, 0, 45), (12, 23, 10, 6))
+
+    # Stray autumn leaf & wild grass tuft at stone base (bridges with leaf pile & grass)
+    pygame.draw.polygon(cave_rubble, (220, 110, 30), [(2, 21), (6, 19), (7, 23), (3, 25)])
+    pygame.draw.line(cave_rubble, (160, 65, 20), (3, 21), (6, 23), 1)
+    pygame.draw.line(cave_rubble, (65, 130, 50), (18, 12), (20, 7), 1)
+    pygame.draw.line(cave_rubble, (95, 165, 65), (19, 12), (22, 8), 1)
+
+    # Large faceted rock (warm natural stone palette)
+    pygame.draw.polygon(cave_rubble, (50, 45, 42), [(4, 14), (12, 19), (10, 21), (3, 16)])
+    pygame.draw.polygon(cave_rubble, (135, 125, 118), [(6, 10), (14, 6), (18, 12), (12, 18), (4, 14)])
+    pygame.draw.polygon(cave_rubble, (175, 165, 158), [(7, 9), (13, 7), (16, 11), (12, 12)])
+    pygame.draw.polygon(cave_rubble, (215, 210, 205), [(8, 9), (12, 8), (10, 10)])
+
+    # Medium faceted rock
+    pygame.draw.polygon(cave_rubble, (60, 55, 50), [(20, 22), (27, 20), (29, 24), (22, 26)])
+    pygame.draw.polygon(cave_rubble, (120, 110, 102), [(20, 16), (27, 13), (29, 21), (22, 25)])
+    pygame.draw.polygon(cave_rubble, (160, 150, 142), [(21, 15), (26, 14), (27, 19)])
+
+    # Small smooth river pebbles & quartz chips
+    pygame.draw.circle(cave_rubble, (0, 0, 0, 40), (9, 25), 3)
     pygame.draw.circle(cave_rubble, (215, 215, 225), (9, 24), 2)
-    pygame.draw.circle(cave_rubble, (215, 215, 225), (22, 8), 2)
-    pygame.draw.circle(cave_rubble, (80, 70, 65), (16, 26), 2)
+    pygame.draw.circle(cave_rubble, WHITE, (8, 23), 1)
+
+    pygame.draw.circle(cave_rubble, (0, 0, 0, 40), (23, 9), 3)
+    pygame.draw.circle(cave_rubble, (205, 200, 210), (23, 8), 2)
+
+    pygame.draw.circle(cave_rubble, (100, 90, 82), (15, 25), 2)
+    pygame.draw.circle(cave_rubble, (140, 130, 122), (15, 24), 1)
     cached_tiles["cave_rubble"] = cave_rubble
 
-    # D. Snow Drift ('x')
-    snow_drift = pygame.Surface((T, T))
-    snow_drift.fill((232, 246, 255)) # Soft powder snow
-    # Gentle cyan drift curves
-    pygame.draw.ellipse(snow_drift, (190, 225, 248), (2, 8, 28, 14))
-    pygame.draw.ellipse(snow_drift, (248, 252, 255), (4, 6, 24, 12))
-    pygame.draw.ellipse(snow_drift, (180, 218, 245), (6, 18, 22, 12))
-    pygame.draw.ellipse(snow_drift, (255, 255, 255), (8, 16, 18, 10))
-    # Glistening frost sparkles
-    pygame.draw.circle(snow_drift, (255, 255, 255), (10, 10), 2)
-    pygame.draw.line(snow_drift, (130, 205, 255), (10, 8), (10, 12), 1)
-    pygame.draw.line(snow_drift, (130, 205, 255), (8, 10), (12, 10), 1)
-    pygame.draw.circle(snow_drift, (255, 255, 255), (22, 20), 2)
+    # D. Snow Drift ('x') - Transparent powder snow
+    snow_drift = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(snow_drift, (180, 220, 248, 160), (2, 8, 28, 14))
+    pygame.draw.ellipse(snow_drift, (240, 250, 255, 210), (4, 6, 24, 12))
+    pygame.draw.ellipse(snow_drift, (170, 212, 242, 170), (6, 18, 22, 12))
+    pygame.draw.ellipse(snow_drift, (255, 255, 255, 220), (8, 16, 18, 10))
+    pygame.draw.circle(snow_drift, (255, 255, 255, 240), (10, 10), 2)
+    pygame.draw.line(snow_drift, (130, 205, 255, 200), (10, 8), (10, 12), 1)
+    pygame.draw.line(snow_drift, (130, 205, 255, 200), (8, 10), (12, 10), 1)
+    pygame.draw.circle(snow_drift, (255, 255, 255, 240), (22, 20), 2)
     cached_tiles["snow_drift"] = snow_drift
 
-    # E. Haunted Mist / Spirit Fog ('m')
-    spooky_mist = lavender_ground.copy()
-    mist_layer = pygame.Surface((T, T), pygame.SRCALPHA)
-    # Swirling ethereal violet bands
-    pygame.draw.ellipse(mist_layer, (160, 110, 210, 130), (2, 4, 28, 12))
-    pygame.draw.ellipse(mist_layer, (210, 160, 255, 160), (6, 6, 20, 8))
-    pygame.draw.ellipse(mist_layer, (140, 90, 190, 140), (4, 16, 26, 12))
-    pygame.draw.ellipse(mist_layer, (200, 150, 250, 170), (8, 18, 18, 8))
-    # Glowing spirit orbs
-    pygame.draw.circle(mist_layer, (240, 210, 255, 220), (12, 10), 2)
-    pygame.draw.circle(mist_layer, (240, 210, 255, 220), (22, 22), 2)
-    spooky_mist.blit(mist_layer, (0, 0))
+    # E. Haunted Mist / Spirit Fog ('m') - Transparent ethereal fog
+    spooky_mist = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(spooky_mist, (160, 110, 210, 120), (2, 4, 28, 12))
+    pygame.draw.ellipse(spooky_mist, (210, 160, 255, 150), (6, 6, 20, 8))
+    pygame.draw.ellipse(spooky_mist, (140, 90, 190, 130), (4, 16, 26, 12))
+    pygame.draw.ellipse(spooky_mist, (200, 150, 250, 160), (8, 18, 18, 8))
+    pygame.draw.circle(spooky_mist, (240, 210, 255, 210), (12, 10), 2)
+    pygame.draw.circle(spooky_mist, (240, 210, 255, 210), (22, 22), 2)
     cached_tiles["spooky_mist"] = spooky_mist
 
-    # F. Volcanic Ash & Embers ('a')
-    volcanic_ash = pygame.Surface((T, T))
-    volcanic_ash.fill((52, 45, 50)) # Charcoal dark basalt
-    # Ash soot mounds
-    pygame.draw.ellipse(volcanic_ash, (78, 68, 74), (2, 6, 18, 10))
-    pygame.draw.ellipse(volcanic_ash, (70, 62, 66), (14, 16, 16, 12))
-    # Glowing volcanic embers
+    # F. Volcanic Ash & Embers ('a') - Transparent volcanic soot with glowing embers
+    volcanic_ash = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(volcanic_ash, (45, 38, 42, 160), (2, 6, 18, 10))
+    pygame.draw.ellipse(volcanic_ash, (40, 34, 38, 150), (14, 16, 16, 12))
     pygame.draw.circle(volcanic_ash, (255, 60, 20), (8, 10), 3)
     pygame.draw.circle(volcanic_ash, (255, 200, 50), (8, 10), 1)
     pygame.draw.circle(volcanic_ash, (255, 80, 20), (22, 20), 3)
@@ -866,19 +1188,15 @@ def generate_tiles(fonts):
     pygame.draw.circle(volcanic_ash, (240, 40, 10), (16, 14), 2)
     cached_tiles["volcanic_ash"] = volcanic_ash
 
-    # G. Swamp Marsh / Mud Bog ('u')
-    swamp_marsh = pygame.Surface((T, T))
-    swamp_marsh.fill((58, 105, 90)) # Deep murky marsh water
-    # Mud banks
+    # G. Swamp Marsh / Mud Bog ('u') - Transparent murky puddle with cattails
+    swamp_marsh = pygame.Surface((T, T), pygame.SRCALPHA)
+    pygame.draw.ellipse(swamp_marsh, (42, 85, 72, 170), (1, 1, 30, 30))
     pygame.draw.ellipse(swamp_marsh, (98, 76, 48), (0, 0, 16, 12))
     pygame.draw.ellipse(swamp_marsh, (98, 76, 48), (14, 18, 18, 14))
-    # Water ripples
     pygame.draw.arc(swamp_marsh, (110, 175, 155), (4, 12, 14, 6), 0, 3.14, 1)
     pygame.draw.arc(swamp_marsh, (110, 175, 155), (16, 8, 12, 5), 0, 3.14, 1)
-    # Lily pad
     pygame.draw.ellipse(swamp_marsh, (45, 155, 65), (6, 18, 9, 6))
-    pygame.draw.circle(swamp_marsh, (255, 140, 180), (10, 20), 2) # Lily flower
-    # Cattail reeds
+    pygame.draw.circle(swamp_marsh, (255, 140, 180), (10, 20), 2)
     pygame.draw.line(swamp_marsh, (35, 110, 45), (25, 6), (25, 16), 2)
     pygame.draw.rect(swamp_marsh, (120, 65, 25), (24, 4, 3, 6), border_radius=1)
     cached_tiles["swamp_marsh"] = swamp_marsh

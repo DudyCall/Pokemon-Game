@@ -84,6 +84,8 @@ class FollowerPokemon:
             if self.emote_timer <= 0:
                 self.emote_type = None
 
+        self.move_speed = getattr(player, "move_speed", 4.0)
+
         if self.is_moving:
             self.move_progress += self.move_speed * dt
             if self.move_progress >= 1.0:
@@ -97,7 +99,8 @@ class FollowerPokemon:
                 self.pixel_x = (self.grid_x + (self.target_x - self.grid_x) * self.move_progress) * TILE_SIZE
                 self.pixel_y = (self.grid_y + (self.target_y - self.grid_y) * self.move_progress) * TILE_SIZE
 
-            self.step_counter += dt * 8
+            anim_rate = 14 if getattr(player, "is_running", False) else 8
+            self.step_counter += dt * anim_rate
             self.walk_frame = int(self.step_counter) % 2
         else:
             self.walk_frame = 0
@@ -173,7 +176,10 @@ class Player:
         self.move_progress = 0.0 # 0.0 to 1.0
         self.target_x = x
         self.target_y = y
-        self.move_speed = 4.0 # tiles per second
+        self.walk_speed = 4.0 # standard walking speed (tiles per second)
+        self.run_speed = 8.0  # running shoes speed when holding SPACE / SHIFT
+        self.move_speed = 4.0
+        self.is_running = False
         self.walk_frame = 0
         self.step_counter = 0
         self.current_map = current_map
@@ -198,8 +204,10 @@ class Player:
         # Sync graphics manager sprites
         gfx.set_custom_player_appearance(self.gender, self.outfit_theme, self.hat_style, self.hair_color)
 
-    def update(self, dt, world):
-        self.sail_timer += dt
+    def update(self, dt, world, is_running=False):
+        self.is_running = is_running
+        self.move_speed = self.run_speed if self.is_running else self.walk_speed
+        self.sail_timer += dt * (1.5 if self.is_running else 1.0)
         
         # Update follower entity
         if self.follower:
@@ -236,8 +244,9 @@ class Player:
                 self.pixel_x = (self.grid_x + (self.target_x - self.grid_x) * self.move_progress) * TILE_SIZE
                 self.pixel_y = (self.grid_y + (self.target_y - self.grid_y) * self.move_progress) * TILE_SIZE
                 
-            # Update walk animation frame
-            self.step_counter += dt * 8
+            # Update walk/run animation frame
+            anim_rate = 14 if self.is_running else 8
+            self.step_counter += dt * anim_rate
             self.walk_frame = int(self.step_counter) % 3
         else:
             self.walk_frame = 0

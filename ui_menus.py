@@ -18,9 +18,8 @@ from save_system import NUM_SAVE_SLOTS
 
 class TitleScreen:
     """
-    Title screen with interactive save slot carousel preview.
-    Allows cycling through all 3 save slots directly on the main screen,
-    loading any slot instantly, or starting a new adventure in any slot.
+    Polished Pokémon Title Screen with interactive save slot carousel preview,
+    authentic multi-layer branding, dynamic ambient background, and vector UI chevrons.
     """
     def __init__(self):
         self.timer = 0.0
@@ -28,10 +27,65 @@ class TitleScreen:
         self.starters = ["Charmander", "Squirtle", "Bulbasaur", "Pikachu"]
         self.menu_options = ["CONTINUE", "ALL_SLOTS", "NEW_GAME"]
         self.selected_idx = 0
-        self.slot_preview_idx = 0 # 0: Slot 1, 1: Slot 2, 2: Slot 3
+        self.slot_preview_idx = 0
         self.slots = []
         self.has_save = False
+        
+        # Interactive pulse effects for slot switching
+        self.arrow_pulse_left = 0.0
+        self.arrow_pulse_right = 0.0
+        
+        # Pre-render background gradient for fast, smooth 60fps rendering
+        self.bg_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self._init_background_gradient()
+
+        # Stylized Pokéball watermark
+        self.pokeball_watermark = pygame.Surface((340, 340), pygame.SRCALPHA)
+        self._init_watermark()
+
+        # Ambient floating luminous motes
+        self.particles = [
+            {
+                "x": random.uniform(0, SCREEN_WIDTH),
+                "y": random.uniform(0, SCREEN_HEIGHT),
+                "speed": random.uniform(14, 32),
+                "size": random.uniform(1.5, 3.5),
+                "alpha": random.randint(30, 110),
+                "phase": random.uniform(0, 6.28)
+            }
+            for _ in range(22)
+        ]
+
         self.refresh_save_status()
+
+    def _init_background_gradient(self):
+        """Creates a modern deep midnight sapphire gradient background."""
+        for y in range(SCREEN_HEIGHT):
+            ratio = y / SCREEN_HEIGHT
+            if ratio < 0.5:
+                sub_r = ratio / 0.5
+                r = int(14 + 10 * sub_r)
+                g = int(20 + 14 * sub_r)
+                b = int(44 + 28 * sub_r)
+            else:
+                sub_r = (ratio - 0.5) / 0.5
+                r = int(24 - 12 * sub_r)
+                g = int(34 - 18 * sub_r)
+                b = int(72 - 38 * sub_r)
+            pygame.draw.line(self.bg_surface, (r, g, b), (0, y), (SCREEN_WIDTH, y))
+
+    def _init_watermark(self):
+        """Pre-renders an authentic stylized Pokéball watermark."""
+        cx, cy, r = 170, 170, 145
+        # Top hemisphere tint
+        pygame.draw.arc(self.pokeball_watermark, (235, 75, 75, 20), (cx - r, cy - r, r * 2, r * 2), 0, math.pi, 8)
+        # Bottom hemisphere tint
+        pygame.draw.arc(self.pokeball_watermark, (255, 255, 255, 16), (cx - r, cy - r, r * 2, r * 2), math.pi, math.pi * 2, 8)
+        # Horizontal middle seam
+        pygame.draw.line(self.pokeball_watermark, (255, 255, 255, 20), (cx - r, cy), (cx + r, cy), 8)
+        # Center button
+        pygame.draw.circle(self.pokeball_watermark, (255, 255, 255, 24), (cx, cy), 40, 8)
+        pygame.draw.circle(self.pokeball_watermark, (255, 255, 255, 16), (cx, cy), 20)
 
     def refresh_save_status(self):
         from save_system import SaveSystem
@@ -64,9 +118,11 @@ class TitleScreen:
             elif self.selected_idx == 0: # On CONTINUE slot preview
                 if any(event.key == k for k in KEY_LEFT):
                     self.slot_preview_idx = (self.slot_preview_idx - 1) % len(self.slots)
+                    self.arrow_pulse_left = 0.28
                     sound_mgr.play_sfx("select")
                 elif any(event.key == k for k in KEY_RIGHT):
                     self.slot_preview_idx = (self.slot_preview_idx + 1) % len(self.slots)
+                    self.arrow_pulse_right = 0.28
                     sound_mgr.play_sfx("select")
 
         if any(event.key == k for k in KEY_CONFIRM):
@@ -79,7 +135,6 @@ class TitleScreen:
                 if curr_slot_data.get("exists"):
                     return ("LOAD_SLOT", chosen_slot_num)
                 else:
-                    # Slot is empty -> start new game in this slot
                     return ("NEW_GAME", chosen_slot_num)
             elif chosen_opt == "ALL_SLOTS":
                 return ("SELECT_SLOT", chosen_slot_num)
@@ -91,100 +146,348 @@ class TitleScreen:
     def update(self, dt):
         self.timer += dt
         self.starter_index = int(self.timer / 2.0) % len(self.starters)
+        if self.arrow_pulse_left > 0:
+            self.arrow_pulse_left = max(0.0, self.arrow_pulse_left - dt)
+        if self.arrow_pulse_right > 0:
+            self.arrow_pulse_right = max(0.0, self.arrow_pulse_right - dt)
+
+        # Update ambient drifting particles
+        for p in self.particles:
+            p["y"] -= p["speed"] * dt
+            if p["y"] < -10:
+                p["y"] = SCREEN_HEIGHT + 10
+                p["x"] = random.uniform(0, SCREEN_WIDTH)
 
     def draw(self, surf):
-        # Radiant Gradient Background
-        for y in range(SCREEN_HEIGHT):
-            ratio = y / SCREEN_HEIGHT
-            col = (
-                int(24 + 16 * ratio),
-                int(32 + 24 * ratio),
-                int(64 + 48 * ratio)
-            )
-            pygame.draw.line(surf, col, (0, y), (SCREEN_WIDTH, y))
+        # 1. Background Gradient
+        surf.blit(self.bg_surface, (0, 0))
 
-        # Title Card
-        title_y = 45 + int(math.sin(self.timer * 2.0) * 5)
-        title_txt = gfx.fonts["title"].render("POKÉMON", True, (255, 215, 0)) # Gold
-        sub_txt = gfx.fonts["large"].render("PYGAME EDITION", True, (240, 60, 60)) # Red
-        
-        # Shadow & Glow
-        surf.blit(gfx.fonts["title"].render("POKÉMON", True, (30, 30, 40)), (SCREEN_WIDTH // 2 - title_txt.get_width() // 2 + 4, title_y + 4))
-        surf.blit(title_txt, (SCREEN_WIDTH // 2 - title_txt.get_width() // 2, title_y))
-        surf.blit(sub_txt, (SCREEN_WIDTH // 2 - sub_txt.get_width() // 2, title_y + 50))
+        # 2. Pokéball Watermark
+        surf.blit(self.pokeball_watermark, (SCREEN_WIDTH // 2 - 170 + 80, 110))
 
+        # 3. Ambient Drifting Motes
+        for p in self.particles:
+            sway = math.sin(self.timer * 1.5 + p["phase"]) * 10
+            px = int(p["x"] + sway)
+            py = int(p["y"])
+            alpha = int(p["alpha"] * (0.7 + 0.3 * math.sin(self.timer * 2.0 + p["phase"])))
+            sp_surf = pygame.Surface((int(p["size"] * 2 + 2), int(p["size"] * 2 + 2)), pygame.SRCALPHA)
+            pygame.draw.circle(sp_surf, (200, 225, 255, alpha), (sp_surf.get_width() // 2, sp_surf.get_height() // 2), int(p["size"]))
+            surf.blit(sp_surf, (px, py))
+
+        # 4. Multi-Layer Pokémon Title Logo
+        title_bob = int(math.sin(self.timer * 1.8) * 3)
+        title_y = 36 + title_bob
+        self._draw_pokemon_logo(surf, SCREEN_WIDTH // 2, title_y)
+
+        # 5. Main Interactive Content
         if self.has_save:
-            # 1. CONTINUE (Slot Carousel Card)
-            cur_slot = self.slots[self.slot_preview_idx]
-            cur_num = self.slot_preview_idx + 1
-            is_sel_cont = (self.selected_idx == 0)
-            
-            cw, ch = 520, 135
-            cx = (SCREEN_WIDTH - cw) // 2
-            cy = 180
+            self._draw_main_menu(surf)
+        else:
+            self._draw_starter_showcase(surf)
 
-            pygame.draw.rect(surf, (240, 140, 40) if is_sel_cont else UI_BORDER_LIGHT, (cx - 2, cy - 2, cw + 4, ch + 4), border_radius=12)
-            pygame.draw.rect(surf, (255, 248, 230) if is_sel_cont else WHITE, (cx, cy, cw, ch), border_radius=10)
+        # 6. Console Keycap Controls Bar
+        self._draw_controls_bar(surf)
 
-            # Slot Header with Arrow Indicators & Counter
-            header_txt = gfx.fonts["large"].render(f"CONTINUE GAME  ◀  SLOT {cur_num:02d} / {len(self.slots)}  ▶", True, (220, 80, 0) if is_sel_cont else UI_TEXT)
-            surf.blit(header_txt, (cx + 20, cy + 12))
+    def _draw_pokemon_logo(self, surf, center_x, title_y):
+        """Renders Pokémon logo with blue outline, drop shadow, gold face, and banner badge."""
+        logo_font = gfx.fonts["title"]
+        title_str = "POKÉMON"
 
-            if cur_slot.get("exists"):
-                # Lead Pokémon Sprite
-                lead_sp = gfx.get_pokemon_sprite(cur_slot.get("lead_species", "Pikachu"), is_back=False, size=(75, 75))
-                surf.blit(lead_sp, (cx + 15, cy + 45))
+        # Drop shadow
+        shd_surf = logo_font.render(title_str, True, (12, 16, 28))
+        surf.blit(shd_surf, (center_x - shd_surf.get_width() // 2 + 3, title_y + 5))
 
-                # Trainer & Location Details
-                t_name = cur_slot.get("trainer_name", "Red")
-                t_gender = cur_slot.get("gender", "Boy")
-                info_l1 = gfx.fonts["regular"].render(f"Trainer: {t_name} ({t_gender})  |  Map: {cur_slot.get('map', 'Pallet Town')}", True, UI_TEXT)
-                info_l2 = gfx.fonts["regular"].render(f"Lead: {cur_slot.get('lead_name', 'Pokémon')} (Lv.{cur_slot.get('lead_level', 5)})", True, (40, 120, 220))
-                info_l3 = gfx.fonts["small"].render(f"Team: {cur_slot.get('party_count', 1)} | Money: ${cur_slot.get('money', 0)} | Pokédex: {cur_slot.get('caught_count', 0)}/151 | {cur_slot.get('timestamp', '')}", True, UI_TEXT_MUTED)
-                
-                surf.blit(info_l1, (cx + 98, cy + 46))
-                surf.blit(info_l2, (cx + 98, cy + 72))
-                surf.blit(info_l3, (cx + 98, cy + 98))
-            else:
-                # Empty Slot state
-                emp_txt = gfx.fonts["large"].render(f"- Empty Save Slot {cur_num} -", True, (160, 170, 185))
-                emp_sub = gfx.fonts["regular"].render("Press [Enter] to start a new adventure in Slot " + str(cur_num), True, UI_TEXT_MUTED)
-                surf.blit(emp_txt, (cx + (cw - emp_txt.get_width()) // 2, cy + 50))
-                surf.blit(emp_sub, (cx + (cw - emp_sub.get_width()) // 2, cy + 85))
+        # Thick 8-direction blue outline (Iconic Pokémon blue)
+        outline_col = (38, 70, 160)
+        for dx, dy in [(-2, -2), (2, -2), (-2, 2), (2, 2), (-3, 0), (3, 0), (0, -3), (0, 3)]:
+            out_surf = logo_font.render(title_str, True, outline_col)
+            surf.blit(out_surf, (center_x - out_surf.get_width() // 2 + dx, title_y + dy))
 
-            # 2. ALL SAVE SLOTS Button
-            is_sel_all = (self.selected_idx == 1)
-            by_all = cy + ch + 18
-            bh_btn = 52
-            pygame.draw.rect(surf, (240, 140, 40) if is_sel_all else UI_BORDER_LIGHT, (cx - 2, by_all - 2, cw + 4, bh_btn + 4), border_radius=10)
-            pygame.draw.rect(surf, (255, 248, 230) if is_sel_all else WHITE, (cx, by_all, cw, bh_btn), border_radius=8)
-            all_txt = gfx.fonts["medium"].render("VIEW ALL 99 SAVE SLOTS", True, (220, 80, 0) if is_sel_all else UI_TEXT)
-            surf.blit(all_txt, (cx + (cw - all_txt.get_width()) // 2, by_all + 14))
+        # Core Pikachu gold face
+        gold_surf = logo_font.render(title_str, True, (255, 218, 24))
+        surf.blit(gold_surf, (center_x - gold_surf.get_width() // 2, title_y))
 
-            # 3. NEW GAME Button
-            is_sel_new = (self.selected_idx == 2)
-            by_new = by_all + bh_btn + 14
-            pygame.draw.rect(surf, (240, 140, 40) if is_sel_new else UI_BORDER_LIGHT, (cx - 2, by_new - 2, cw + 4, bh_btn + 4), border_radius=10)
-            pygame.draw.rect(surf, (255, 248, 230) if is_sel_new else WHITE, (cx, by_new, cw, bh_btn), border_radius=8)
-            new_txt = gfx.fonts["medium"].render("START NEW ADVENTURE", True, (220, 80, 0) if is_sel_new else UI_TEXT)
-            surf.blit(new_txt, (cx + (cw - new_txt.get_width()) // 2, by_new + 14))
+        # Subtitle Pill Badge: ★ PYGAME EDITION ★
+        sub_str = "★  PYGAME EDITION  ★"
+        sub_font = gfx.fonts["regular"]
+        sub_txt = sub_font.render(sub_str, True, (255, 245, 220))
 
-            ctrl_hint = gfx.fonts["small"].render("Up/Down: Choose Menu  |  Left/Right: Switch Slot (1-99)  |  [Enter]: Start", True, LIGHT_GRAY)
-            surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 560))
+        badge_w = sub_txt.get_width() + 32
+        badge_h = 24
+        badge_x = center_x - badge_w // 2
+        badge_y = title_y + 46
+
+        pygame.draw.rect(surf, (15, 18, 30), (badge_x - 1, badge_y - 1, badge_w + 2, badge_h + 2), border_radius=12)
+        pygame.draw.rect(surf, (170, 24, 38), (badge_x, badge_y, badge_w, badge_h), border_radius=11)
+        pygame.draw.rect(surf, (255, 200, 50), (badge_x, badge_y, badge_w, badge_h), 1, border_radius=11)
+        surf.blit(sub_txt, (badge_x + (badge_w - sub_txt.get_width()) // 2, badge_y + (badge_h - sub_txt.get_height()) // 2))
+
+    def _draw_main_menu(self, surf):
+        cw = 540
+        ch = 146
+        cx = (SCREEN_WIDTH - cw) // 2
+        cy = 158
+
+        cur_slot = self.slots[self.slot_preview_idx]
+        cur_num = self.slot_preview_idx + 1
+        is_sel_cont = (self.selected_idx == 0)
+
+        # -------------------------------------------------------------
+        # 1. CONTINUE GAME (Interactive Slot Carousel Card)
+        # -------------------------------------------------------------
+        if is_sel_cont:
+            glow_surf = pygame.Surface((cw + 12, ch + 12), pygame.SRCALPHA)
+            pulse_a = int(55 + 25 * math.sin(self.timer * 4.0))
+            pygame.draw.rect(glow_surf, (255, 175, 45, pulse_a), (0, 0, cw + 12, ch + 12), border_radius=14)
+            surf.blit(glow_surf, (cx - 6, cy - 6))
+
+        border_col = (245, 140, 25) if is_sel_cont else (65, 85, 120)
+        bg_col = (255, 252, 246) if is_sel_cont else (22, 32, 52)
+        pygame.draw.rect(surf, border_col, (cx - 2, cy - 2, cw + 4, ch + 4), border_radius=12)
+        pygame.draw.rect(surf, bg_col, (cx, cy, cw, ch), border_radius=10)
+
+        if is_sel_cont:
+            pygame.draw.rect(surf, (240, 110, 20), (cx + 4, cy + 8, 4, ch - 16), border_radius=2)
+
+        # Header Title
+        header_text = "CONTINUE GAME" if cur_slot.get("exists") else "EMPTY SAVE SLOT"
+        header_col = (220, 75, 10) if is_sel_cont else (240, 244, 255)
+        lbl_head = gfx.fonts["large"].render(header_text, True, header_col)
+        surf.blit(lbl_head, (cx + 18, cy + 12))
+
+        # Slot Navigation Widget: [ < ]  SLOT 04 / 99  [ > ]
+        self._draw_slot_carousel_header(surf, cx + cw - 195, cy + 12, cur_num, is_sel_cont)
+
+        # Card Details
+        if cur_slot.get("exists"):
+            lead_species = cur_slot.get("lead_species", "Pikachu")
+            lead_level = cur_slot.get("lead_level", 5)
+            lead_name = cur_slot.get("lead_name", lead_species)
+            trainer_name = cur_slot.get("trainer_name", "Red")
+            gender = cur_slot.get("gender", "Boy")
+            map_name = cur_slot.get("map", "Pallet Town")
+            party_count = cur_slot.get("party_count", 1)
+            money = cur_slot.get("money", 0)
+            caught_count = cur_slot.get("caught_count", 0)
+            timestamp = cur_slot.get("timestamp", "")
+
+            # Pokémon Showcase Pedestal
+            ped_x, ped_y, ped_w, ped_h = cx + 18, cy + 44, 82, 92
+            ped_bg = (242, 246, 252) if is_sel_cont else (28, 40, 64)
+            ped_bdr = (210, 222, 240) if is_sel_cont else (55, 75, 105)
+            pygame.draw.rect(surf, ped_bdr, (ped_x - 1, ped_y - 1, ped_w + 2, ped_h + 2), border_radius=8)
+            pygame.draw.rect(surf, ped_bg, (ped_x, ped_y, ped_w, ped_h), border_radius=7)
+
+            sp = gfx.get_pokemon_sprite(lead_species, is_back=False, size=(68, 68))
+            bob = int(math.sin(self.timer * 3.5) * 2.5) if is_sel_cont else 0
+            surf.blit(sp, (ped_x + (ped_w - 68) // 2, ped_y + 4 + bob))
+
+            lvl_txt = gfx.fonts["small"].render(f"Lv.{lead_level}", True, WHITE)
+            lvl_bw = max(44, lvl_txt.get_width() + 10)
+            lvl_bx = ped_x + (ped_w - lvl_bw) // 2
+            lvl_by = ped_y + ped_h - 20
+            pygame.draw.rect(surf, (35, 45, 65), (lvl_bx, lvl_by, lvl_bw, 16), border_radius=4)
+            surf.blit(lvl_txt, (lvl_bx + (lvl_bw - lvl_txt.get_width()) // 2, lvl_by + 1))
+
+            text_dark = (20, 26, 38) if is_sel_cont else (235, 242, 255)
+            text_sub = (90, 105, 130) if is_sel_cont else (160, 175, 205)
+
+            # Line 1: Trainer & Map Location
+            gen_col = (50, 120, 240) if gender == "Boy" else (240, 80, 140)
+            t_str = f"Trainer: {trainer_name} "
+            t_surf = gfx.fonts["regular"].render(t_str, True, text_dark)
+            surf.blit(t_surf, (cx + 114, cy + 46))
+
+            g_surf = gfx.fonts["small"].render(f"({gender})", True, gen_col)
+            surf.blit(g_surf, (cx + 114 + t_surf.get_width(), cy + 48))
+
+            map_str = f"  |  📍 {map_name}"
+            map_surf = gfx.fonts["regular"].render(map_str, True, (40, 140, 70) if is_sel_cont else (90, 210, 130))
+            surf.blit(map_surf, (cx + 114 + t_surf.get_width() + g_surf.get_width(), cy + 46))
+
+            # Line 2: Lead Pokémon & Type Badge
+            lead_lbl = gfx.fonts["regular"].render(f"Lead: {lead_name}", True, (20, 90, 210) if is_sel_cont else (100, 180, 255))
+            surf.blit(lead_lbl, (cx + 114, cy + 74))
+
+            sp_data = POKEMON_SPECIES.get(lead_species, {})
+            p_types = sp_data.get("types", ["Normal"])
+            if p_types:
+                gfx.draw_type_badge(surf, p_types[0], cx + 120 + lead_lbl.get_width(), cy + 73, width=54, height=18)
+
+            # Line 3: Stat Badges Row
+            stat_y = cy + 104
+            self._draw_mini_stat_badge(surf, cx + 114, stat_y, f"Team: {party_count}/6", is_sel_cont)
+            self._draw_mini_stat_badge(surf, cx + 206, stat_y, f"${money:,}", is_sel_cont, text_color=(35, 140, 50) if is_sel_cont else (80, 210, 110))
+            self._draw_mini_stat_badge(surf, cx + 294, stat_y, f"Dex: {caught_count}/151", is_sel_cont)
+
+            if timestamp:
+                ts_txt = gfx.fonts["small"].render(timestamp, True, text_sub)
+                surf.blit(ts_txt, (cx + cw - ts_txt.get_width() - 14, stat_y + 2))
 
         else:
-            # Featured Starter Sprite for fresh start
-            feat_species = self.starters[self.starter_index]
-            p_surf = gfx.get_pokemon_sprite(feat_species, is_back=False, size=(200, 200))
-            surf.blit(p_surf, (SCREEN_WIDTH // 2 - 100, 195))
+            emp_col = (130, 145, 165) if is_sel_cont else (140, 155, 185)
+            emp_title = gfx.fonts["medium"].render(f"Save Slot {cur_num:02d} is Empty", True, (80, 100, 130) if is_sel_cont else (180, 195, 220))
+            emp_sub = gfx.fonts["regular"].render("Press [Enter] or [Z] to begin a new journey in this slot", True, emp_col)
+            surf.blit(emp_title, (cx + (cw - emp_title.get_width()) // 2, cy + 54))
+            surf.blit(emp_sub, (cx + (cw - emp_sub.get_width()) // 2, cy + 86))
 
-            # Blinking "PRESS ENTER OR Z TO START"
-            if int(self.timer * 2) % 2 == 0:
-                start_txt = gfx.fonts["medium"].render("PRESS [ENTER] OR [Z] TO START", True, WHITE)
-                surf.blit(start_txt, (SCREEN_WIDTH // 2 - start_txt.get_width() // 2, 460))
-                
-            ctrl_hint = gfx.fonts["small"].render("Arrows/D-Pad: Move  |  Z/B: Confirm  |  X/A: Back  |  C/Start: Menu  |  F5/Select: Save", True, LIGHT_GRAY)
-            surf.blit(ctrl_hint, (SCREEN_WIDTH // 2 - ctrl_hint.get_width() // 2, 545))
+        # -------------------------------------------------------------
+        # 2. ALL SAVE SLOTS Button
+        # -------------------------------------------------------------
+        btn_y1 = cy + ch + 14
+        self._draw_action_button(surf, cx, btn_y1, cw, 46, "📂  VIEW ALL 99 SAVE SLOTS", is_selected=(self.selected_idx == 1))
+
+        # -------------------------------------------------------------
+        # 3. NEW GAME Button
+        # -------------------------------------------------------------
+        btn_y2 = btn_y1 + 46 + 10
+        self._draw_action_button(surf, cx, btn_y2, cw, 46, "✨  START NEW ADVENTURE", is_selected=(self.selected_idx == 2))
+
+    def _draw_slot_carousel_header(self, surf, x, y, cur_num, is_sel_cont):
+        """Renders crisp vector chevrons and slot counter badge: [ < ]  SLOT 04 / 99  [ > ]"""
+        box_bg = (240, 245, 252) if is_sel_cont else (28, 38, 58)
+        box_bdr = (210, 222, 240) if is_sel_cont else (55, 75, 105)
+
+        bw, bh = 185, 26
+        pygame.draw.rect(surf, box_bdr, (x, y, bw, bh), border_radius=6)
+        pygame.draw.rect(surf, box_bg, (x + 1, y + 1, bw - 2, bh - 2), border_radius=5)
+
+        # Left Vector Chevron Button
+        l_btn_x = x + 4
+        l_active = (self.arrow_pulse_left > 0)
+        l_col = (255, 120, 20) if l_active else ((220, 80, 10) if is_sel_cont else (180, 205, 240))
+        pts_left = [
+            (l_btn_x + 12, y + 6),
+            (l_btn_x + 4, y + 13),
+            (l_btn_x + 12, y + 20)
+        ]
+        pygame.draw.polygon(surf, l_col, pts_left)
+
+        # Slot Counter Text: SLOT 04 / 99
+        cnt_col = (20, 30, 50) if is_sel_cont else (240, 246, 255)
+        cnt_str = f"SLOT {cur_num:02d} / {len(self.slots)}"
+        cnt_txt = gfx.fonts["regular"].render(cnt_str, True, cnt_col)
+        surf.blit(cnt_txt, (x + (bw - cnt_txt.get_width()) // 2, y + 3))
+
+        # Right Vector Chevron Button
+        r_btn_x = x + bw - 18
+        r_active = (self.arrow_pulse_right > 0)
+        r_col = (255, 120, 20) if r_active else ((220, 80, 10) if is_sel_cont else (180, 205, 240))
+        pts_right = [
+            (r_btn_x + 2, y + 6),
+            (r_btn_x + 10, y + 13),
+            (r_btn_x + 2, y + 20)
+        ]
+        pygame.draw.polygon(surf, r_col, pts_right)
+
+    def _draw_mini_stat_badge(self, surf, x, y, text, is_sel_cont, text_color=None):
+        """Renders small rounded info tags for party count, money, etc."""
+        f = gfx.fonts["small"]
+        txt = f.render(text, True, text_color or ((30, 40, 60) if is_sel_cont else (210, 225, 245)))
+        bw = txt.get_width() + 14
+        bh = 20
+        bg_col = (236, 242, 250) if is_sel_cont else (32, 44, 68)
+        bdr_col = (210, 222, 238) if is_sel_cont else (55, 75, 105)
+        pygame.draw.rect(surf, bdr_col, (x, y, bw, bh), border_radius=5)
+        pygame.draw.rect(surf, bg_col, (x + 1, y + 1, bw - 2, bh - 2), border_radius=4)
+        surf.blit(txt, (x + 7, y + 2))
+
+    def _draw_action_button(self, surf, x, y, w, h, text, is_selected):
+        """Renders a sleek button with hover halo, responsive selection, and indicator."""
+        if is_selected:
+            glow_surf = pygame.Surface((w + 8, h + 8), pygame.SRCALPHA)
+            pulse_a = int(50 + 20 * math.sin(self.timer * 4.0))
+            pygame.draw.rect(glow_surf, (255, 175, 45, pulse_a), (0, 0, w + 8, h + 8), border_radius=11)
+            surf.blit(glow_surf, (x - 4, y - 4))
+
+            border_col = (245, 140, 25)
+            bg_col = (255, 252, 246)
+            text_col = (215, 60, 10)
+        else:
+            border_col = (58, 76, 110)
+            bg_col = (22, 32, 52)
+            text_col = (215, 228, 245)
+
+        pygame.draw.rect(surf, border_col, (x - 1, y - 1, w + 2, h + 2), border_radius=10)
+        pygame.draw.rect(surf, bg_col, (x, y, w, h), border_radius=9)
+
+        if is_selected:
+            pointer_x = x + 16 + int(math.sin(self.timer * 6.0) * 2.5)
+            pts = [(pointer_x, y + h // 2 - 6), (pointer_x + 8, y + h // 2), (pointer_x, y + h // 2 + 6)]
+            pygame.draw.polygon(surf, (240, 100, 20), pts)
+
+        lbl = gfx.fonts["medium"].render(text, True, text_col)
+        surf.blit(lbl, (x + (w - lbl.get_width()) // 2, y + (h - lbl.get_height()) // 2))
+
+    def _draw_starter_showcase(self, surf):
+        """Showcases featured starter Pokémon on a glowing pedestal when starting fresh."""
+        feat_species = self.starters[self.starter_index]
+
+        ped_cx, ped_cy = SCREEN_WIDTH // 2, 280
+        ped_w, ped_h = 240, 190
+        ped_x = ped_cx - ped_w // 2
+        ped_y = ped_cy - ped_h // 2
+
+        pygame.draw.rect(surf, (60, 85, 125), (ped_x - 2, ped_y - 2, ped_w + 4, ped_h + 4), border_radius=14)
+        pygame.draw.rect(surf, (20, 30, 50), (ped_x, ped_y, ped_w, ped_h), border_radius=12)
+
+        p_surf = gfx.get_pokemon_sprite(feat_species, is_back=False, size=(160, 160))
+        bob = int(math.sin(self.timer * 3.0) * 5)
+        surf.blit(p_surf, (ped_cx - 80, ped_cy - 90 + bob))
+
+        name_txt = gfx.fonts["large"].render(feat_species.upper(), True, (255, 220, 50))
+        surf.blit(name_txt, (ped_cx - name_txt.get_width() // 2, ped_y + ped_h - 36))
+
+        sp_data = POKEMON_SPECIES.get(feat_species, {})
+        p_types = sp_data.get("types", ["Normal"])
+        if p_types:
+            gfx.draw_type_badge(surf, p_types[0], ped_cx + name_txt.get_width() // 2 + 8, ped_y + ped_h - 36, width=54, height=18)
+
+        prompt_y = 425
+        prompt_w = 420
+        prompt_h = 50
+        prompt_x = (SCREEN_WIDTH - prompt_w) // 2
+
+        pulse_a = int(60 + 30 * math.sin(self.timer * 4.0))
+        glow_surf = pygame.Surface((prompt_w + 10, prompt_h + 10), pygame.SRCALPHA)
+        pygame.draw.rect(glow_surf, (255, 180, 50, pulse_a), (0, 0, prompt_w + 10, prompt_h + 10), border_radius=12)
+        surf.blit(glow_surf, (prompt_x - 5, prompt_y - 5))
+
+        pygame.draw.rect(surf, (250, 150, 30), (prompt_x - 2, prompt_y - 2, prompt_w + 4, prompt_h + 4), border_radius=10)
+        pygame.draw.rect(surf, (255, 252, 246), (prompt_x, prompt_y, prompt_w, prompt_h), border_radius=8)
+
+        start_txt = gfx.fonts["medium"].render("PRESS [ENTER] OR [Z] TO START", True, (220, 70, 10))
+        surf.blit(start_txt, (SCREEN_WIDTH // 2 - start_txt.get_width() // 2, prompt_y + 14))
+
+    def _draw_controls_bar(self, surf):
+        """Renders arcade/console keycap pill indicators at the bottom."""
+        by = 556
+        badges = [
+            ("↑/↓", "Select"),
+            ("←/→", "Switch Slot (1-99)"),
+            ("Z / Enter", "Confirm")
+        ]
+
+        total_w = 0
+        items = []
+        for key_txt, desc_txt in badges:
+            k_surf = gfx.fonts["small"].render(key_txt, True, WHITE)
+            d_surf = gfx.fonts["small"].render(desc_txt, True, (160, 175, 200))
+            kw = k_surf.get_width() + 10
+            dw = d_surf.get_width()
+            item_w = kw + 6 + dw + 18
+            items.append((k_surf, d_surf, kw, dw, item_w))
+            total_w += item_w
+
+        start_x = (SCREEN_WIDTH - total_w) // 2
+        for k_surf, d_surf, kw, dw, item_w in items:
+            pygame.draw.rect(surf, (55, 70, 100), (start_x, by, kw, 20), border_radius=4)
+            pygame.draw.rect(surf, (20, 26, 42), (start_x + 1, by + 1, kw - 2, 18), border_radius=3)
+            surf.blit(k_surf, (start_x + (kw - k_surf.get_width()) // 2, by + 2))
+
+            surf.blit(d_surf, (start_x + kw + 6, by + 2))
+            start_x += item_w
 
 class SaveSlotSelectScreen:
     """
@@ -933,6 +1236,7 @@ class PauseMenu:
 class ShopScreen:
     def __init__(self, inventory):
         self.inventory = inventory
+        self.mode = "BUY"  # "BUY" or "SELL"
         self.items_for_sale = [
             "Poke Ball", "Great Ball", "Ultra Ball",
             "Potion", "Super Potion", "Max Potion", "Revive",
@@ -942,9 +1246,37 @@ class ShopScreen:
         ]
         self.selected_idx = 0
         self.scroll_offset = 0
-        self.message = "Welcome to PokéMart! What would you like to buy?"
+        self.message = "Welcome to PokéMart! [Left/Right]: Switch Buy/Sell  [Z]: Select  [X]: Exit"
+
+    def get_sellable_items(self):
+        """Returns list of (name, count, item_data, sell_price) from player's inventory."""
+        items = []
+        for name, count, data in self.inventory.get_items_list():
+            if name in ["Poke Flute", "Bicycle", "Town Map", "Old Rod", "Good Rod", "Super Rod", "Silph Scope"]:
+                continue
+            cat = data.get("category", "")
+            base_price = data.get("price", 0)
+            if cat == "valuable":
+                sell_price = base_price
+            else:
+                sell_price = max(1, base_price // 2)
+            items.append((name, count, data, sell_price))
+        return items
+
+    def _get_list_length(self):
+        if self.mode == "BUY":
+            return len(self.items_for_sale)
+        else:
+            return len(self.get_sellable_items())
 
     def _adjust_scroll(self):
+        total = self._get_list_length()
+        if total == 0:
+            self.selected_idx = 0
+            self.scroll_offset = 0
+            return
+        if self.selected_idx >= total:
+            self.selected_idx = total - 1
         if self.selected_idx < self.scroll_offset:
             self.scroll_offset = self.selected_idx
         elif self.selected_idx >= self.scroll_offset + 7:
@@ -953,124 +1285,215 @@ class ShopScreen:
     def handle_input(self, event):
         if event.type != pygame.KEYDOWN:
             return None
-            
+
+        # Mode toggle: Left/Right or Tab
+        if any(event.key == k for k in KEY_LEFT) or any(event.key == k for k in KEY_RIGHT) or event.key == pygame.K_TAB:
+            self.mode = "SELL" if self.mode == "BUY" else "BUY"
+            self.selected_idx = 0
+            self.scroll_offset = 0
+            sound_mgr.play_sfx("select")
+            if self.mode == "BUY":
+                self.message = "PokéMart Catalogue: Select an item to buy with [Z]! [Left/Right]: Switch to Sell"
+            else:
+                self.message = "Your Bag Items: Select an item to sell for cash with [Z]! [Left/Right]: Switch to Buy"
+            return None
+
+        total = self._get_list_length()
+
         if any(event.key == k for k in KEY_UP):
-            self.selected_idx = (self.selected_idx - 1) % len(self.items_for_sale)
-            self._adjust_scroll()
-            sound_mgr.play_sfx("select")
+            if total > 0:
+                self.selected_idx = (self.selected_idx - 1) % total
+                self._adjust_scroll()
+                sound_mgr.play_sfx("select")
+            return None
         elif any(event.key == k for k in KEY_DOWN):
-            self.selected_idx = (self.selected_idx + 1) % len(self.items_for_sale)
-            self._adjust_scroll()
-            sound_mgr.play_sfx("select")
+            if total > 0:
+                self.selected_idx = (self.selected_idx + 1) % total
+                self._adjust_scroll()
+                sound_mgr.play_sfx("select")
+            return None
         elif any(event.key == k for k in KEY_CANCEL):
             sound_mgr.play_sfx("cancel")
             return "EXIT"
         elif any(event.key == k for k in KEY_CONFIRM):
-            item_name = self.items_for_sale[self.selected_idx]
-            price = ITEMS[item_name]["price"]
-            if self.inventory.money >= price:
-                self.inventory.money -= price
-                self.inventory.add_item(item_name, 1)
-                sound_mgr.play_sfx("confirm")
-                self.message = f"Bought 1 {item_name} for ${price}!"
+            if self.mode == "BUY":
+                item_name = self.items_for_sale[self.selected_idx]
+                price = ITEMS[item_name]["price"]
+                if self.inventory.money >= price:
+                    self.inventory.money -= price
+                    self.inventory.add_item(item_name, 1)
+                    sound_mgr.play_sfx("confirm")
+                    self.message = f"Bought 1 {item_name} for ${price}! (Money: ${self.inventory.money})"
+                else:
+                    sound_mgr.play_sfx("cancel")
+                    self.message = "You don't have enough money for that!"
             else:
-                sound_mgr.play_sfx("cancel")
-                self.message = "You don't have enough money for that!"
+                sell_items = self.get_sellable_items()
+                if not sell_items or self.selected_idx >= len(sell_items):
+                    sound_mgr.play_sfx("cancel")
+                    self.message = "You don't have any items to sell!"
+                    return None
+                name, count, data, sell_price = sell_items[self.selected_idx]
+                self.inventory.money += sell_price
+                self.inventory.remove_item(name, 1)
+                sound_mgr.play_sfx("confirm")
+                self.message = f"Sold 1 {name} for ${sell_price}! (Money: ${self.inventory.money})"
+                new_items = self.get_sellable_items()
+                if self.selected_idx >= len(new_items):
+                    self.selected_idx = max(0, len(new_items) - 1)
+                self._adjust_scroll()
         return None
 
     def draw(self, surf):
         surf.fill((235, 240, 248))
         head = gfx.fonts["title"].render("POKÉMART & ITEM CATALOGUE", True, (40, 120, 220))
         money_txt = gfx.fonts["large"].render(f"💰 Money: ${self.inventory.money}", True, (40, 140, 60))
-        surf.blit(head, (30, 20))
-        surf.blit(money_txt, (SCREEN_WIDTH - money_txt.get_width() - 30, 25))
+        surf.blit(head, (30, 16))
+        surf.blit(money_txt, (SCREEN_WIDTH - money_txt.get_width() - 30, 20))
 
-        # Items List (Left Box)
-        lx, ly, lw, lh = 30, 85, 380, 390
+        # Mode Select Tabs: [BUY ITEMS] and [SELL ITEMS]
+        tab_y = 56
+        tab_w = 175
+        for t_idx, (t_mode, t_label) in enumerate([("BUY", "BUY ITEMS"), ("SELL", "SELL ITEMS")]):
+            tx = 30 + t_idx * (tab_w + 10)
+            is_active = (self.mode == t_mode)
+            tbdr = (240, 120, 20) if is_active else (190, 205, 220)
+            tbg = (255, 235, 180) if is_active else (245, 248, 252)
+            pygame.draw.rect(surf, tbdr, (tx, tab_y, tab_w, 28), border_radius=6)
+            pygame.draw.rect(surf, tbg, (tx + 1, tab_y + 1, tab_w - 2, 26), border_radius=5)
+            t_col = (200, 60, 0) if is_active else UI_TEXT_MUTED
+            t_txt = gfx.fonts["small"].render(t_label, True, t_col)
+            surf.blit(t_txt, (tx + (tab_w - t_txt.get_width()) // 2, tab_y + 6))
+
+        hint_tab = gfx.fonts["small"].render("[◀ / ▶]: Switch Tab", True, (100, 120, 150))
+        surf.blit(hint_tab, (30 + 2 * tab_w + 30, tab_y + 7))
+
+        # Left Box (Items List)
+        lx, ly, lw, lh = 30, 92, 380, 385
         pygame.draw.rect(surf, UI_BORDER_DARK, (lx - 2, ly - 2, lw + 4, lh + 4), border_radius=8)
         pygame.draw.rect(surf, WHITE, (lx, ly, lw, lh), border_radius=6)
 
-        visible_items = self.items_for_sale[self.scroll_offset : self.scroll_offset + 7]
-        for rel_idx, name in enumerate(visible_items):
-            actual_idx = self.scroll_offset + rel_idx
-            is_sel = (actual_idx == self.selected_idx)
-            iy = ly + 10 + rel_idx * 52
-            price = ITEMS[name]["price"]
-            
-            bdr = (240, 140, 40) if is_sel else (225, 230, 240)
-            bg = (255, 235, 180) if is_sel else ((250, 252, 255) if rel_idx % 2 == 0 else WHITE)
-            pygame.draw.rect(surf, bdr, (lx + 6, iy, lw - 12, 46), 2 if is_sel else 1, border_radius=6)
-            pygame.draw.rect(surf, bg, (lx + 7, iy + 1, lw - 14, 44), border_radius=5)
-            
-            # Icon
-            icon = gfx.get_item_sprite(name, (30, 30))
-            surf.blit(icon, (lx + 14, iy + 8))
+        if self.mode == "BUY":
+            items = self.items_for_sale
+            total_items = len(items)
+            visible_items = items[self.scroll_offset : self.scroll_offset + 7]
+            for rel_idx, name in enumerate(visible_items):
+                actual_idx = self.scroll_offset + rel_idx
+                is_sel = (actual_idx == self.selected_idx)
+                iy = ly + 8 + rel_idx * 52
+                price = ITEMS[name]["price"]
+                
+                bdr = (240, 140, 40) if is_sel else (225, 230, 240)
+                bg = (255, 235, 180) if is_sel else ((250, 252, 255) if rel_idx % 2 == 0 else WHITE)
+                pygame.draw.rect(surf, bdr, (lx + 6, iy, lw - 12, 46), 2 if is_sel else 1, border_radius=6)
+                pygame.draw.rect(surf, bg, (lx + 7, iy + 1, lw - 14, 44), border_radius=5)
+                
+                icon = gfx.get_item_sprite(name, (30, 30))
+                surf.blit(icon, (lx + 14, iy + 8))
 
-            itxt = gfx.fonts["regular"].render(name, True, (200, 80, 0) if is_sel else UI_TEXT)
-            ptxt = gfx.fonts["regular"].render(f"${price}", True, (40, 140, 60))
-            surf.blit(itxt, (lx + 52, iy + 12))
-            surf.blit(ptxt, (lx + lw - ptxt.get_width() - 16, iy + 12))
+                itxt = gfx.fonts["regular"].render(name, True, (200, 80, 0) if is_sel else UI_TEXT)
+                ptxt = gfx.fonts["regular"].render(f"${price}", True, (40, 140, 60))
+                surf.blit(itxt, (lx + 52, iy + 12))
+                surf.blit(ptxt, (lx + lw - ptxt.get_width() - 16, iy + 12))
+        else:
+            sell_items = self.get_sellable_items()
+            total_items = len(sell_items)
+            if not sell_items:
+                no_txt = gfx.fonts["regular"].render("Your Bag has no items to sell!", True, UI_TEXT_MUTED)
+                surf.blit(no_txt, (lx + (lw - no_txt.get_width()) // 2, ly + 160))
+            else:
+                visible_items = sell_items[self.scroll_offset : self.scroll_offset + 7]
+                for rel_idx, (name, count, data, sell_price) in enumerate(visible_items):
+                    actual_idx = self.scroll_offset + rel_idx
+                    is_sel = (actual_idx == self.selected_idx)
+                    iy = ly + 8 + rel_idx * 52
+
+                    bdr = (240, 140, 40) if is_sel else (225, 230, 240)
+                    bg = (255, 235, 180) if is_sel else ((250, 252, 255) if rel_idx % 2 == 0 else WHITE)
+                    pygame.draw.rect(surf, bdr, (lx + 6, iy, lw - 12, 46), 2 if is_sel else 1, border_radius=6)
+                    pygame.draw.rect(surf, bg, (lx + 7, iy + 1, lw - 14, 44), border_radius=5)
+
+                    icon = gfx.get_item_sprite(name, (30, 30))
+                    surf.blit(icon, (lx + 14, iy + 8))
+
+                    itxt = gfx.fonts["regular"].render(name, True, (200, 80, 0) if is_sel else UI_TEXT)
+                    cnt_lbl = gfx.fonts["small"].render(f"x{count}", True, UI_TEXT_MUTED)
+                    ptxt = gfx.fonts["regular"].render(f"+${sell_price}", True, (30, 140, 50))
+                    surf.blit(itxt, (lx + 52, iy + 5))
+                    surf.blit(cnt_lbl, (lx + 52, iy + 25))
+                    surf.blit(ptxt, (lx + lw - ptxt.get_width() - 16, iy + 12))
 
         # Scroll indicator
-        if len(self.items_for_sale) > 7:
-            scr_info = gfx.fonts["small"].render(f"▲ ▼ ({self.selected_idx + 1}/{len(self.items_for_sale)})", True, (200, 80, 0))
-            surf.blit(scr_info, (lx + lw - scr_info.get_width() - 14, ly + lh - 20))
+        if total_items > 7:
+            scr_info = gfx.fonts["small"].render(f"▲ ▼ ({self.selected_idx + 1}/{total_items})", True, (200, 80, 0))
+            surf.blit(scr_info, (lx + lw - scr_info.get_width() - 14, ly + lh - 18))
 
-        # Right Detail & Explanation Box
-        rx, ry, rw, rh = 430, 85, 340, 390
-        curr_name = self.items_for_sale[self.selected_idx]
-        data = ITEMS[curr_name]
+        # Right Detail Box
+        rx, ry, rw, rh = 430, 92, 340, 385
         pygame.draw.rect(surf, UI_BORDER_DARK, (rx - 2, ry - 2, rw + 4, rh + 4), border_radius=8)
         pygame.draw.rect(surf, WHITE, (rx, ry, rw, rh), border_radius=6)
 
-        # Header with icon
-        spr = gfx.get_item_sprite(curr_name, (48, 48))
-        surf.blit(spr, (rx + 16, ry + 16))
+        curr_name, curr_data, curr_price_str = None, None, ""
+        if self.mode == "BUY" and self.items_for_sale:
+            curr_name = self.items_for_sale[self.selected_idx]
+            curr_data = ITEMS[curr_name]
+            curr_price_str = f"Buy Price: ${curr_data.get('price', 0)}"
+        elif self.mode == "SELL":
+            sell_items = self.get_sellable_items()
+            if sell_items and 0 <= self.selected_idx < len(sell_items):
+                curr_name, count, curr_data, sell_price = sell_items[self.selected_idx]
+                curr_price_str = f"Sell Value: ${sell_price} (In Bag: {count})"
 
-        surf.blit(gfx.fonts["large"].render(curr_name, True, (30, 50, 90)), (rx + 72, ry + 16))
-        surf.blit(gfx.fonts["small"].render(f"Category: {data.get('category', 'item').upper()}", True, (200, 80, 0)), (rx + 72, ry + 44))
-        surf.blit(gfx.fonts["small"].render(f"In Bag: {self.inventory.get_count(curr_name)}  |  Price: ${data.get('price', 0)}", True, (40, 140, 60)), (rx + 72, ry + 60))
+        if curr_name and curr_data:
+            spr = gfx.get_item_sprite(curr_name, (48, 48))
+            surf.blit(spr, (rx + 16, ry + 16))
 
-        # Purpose & Description
-        pygame.draw.rect(surf, (246, 249, 255), (rx + 12, ry + 86, rw - 24, 140), border_radius=6)
-        surf.blit(gfx.fonts["small"].render("📖 PURPOSE & EFFECT:", True, (40, 80, 180)), (rx + 20, ry + 94))
+            surf.blit(gfx.fonts["large"].render(curr_name, True, (30, 50, 90)), (rx + 72, ry + 16))
+            surf.blit(gfx.fonts["small"].render(f"Category: {curr_data.get('category', 'item').upper()}", True, (200, 80, 0)), (rx + 72, ry + 42))
+            surf.blit(gfx.fonts["small"].render(curr_price_str, True, (40, 140, 60)), (rx + 72, ry + 58))
 
-        words = data.get("desc", "").split(" ")
-        lines, cur = [], ""
-        for w in words:
-            test = cur + (" " if cur else "") + w
-            if gfx.fonts["regular"].size(test)[0] < rw - 50:
-                cur = test
-            else:
+            # Purpose & Description
+            pygame.draw.rect(surf, (246, 249, 255), (rx + 12, ry + 84, rw - 24, 135), border_radius=6)
+            surf.blit(gfx.fonts["small"].render("📖 PURPOSE & EFFECT:", True, (40, 80, 180)), (rx + 20, ry + 92))
+
+            words = curr_data.get("desc", "").split(" ")
+            lines, cur = [], ""
+            for w in words:
+                test = cur + (" " if cur else "") + w
+                if gfx.fonts["regular"].size(test)[0] < rw - 50:
+                    cur = test
+                else:
+                    lines.append(cur)
+                    cur = w
+            if cur:
                 lines.append(cur)
-                cur = w
-        if cur:
-            lines.append(cur)
-        for l_idx, line_str in enumerate(lines[:5]):
-            ltxt = gfx.fonts["regular"].render(line_str, True, UI_TEXT)
-            surf.blit(ltxt, (rx + 20, ry + 118 + l_idx * 22))
+            for l_idx, line_str in enumerate(lines[:5]):
+                surf.blit(gfx.fonts["regular"].render(line_str, True, UI_TEXT), (rx + 20, ry + 114 + l_idx * 21))
 
-        # Usage
-        pygame.draw.rect(surf, (255, 250, 242), (rx + 12, ry + 236, rw - 24, 100), border_radius=6)
-        surf.blit(gfx.fonts["small"].render("⚡ HOW TO USE:", True, (210, 80, 20)), (rx + 20, ry + 244))
+            # Usage
+            pygame.draw.rect(surf, (255, 250, 242), (rx + 12, ry + 228, rw - 24, 95), border_radius=6)
+            surf.blit(gfx.fonts["small"].render("⚡ HOW TO USE:", True, (210, 80, 20)), (rx + 20, ry + 234))
 
-        uwords = data.get("usage", "Select to purchase.").split(" ")
-        ulines, ucur = [], ""
-        for w in uwords:
-            utest = ucur + (" " if ucur else "") + w
-            if gfx.fonts["regular"].size(utest)[0] < rw - 50:
-                ucur = utest
-            else:
+            uwords = curr_data.get("usage", "Select to transact.").split(" ")
+            ulines, ucur = [], ""
+            for w in uwords:
+                utest = ucur + (" " if ucur else "") + w
+                if gfx.fonts["regular"].size(utest)[0] < rw - 50:
+                    ucur = utest
+                else:
+                    ulines.append(ucur)
+                    ucur = w
+            if ucur:
                 ulines.append(ucur)
-                ucur = w
-        if ucur:
-            ulines.append(ucur)
-        for ul_idx, uline_str in enumerate(ulines[:3]):
-            ultxt = gfx.fonts["regular"].render(uline_str, True, (80, 70, 60))
-            surf.blit(ultxt, (rx + 20, ry + 268 + ul_idx * 22))
+            for ul_idx, uline_str in enumerate(ulines[:3]):
+                surf.blit(gfx.fonts["regular"].render(uline_str, True, (80, 70, 60)), (rx + 20, ry + 256 + ul_idx * 21))
 
-        cue = gfx.fonts["small"].render("Press [Z] to Buy  [X]: Exit", True, (40, 120, 220))
-        surf.blit(cue, (rx + (rw - cue.get_width()) // 2, ry + 354))
+            cue_txt = "Press [Z] to Buy 1  [X]: Exit" if self.mode == "BUY" else "Press [Z] to Sell 1 for Cash!  [X]: Exit"
+            cue = gfx.fonts["small"].render(cue_txt, True, (40, 120, 220) if self.mode == "BUY" else (30, 140, 50))
+            surf.blit(cue, (rx + (rw - cue.get_width()) // 2, ry + 348))
+        else:
+            empty_det = gfx.fonts["regular"].render("No item selected", True, UI_TEXT_MUTED)
+            surf.blit(empty_det, (rx + (rw - empty_det.get_width()) // 2, ry + 160))
 
         # Bottom message box
         bx, by, bw, bh = 30, 490, SCREEN_WIDTH - 60, 80

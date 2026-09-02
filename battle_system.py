@@ -22,6 +22,7 @@ class BattlePhase:
     MOVE_SELECT = "MOVE_SELECT"
     BAG_SELECT = "BAG_SELECT"
     PARTY_SELECT = "PARTY_SELECT"
+    PARTY_ITEM_SELECT = "PARTY_ITEM_SELECT"
     MESSAGE_QUEUE = "MESSAGE_QUEUE"
     ATTACK_ANIM = "ATTACK_ANIM"
     HP_ANIM = "HP_ANIM"
@@ -94,6 +95,7 @@ class BattleSystem:
         
         # Move Reorder Mode
         self.move_swap_source = None
+        self.selected_item_for_party = None
         
         # Floating Combat Damage Text
         self.floating_texts = []
@@ -381,14 +383,44 @@ class BattleSystem:
                         self.queue_message("The trainer blocked your Poké Ball! Don't be a thief!")
                     else:
                         self._use_pokeball(item_name)
-                elif data.get("category") in ["medicine", "candy"]:
-                    # Use on active pokemon or open party target
-                    success, msg = self.inventory.use_item_on_pokemon(item_name, self.player_pokemon)
-                    if success:
-                        sound_mgr.play_sfx("heal")
+                elif data.get("category") in ["medicine", "candy", "stone"] or "revive_hp_percent" in data or "heal_hp" in data or "cure_status" in data or "level_up" in data or data.get("is_move_reroll"):
+                    self.selected_item_for_party = item_name
+                    self.phase = BattlePhase.PARTY_ITEM_SELECT
+                    self.party_menu_index = 0
+                    self.party_scroll = 0
+                    sound_mgr.play_sfx("select")
+                else:
+                    # General item use
+                    ok, msg = self.inventory.use_item(item_name, quest_mgr=self.quest_mgr)
+                    if ok:
+                        sound_mgr.play_sfx("confirm")
                         self.queue_message(msg, on_done=self._enemy_turn_after_item)
                     else:
                         sound_mgr.play_sfx("cancel")
+
+        # Party Selection for Item Use in Battle
+        elif self.phase == BattlePhase.PARTY_ITEM_SELECT:
+            if any(event.key == k for k in KEY_UP):
+                self.party_menu_index = (self.party_menu_index - 1) % len(self.player_party)
+                self._adjust_party_scroll()
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_DOWN):
+                self.party_menu_index = (self.party_menu_index + 1) % len(self.player_party)
+                self._adjust_party_scroll()
+                sound_mgr.play_sfx("select")
+            elif any(event.key == k for k in KEY_CANCEL):
+                sound_mgr.play_sfx("cancel")
+                self.phase = BattlePhase.BAG_SELECT
+            elif any(event.key == k for k in KEY_CONFIRM):
+                selected = self.player_party[self.party_menu_index]
+                item_name = self.selected_item_for_party
+                success, msg = self.inventory.use_item_on_pokemon(item_name, selected, quest_mgr=self.quest_mgr)
+                if success:
+                    sound_mgr.play_sfx("heal" if ("heal" in item_name.lower() or "potion" in item_name.lower() or "revive" in item_name.lower()) else "confirm")
+                    self.queue_message(msg, on_done=self._enemy_turn_after_item)
+                else:
+                    sound_mgr.play_sfx("cancel")
+                    self.queue_message(msg, on_done=lambda: setattr(self, 'phase', BattlePhase.PARTY_ITEM_SELECT))
 
         # Party Selection Menu
         elif self.phase == BattlePhase.PARTY_SELECT:
@@ -892,13 +924,38 @@ class BattleSystem:
         sound_mgr.play_bgm("victory", loop=False)
         if self.is_trainer:
             prize = self.trainer_data.get("reward_money", 200)
+            badge_name = self.trainer_data.get("reward_badge")
+            t_name = self.trainer_data.get("name", "Trainer")
+            dialog_after = self.trainer_data.get("dialog_after")
+
             if self.inventory:
                 self.inventory.money += prize
             if self.quest_mgr and self.trainer_data:
                 self.quest_mgr.on_trainer_defeated(self.trainer_data.get("id"), self.inventory)
-            self.queue_message(f"You defeated {self.trainer_data['name']}!", on_done=lambda: self.queue_message(
-                f"You got ${prize} for winning!", on_done=self._finish_battle
-            ))
+
+            def on_money_done():
+                self._finish_battle()
+
+            def on_badge_done():
+                self.queue_message(f"You got ${prize} for winning!", on_done=on_money_done)
+
+            def on_dialog_after_done():
+                if badge_name:
+                    sound_mgr.play_sfx("level_up")
+                    self.queue_message(f"Received the {badge_name.upper()} from {t_name}!", on_done=on_badge_done)
+                else:
+                    self.queue_message(f"You got ${prize} for winning!", on_done=on_money_done)
+
+            def on_defeat_msg_done():
+                if dialog_after:
+                    self.queue_message(f"{t_name}: \"{dialog_after}\"", on_done=on_dialog_after_done)
+                elif badge_name:
+                    sound_mgr.play_sfx("level_up")
+                    self.queue_message(f"Received the {badge_name.upper()} from {t_name}!", on_done=on_badge_done)
+                else:
+                    self.queue_message(f"You got ${prize} for winning!", on_done=on_money_done)
+
+            self.queue_message(f"You defeated {t_name}!", on_done=on_defeat_msg_done)
         else:
             self.queue_message(f"Defeated wild {self.enemy_pokemon.species.upper()}!", on_done=self._finish_battle)
 
@@ -1315,26 +1372,55 @@ class BattleSystem:
                         u_surf = gfx.fonts["small"].render(f"▶ {usage_txt[:50]}...", True, (40, 120, 200)) if len(usage_txt) > 50 else gfx.fonts["small"].render(f"▶ {usage_txt}", True, (40, 120, 200))
                         surf.blit(u_surf, (tx + 12, ty + th - 24))
 
-        # Party Selection Sub-Menu
-        elif self.phase in [BattlePhase.PARTY_SELECT, BattlePhase.FAINT_SWITCH]:
-            title = gfx.fonts["medium"].render("Choose a Pokémon to switch:", True, UI_TEXT)
-            surf.blit(title, (bx + 20, by + 15))
+        # Party Selection Sub-Menu (Switching, Faint Switch, or Item Target)
+        elif self.phase in [BattlePhase.PARTY_SELECT, BattlePhase.FAINT_SWITCH, BattlePhase.PARTY_ITEM_SELECT]:
+            if self.phase == BattlePhase.PARTY_ITEM_SELECT:
+                title = gfx.fonts["medium"].render(f"Use {getattr(self, 'selected_item_for_party', 'Item')} on which Pokémon?", True, (220, 80, 0))
+            elif self.phase == BattlePhase.FAINT_SWITCH:
+                title = gfx.fonts["medium"].render("Choose next Pokémon to send out:", True, UI_TEXT)
+            else:
+                title = gfx.fonts["medium"].render("Choose a Pokémon to switch:", True, UI_TEXT)
+            surf.blit(title, (bx + 20, by + 12))
             
             self._adjust_party_scroll()
             visible_party = self.player_party[self.party_scroll : self.party_scroll + 4]
             for rel_idx, p in enumerate(visible_party):
                 actual_idx = self.party_scroll + rel_idx
-                iy = by + 50 + rel_idx * 28
+                iy = by + 42 + rel_idx * 28
                 is_sel = (self.party_menu_index == actual_idx)
                 marker = "> " if is_sel else "  "
-                status_str = f"({p.status})" if p.status else ""
-                col = (200, 80, 0) if is_sel else ((160, 160, 160) if p.is_fainted() else UI_TEXT)
-                ptxt = gfx.fonts["regular"].render(f"{marker}{p.nickname} Lv.{p.level} - HP {p.current_hp}/{p.max_hp} {status_str}", True, col)
+                in_battle_tag = " [In Battle]" if p == self.player_pokemon else ""
+                
+                if p.is_fainted():
+                    status_str = "(Fainted)"
+                elif p.status:
+                    status_str = f"({p.status})"
+                else:
+                    status_str = ""
+                    
+                if is_sel:
+                    col = (220, 80, 0)
+                elif p.is_fainted():
+                    if self.phase == BattlePhase.PARTY_ITEM_SELECT and "revive" in getattr(self, "selected_item_for_party", "").lower():
+                        col = (180, 50, 50)
+                    else:
+                        col = (160, 160, 160)
+                else:
+                    col = UI_TEXT
+                    
+                ptxt = gfx.fonts["regular"].render(f"{marker}{p.nickname} Lv.{p.level} - HP {p.current_hp}/{p.max_hp} {status_str}{in_battle_tag}", True, col)
                 surf.blit(ptxt, (bx + 20, iy))
 
             if len(self.player_party) > 4:
                 scroll_info = gfx.fonts["small"].render(f"▲ ▼ ({self.party_menu_index + 1}/{len(self.player_party)})", True, (200, 80, 0))
-                surf.blit(scroll_info, (bx + bw - scroll_info.get_width() - 25, by + 18))
+                surf.blit(scroll_info, (bx + bw - scroll_info.get_width() - 25, by + 14))
+
+            if self.phase == BattlePhase.PARTY_ITEM_SELECT:
+                hint_str = "[Z / Enter]: Apply Item  |  [X]: Back to Bag"
+            else:
+                hint_str = "[Z / Enter]: Choose  |  [X]: Cancel"
+            hint_txt = gfx.fonts["small"].render(hint_str, True, (40, 100, 180))
+            surf.blit(hint_txt, (bx + 20, by + bh - 20))
 
     def _draw_level_up_modal(self, surf):
         mx, my, mw, mh = 250, 120, 300, 320

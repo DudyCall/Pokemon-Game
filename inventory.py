@@ -51,7 +51,7 @@ class Inventory:
                     res.append((name, count, item_data))
         return res
 
-    def use_item_on_pokemon(self, item_name, pokemon, quest_mgr=None):
+    def use_item_on_pokemon(self, item_name, pokemon, quest_mgr=None, replace_idx=None, specific_move=None):
         """
         Uses an item on a given Pokemon object.
         Returns (success: bool, message: str)
@@ -63,7 +63,7 @@ class Inventory:
         if not data:
             return False, "Unknown item."
 
-        # Revive
+        # Revive & Max Revive
         if "revive_hp_percent" in data:
             if not pokemon.is_fainted():
                 return False, f"{pokemon.nickname} is not fainted!"
@@ -71,6 +71,8 @@ class Inventory:
             pokemon.current_hp = revive_amount
             pokemon.status = None
             self.remove_item(item_name, 1)
+            if quest_mgr is not None:
+                quest_mgr.on_item_used(item_name, pokemon, self)
             return True, f"{pokemon.nickname} was revived with {revive_amount} HP!"
 
         # Healing Items (Potion, Super Potion, Max Potion)
@@ -81,6 +83,8 @@ class Inventory:
                 return False, f"{pokemon.nickname}'s HP is already full!"
             healed = pokemon.heal(data["heal_hp"])
             self.remove_item(item_name, 1)
+            if quest_mgr is not None:
+                quest_mgr.on_item_used(item_name, pokemon, self)
             return True, f"{pokemon.nickname} recovered {healed} HP!"
 
         # Status Cures (Antidote, Paralyze Heal, Awakening, Burn Heal)
@@ -89,6 +93,8 @@ class Inventory:
                 return False, f"{pokemon.nickname} is not afflicted with {data['cure_status']}!"
             pokemon.cure_status()
             self.remove_item(item_name, 1)
+            if quest_mgr is not None:
+                quest_mgr.on_item_used(item_name, pokemon, self)
             return True, f"{pokemon.nickname}'s {data['cure_status']} was cured!"
 
         # Rare Candy
@@ -98,6 +104,8 @@ class Inventory:
             exp_needed = pokemon.exp_for_next_level() - pokemon.exp
             events = pokemon.gain_exp(exp_needed)
             self.remove_item(item_name, 1)
+            if quest_mgr is not None:
+                quest_mgr.on_item_used(item_name, pokemon, self)
             
             msg_parts = [f"{pokemon.nickname} grew to Level {pokemon.level}!"]
             
@@ -147,9 +155,11 @@ class Inventory:
 
         # Move Reroll Disk
         if data.get("is_move_reroll"):
-            ok, new_m, old_m, msg = pokemon.reroll_move()
+            ok, new_m, old_m, msg = pokemon.reroll_move(replace_idx=replace_idx, specific_move=specific_move)
             if ok:
                 self.remove_item(item_name, 1)
+                if quest_mgr is not None:
+                    quest_mgr.on_item_used(item_name, pokemon, self)
                 return True, msg
             return False, msg
 

@@ -201,28 +201,6 @@ BARRIER_DEFINITIONS = {
             "Pass through, champion in the making! Victory Road and the Indigo Plateau await you!"
         ),
     },
-    "barrier_cerulean_cave": {
-        "id": "barrier_cerulean_cave",
-        "map_name": "Cerulean City",
-        "name": "Mystic Psychic Barrier",
-        "sprite_type": "psychic_seal",
-        "tiles": [(4, 2)],
-        "interaction_tiles": [(4, 3), (4, 1)],
-        "condition_type": "ALL_BADGES_AND_LEVEL",
-        "required_badge_count": 8,
-        "required_level": 55,
-        "blocked_title": "Mysterious Psychic Seal",
-        "blocked_message": (
-            "A colossal, pulsing psychic barrier seals the entrance to Cerulean Cave!\n\n"
-            "Inconceivably dangerous legendary Pokémon dwell within.\n"
-            "Requirements: All 8 Kanto Gym Badges AND a Pokémon trained to Level 55+!"
-        ),
-        "cleared_title": "Cerulean Cave Unlocked",
-        "cleared_message": (
-            "The 8 Kanto Badges resonate with brilliant light, shattering the psychic seal!\n\n"
-            "Cerulean Cave is open. Prepare yourself for the ultimate battle!"
-        ),
-    },
 }
 
 
@@ -245,6 +223,23 @@ class BarrierManager:
                         return b_data
         return None
 
+    def has_badge(self, world, req_badge):
+        if not req_badge:
+            return True
+        badges = getattr(world, "badges", set())
+        req_norm = req_badge.lower().replace(" badge", "").strip()
+        for b in badges:
+            b_norm = b.lower().replace(" badge", "").strip()
+            if req_norm == b_norm:
+                return True
+        return False
+
+    def count_unique_badges(self, world):
+        unique = set()
+        for b in getattr(world, "badges", set()):
+            unique.add(b.lower().replace(" badge", "").strip())
+        return len(unique)
+
     def evaluate_condition(self, barrier_id, player, party, world, quest_mgr, pokedex, inventory):
         b_data = self.definitions.get(barrier_id)
         if not b_data:
@@ -252,7 +247,7 @@ class BarrierManager:
 
         c_type = b_data.get("condition_type")
         max_level = max([p.level for p in party], default=1)
-        badge_count = len(getattr(world, "badges", set()))
+        badge_count = self.count_unique_badges(world)
         caught_count = len(getattr(pokedex, "caught", set()))
 
         if c_type == "QUEST_OR_CAUGHT":
@@ -266,14 +261,14 @@ class BarrierManager:
 
         elif c_type == "BADGE":
             req_badge = b_data.get("required_badge")
-            is_met = req_badge in getattr(world, "badges", set())
+            is_met = self.has_badge(world, req_badge)
             prog = f"[{req_badge.capitalize()} Badge: {'Earned' if is_met else 'Not Earned'}]"
             return is_met, prog
 
         elif c_type == "BADGE_OR_LEVEL":
             req_badge = b_data.get("required_badge")
             req_level = b_data.get("required_level", 18)
-            b_ok = req_badge in getattr(world, "badges", set())
+            b_ok = self.has_badge(world, req_badge)
             l_ok = max_level >= req_level
             is_met = b_ok or l_ok
             prog = f"[{req_badge.capitalize()} Badge: {'Earned' if b_ok else 'None'} | Highest Lv: {max_level}/{req_level}]"
@@ -283,7 +278,7 @@ class BarrierManager:
             req_quest = b_data.get("required_quest")
             req_badge = b_data.get("required_badge")
             q_ok = quest_mgr.is_completed(req_quest) if quest_mgr else False
-            b_ok = req_badge in getattr(world, "badges", set())
+            b_ok = self.has_badge(world, req_badge)
             is_met = q_ok or b_ok
             prog = f"[Quest: {'Done' if q_ok else 'Incomplete'} | {req_badge.capitalize()} Badge: {'Earned' if b_ok else 'None'}]"
             return is_met, prog
@@ -302,7 +297,7 @@ class BarrierManager:
             req_badge = b_data.get("required_badge")
             req_quest = b_data.get("required_quest")
             c_ok = caught_count >= req_caught
-            b_ok = req_badge in getattr(world, "badges", set())
+            b_ok = self.has_badge(world, req_badge)
             q_ok = quest_mgr.is_completed(req_quest) if quest_mgr else False
             is_met = c_ok and (b_ok or q_ok)
             prog = f"[Pokédex: {caught_count}/{req_caught} | Badge/Quest: {'Ready' if (b_ok or q_ok) else 'Incomplete'}]"

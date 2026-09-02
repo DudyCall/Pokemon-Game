@@ -5,8 +5,8 @@ import sys
 import random
 import pygame
 from constants import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, FPS, GameState, Direction,
-    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_CONFIRM, KEY_CANCEL, KEY_MENU, KEY_QUICKSAVE
+    SCREEN_WIDTH, SCREEN_HEIGHT, FPS, GameState, Direction, BLACK,
+    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_CONFIRM, KEY_CANCEL, KEY_MENU, KEY_QUICKSAVE, KEY_RUN
 )
 from graphics_manager import gfx
 from sound_manager import sound_mgr
@@ -315,6 +315,19 @@ class Game:
                     # Interaction Key (Talk to NPC / Check Sign / Enter)
                     if any(event.key == k for k in KEY_CONFIRM):
                         self._handle_overworld_interaction()
+                    elif not self.player.is_moving:
+                        # Auto-trigger barrier notice if attempting to walk directly into a blocked barrier tile
+                        dir_bump = None
+                        if any(event.key == k for k in KEY_UP): dir_bump = (0, -1, Direction.UP)
+                        elif any(event.key == k for k in KEY_DOWN): dir_bump = (0, 1, Direction.DOWN)
+                        elif any(event.key == k for k in KEY_LEFT): dir_bump = (-1, 0, Direction.LEFT)
+                        elif any(event.key == k for k in KEY_RIGHT): dir_bump = (1, 0, Direction.RIGHT)
+                        if dir_bump:
+                            self.player.facing = dir_bump[2]
+                            bx = self.player.grid_x + dir_bump[0]
+                            by = self.player.grid_y + dir_bump[1]
+                            if barrier_mgr.is_tile_blocked(self.player.current_map, bx, by, self.world.unlocked_barriers):
+                                self._handle_overworld_interaction()
                 continue
 
             # Pause Menu State
@@ -685,6 +698,19 @@ class Game:
         if trainer:
             sound_mgr.play_sfx("confirm")
             if trainer["id"] in self.world.defeated_trainers:
+                # Ensure Gym Badge is unlocked in case of prior save or missed trigger
+                badge_name = trainer.get("reward_badge")
+                if badge_name:
+                    short_b = badge_name.lower().replace(" badge", "").strip()
+                    if badge_name not in self.world.badges or short_b not in self.world.badges:
+                        self.world.badges.add(badge_name)
+                        self.world.badges.add(short_b)
+                        self.show_notification(f"Earned the {badge_name}!")
+                        sound_mgr.play_sfx("level_up")
+                        SaveSystem.save_game(
+                            self.player, self.party, self.inventory, self.pokedex, self.world,
+                            slot=self.current_save_slot, pc_box=self.pc_box, quest_mgr=self.quest_mgr
+                        )
                 # Already defeated -> talk with portrait
                 self.current_dialogue = DialogueBox(
                     trainer["name"],
@@ -720,7 +746,11 @@ class Game:
         target_x = warp["target_x"]
         target_y = warp["target_y"]
         
-        interiors = ["Pokecenter", "Mart", "Oak's Lab", "Player's House", "Pewter Gym", "Cerulean Gym", "Bill's Cottage", "Museum"]
+        interiors = [
+            "Pokecenter", "Mart", "Oak's Lab", "Player's House",
+            "Pewter Gym", "Cerulean Gym", "Vermilion Gym", "Celadon Gym",
+            "Saffron Gym", "Fuchsia Gym", "Bill's Cottage", "Museum", "Silph Co."
+        ]
         # If entering interior, record origin
         if target_map in interiors and self.player.current_map not in interiors:
             self.world.interior_origin_map = self.player.current_map
@@ -742,6 +772,13 @@ class Game:
         if self.player.follower:
             self.player.follower.teleport_to_player(self.player)
         self.world.reveal_area(self.player.current_map, self.player.grid_x, self.player.grid_y)
+
+        # Immediately update camera to target map bounds to prevent 1-frame position lag
+        map_w, map_h = self.world.get_map_dimensions(self.player.current_map)
+        target_cam_x = self.player.pixel_x + 16 - SCREEN_WIDTH // 2
+        target_cam_y = self.player.pixel_y + 16 - SCREEN_HEIGHT // 2
+        self.camera_x = max(0, min(map_w - SCREEN_WIDTH, target_cam_x)) if map_w > SCREEN_WIDTH else (map_w - SCREEN_WIDTH) // 2
+        self.camera_y = max(0, min(map_h - SCREEN_HEIGHT, target_cam_y)) if map_h > SCREEN_HEIGHT else (map_h - SCREEN_HEIGHT) // 2
 
 
     def update(self, dt):
@@ -770,20 +807,22 @@ class Game:
                 self.player.follower.sync_with_party(self.party)
 
             # Continuous grid movement
+            keys = pygame.key.get_pressed() if hasattr(pygame, "key") else {}
+            is_running = any(keys[k] for k in KEY_RUN if k < len(keys)) if keys else False
+
             if not self.player.is_moving and self.state == GameState.OVERWORLD:
-                keys = pygame.key.get_pressed()
                 pad = self.input_mgr.get_held_directions()
-                if any(keys[k] for k in KEY_UP) or Direction.UP in pad:
+                if any(keys[k] for k in KEY_UP if k < len(keys)) or Direction.UP in pad:
                     self.player.move(Direction.UP, self.world)
-                elif any(keys[k] for k in KEY_DOWN) or Direction.DOWN in pad:
+                elif any(keys[k] for k in KEY_DOWN if k < len(keys)) or Direction.DOWN in pad:
                     self.player.move(Direction.DOWN, self.world)
-                elif any(keys[k] for k in KEY_LEFT) or Direction.LEFT in pad:
+                elif any(keys[k] for k in KEY_LEFT if k < len(keys)) or Direction.LEFT in pad:
                     self.player.move(Direction.LEFT, self.world)
-                elif any(keys[k] for k in KEY_RIGHT) or Direction.RIGHT in pad:
+                elif any(keys[k] for k in KEY_RIGHT if k < len(keys)) or Direction.RIGHT in pad:
                     self.player.move(Direction.RIGHT, self.world)
 
             was_moving = self.player.is_moving
-            self.player.update(dt, self.world)
+            self.player.update(dt, self.world, is_running=is_running)
             
             # If player just finished a step
             if was_moving and not self.player.is_moving:
@@ -895,7 +934,10 @@ class Game:
                         badge_name = t_data.get("reward_badge")
                         if badge_name:
                             self.world.badges.add(badge_name)
+                            short_b = badge_name.lower().replace(" badge", "").strip()
+                            self.world.badges.add(short_b)
                             self.show_notification(f"Earned the {badge_name}!")
+                            sound_mgr.play_sfx("level_up")
                     # Save game progress immediately so defeated trainers, catches, EXP, and quest progress stay saved
                     SaveSystem.save_game(
                         self.player, self.party, self.inventory, self.pokedex, self.world,
@@ -919,6 +961,9 @@ class Game:
                     self.show_notification("Your team was fully restored at the Pokémon Center.")
 
     def draw(self):
+        # Always clear display buffer to prevent previous map or menu leaks
+        self.screen.fill(BLACK)
+
         # 1. Title State
         if self.state == GameState.TITLE:
             self.title_screen.draw(self.screen)

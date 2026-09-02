@@ -143,6 +143,7 @@ class World:
         return None
 
     def draw(self, surf, map_name, camera_x, camera_y, quest_mgr=None):
+        surf.fill(BLACK)
         grid = self.maps[map_name]["grid"]
         rows = len(grid)
         cols = len(grid[0])
@@ -230,7 +231,29 @@ class World:
                 elif char == "e":
                     surf.blit(gfx.cached_tiles["electric_surge"], (draw_x, draw_y))
                 elif char == "p":
-                    surf.blit(gfx.cached_tiles["canyon_dirt"] if is_canyon else gfx.cached_tiles["path"], (draw_x, draw_y))
+                    if is_canyon:
+                        surf.blit(gfx.cached_tiles["canyon_dirt"], (draw_x, draw_y))
+                    else:
+                        # High-detail cobblestone path with seamless spatial variations
+                        var_idx = (x * 7 + y * 13 + (x ^ y)) % 4
+                        tile_key = f"path_{var_idx}"
+                        base_path = gfx.cached_tiles.get(tile_key, gfx.cached_tiles["path"])
+                        surf.blit(base_path, (draw_x, draw_y))
+
+                        # Context-aware path edging and stone curbing
+                        up_is_p = (y > 0 and grid[y - 1][x] == "p")
+                        down_is_p = (y + 1 < rows and grid[y + 1][x] == "p")
+                        left_is_p = (x > 0 and grid[y][x - 1] == "p")
+                        right_is_p = (x + 1 < cols and grid[y][x + 1] == "p")
+
+                        if not up_is_p and "path_edge_top" in gfx.cached_tiles:
+                            surf.blit(gfx.cached_tiles["path_edge_top"], (draw_x, draw_y))
+                        if not down_is_p and "path_edge_bottom" in gfx.cached_tiles:
+                            surf.blit(gfx.cached_tiles["path_edge_bottom"], (draw_x, draw_y))
+                        if not left_is_p and "path_edge_left" in gfx.cached_tiles:
+                            surf.blit(gfx.cached_tiles["path_edge_left"], (draw_x, draw_y))
+                        if not right_is_p and "path_edge_right" in gfx.cached_tiles:
+                            surf.blit(gfx.cached_tiles["path_edge_right"], (draw_x, draw_y))
                 elif char == "~":
                     surf.blit(gfx.cached_tiles["water"][self.water_frame], (draw_x, draw_y))
                 elif char == "b":
@@ -245,7 +268,51 @@ class World:
                     elif is_cave:
                         surf.blit(gfx.cached_tiles["cave_wall"], (draw_x, draw_y))
                     else:
-                        surf.blit(gfx.cached_tiles["tree_tl"], (draw_x, draw_y))
+                        # Context-aware lush border & forest tree autotiling
+                        up = (y > 0 and grid[y - 1][x] == "#")
+                        down = (y + 1 < rows and grid[y + 1][x] == "#")
+                        left = (x > 0 and grid[y][x - 1] == "#")
+                        right = (x + 1 < cols and grid[y][x + 1] == "#")
+
+                        # 1. Outer Corners
+                        if not up and not left and (down or right):
+                            surf.blit(gfx.cached_tiles["tree_corner_tl"], (draw_x, draw_y))
+                        elif not up and not right and (down or left):
+                            surf.blit(gfx.cached_tiles["tree_corner_tr"], (draw_x, draw_y))
+                        elif not down and not left and (up or right):
+                            surf.blit(gfx.cached_tiles["tree_corner_bl"], (draw_x, draw_y))
+                        elif not down and not right and (up or left):
+                            surf.blit(gfx.cached_tiles["tree_corner_br"], (draw_x, draw_y))
+
+                        # 2. Outer Straight Borders
+                        elif not up and down:
+                            t_key = "tree_tl" if (x % 2 == 0) else "tree_tr"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
+                        elif not down and up:
+                            t_key = "tree_bl" if (x % 2 == 0) else "tree_br"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
+                        elif not left and right:
+                            t_key = "tree_border_left_0" if (y % 2 == 0) else "tree_border_left_1"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
+                        elif not right and left:
+                            t_key = "tree_border_right_0" if (y % 2 == 0) else "tree_border_right_1"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
+
+                        # 3. Isolated Single Trees & 1-Tile Narrow Strips
+                        elif not up and not down and not left and not right:
+                            surf.blit(gfx.cached_tiles["tree_single"], (draw_x, draw_y))
+                        elif not up and not down:
+                            t_key = "tree_single" if (x % 2 == 0) else "tree_border_top_0"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
+                        elif not left and not right:
+                            t_key = "tree_single" if (y % 2 == 0) else "tree_border_left_0"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
+
+                        # 4. Dense Interior Forest Canopy
+                        else:
+                            var_idx = (x * 7 + y * 13) % 3
+                            t_key = f"tree_dense_canopy_{var_idx}"
+                            surf.blit(gfx.cached_tiles[t_key], (draw_x, draw_y))
                 elif char == "^":
                     if is_ice:
                         surf.blit(gfx.cached_tiles["ice_wall"], (draw_x, draw_y))

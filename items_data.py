@@ -38,6 +38,11 @@ ITEMS = {
         "desc": "A revitalizing medicine that revives a fainted Pokémon (0 HP) and restores half of its maximum HP.",
         "usage": "Use from the Bag or during battle on a fainted Pokémon to bring it back into action."
     },
+    "Max Revive": {
+        "name": "Max Revive", "category": "medicine", "revive_hp_percent": 100, "price": 4000,
+        "desc": "A miraculous medicine that revives a fainted Pokémon (0 HP) and fully restores 100% of its maximum HP.",
+        "usage": "Use from the Bag or during battle on a fainted Pokémon for complete restoration."
+    },
     "Antidote": {
         "name": "Antidote", "category": "medicine", "cure_status": "Poison", "price": 100,
         "desc": "A specialized serum that cures a Pokémon of Poison status and stops residual poison damage.",

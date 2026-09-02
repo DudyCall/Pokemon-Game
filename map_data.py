@@ -244,6 +244,7 @@ MAP_DEFINITIONS = {
             {"name": "Officer Jenny", "x": 18, "y": 9, "dir": Direction.DOWN, "dialog": "Keep an eye out for suspicious Team Rocket grunts! North is Nugget Bridge, and East leads to Route 9 Rock Canyon!"}
         ],
         "signs": {
+            (3, 1): "Cerulean Cave Ahead - Caution: High-Level Subterranean Pokémon & Legendary Secrets!",
             (3, 6): "Cerulean City - A Mysterious Blue Aura",
             (24, 6): "Cerulean PokéMart",
             (6, 13): "Cerulean Gym - Leader: Misty (The Tomboyish Mermaid!)",
@@ -710,8 +711,8 @@ MAP_DEFINITIONS = {
         "bgm": "town",
         "warps": {
             (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
-            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
-            (10, 18): {"target_map": "Celadon Gym", "target_x": 6, "target_y": 8},
+            (28, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (9, 18): {"target_map": "Celadon Gym", "target_x": 6, "target_y": 7},
             (31, 10): {"target_map": "Route 7", "target_x": 1, "target_y": 8},
             (31, 11): {"target_map": "Route 7", "target_x": 1, "target_y": 8},
             (31, 12): {"target_map": "Route 7", "target_x": 1, "target_y": 9},
@@ -736,7 +737,7 @@ MAP_DEFINITIONS = {
         "grid": MAP_CELADON_GYM,
         "bgm": "town",
         "warps": {
-            (6, 8): {"target_map": "Celadon City", "target_x": 10, "target_y": 19}
+            (6, 8): {"target_map": "Celadon City", "target_x": 9, "target_y": 19}
         },
         "trainers": ["beauty_tamia", "gym_leader_erika"]
     },
@@ -761,17 +762,19 @@ MAP_DEFINITIONS = {
             (31, 16): {"target_map": "Route 8", "target_x": 1, "target_y": 9},
             (31, 17): {"target_map": "Route 8", "target_x": 1, "target_y": 10},
             (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
-            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
-            (24, 21): {"target_map": "Saffron Gym", "target_x": 6, "target_y": 10}
+            (28, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (17, 16): {"target_map": "Silph Co.", "target_x": 14, "target_y": 8},
+            (25, 21): {"target_map": "Saffron Gym", "target_x": 7, "target_y": 9}
         },
         "trainers": ["blackbelt_nob"],
         "npcs": [
-            {"name": "Silph President", "x": 16, "y": 8, "dir": Direction.DOWN, "dialog": "Welcome to Saffron City, the beating heart of Kanto! Silph Co. produces Master Balls and high-tech items!"},
+            {"name": "Saffron Guide", "x": 16, "y": 8, "dir": Direction.DOWN, "dialog": "Welcome to Saffron City! Silph Co. headquarters is located in the center of the metropolis, and Sabrina's Gym is to the south!"},
             {"name": "Black Belt Kenji", "x": 12, "y": 21, "dir": Direction.DOWN, "quest_id": "karate_spirit", "dialog": "Hi-yah! True mastery comes through hard training! Defeat 4 Fighting or Rock-type Pokémon in battle! (Reward: $3000, Move Reroll Disk, 2x Max Potion)"}
         ],
         "signs": {
             (3, 6): "Saffron City - Shining Golden Metropolis Crossroads",
             (24, 6): "Saffron PokéMart",
+            (15, 17): "Silph Co. Headquarters - Cutting-Edge Technology & Master Balls",
             (24, 23): "Saffron Gym - Leader: Sabrina (Master of Psychic Pokémon!)"
         },
         "ground_items": [
@@ -779,11 +782,30 @@ MAP_DEFINITIONS = {
             {"id": "saffron_candy", "x": 24, "y": 27, "item": "Rare Candy", "count": 2}
         ]
     },
+    "Silph Co.": {
+        "grid": MAP_SILPH_CO,
+        "bgm": "town",
+        "warps": {
+            (14, 8): {"target_map": "Saffron City", "target_x": 17, "target_y": 17}
+        },
+        "npcs": [
+            {"name": "Silph President", "x": 14, "y": 3, "dir": Direction.DOWN, "dialog": "Welcome to Silph Co. Corporate Headquarters! We develop Master Balls, Silph Scopes, and state-of-the-art battle equipment for trainers across Kanto!"},
+            {"name": "Lead Scientist", "x": 6, "y": 5, "dir": Direction.RIGHT, "dialog": "Our research laboratory engineered the Master Ball—a prototype ball with a 100% capture rate on any Pokémon!"},
+            {"name": "Silph Engineer", "x": 21, "y": 5, "dir": Direction.LEFT, "dialog": "We manage the wireless communications network connecting Pokémon Centers and PC Storage boxes throughout Kanto."}
+        ],
+        "signs": {
+            (14, 1): "Silph Co. Central Server Mainframe - Highly Confidential"
+        },
+        "ground_items": [
+            {"id": "silph_masterball", "x": 3, "y": 7, "item": "Master Ball", "count": 1},
+            {"id": "silph_candy", "x": 24, "y": 7, "item": "Rare Candy", "count": 2}
+        ]
+    },
     "Saffron Gym": {
         "grid": MAP_SAFFRON_GYM,
         "bgm": "town",
         "warps": {
-            (6, 10): {"target_map": "Saffron City", "target_x": 24, "target_y": 22}
+            (7, 10): {"target_map": "Saffron City", "target_x": 25, "target_y": 22}
         },
         "trainers": ["psychic_johan", "gym_leader_sabrina"]
     },
@@ -818,9 +840,9 @@ MAP_DEFINITIONS = {
             (5, 0): {"target_map": "Safari Zone", "target_x": 16, "target_y": 28},
             (6, 0): {"target_map": "Safari Zone", "target_x": 16, "target_y": 28},
             (7, 0): {"target_map": "Safari Zone", "target_x": 17, "target_y": 28},
-            (6, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
-            (24, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
-            (10, 17): {"target_map": "Fuchsia Gym", "target_x": 6, "target_y": 8}
+            (13, 4): {"target_map": "Pokecenter", "target_x": 6, "target_y": 6},
+            (21, 4): {"target_map": "Mart", "target_x": 6, "target_y": 5},
+            (13, 17): {"target_map": "Fuchsia Gym", "target_x": 6, "target_y": 7}
         },
         "npcs": [
             {"name": "Safari Warden", "x": 16, "y": 9, "dir": Direction.DOWN, "dialog": "Welcome to Fuchsia City! North gate leads straight to the grand Safari Zone Sanctuary!"},
@@ -841,7 +863,7 @@ MAP_DEFINITIONS = {
         "grid": MAP_FUCHSIA_GYM,
         "bgm": "town",
         "warps": {
-            (6, 8): {"target_map": "Fuchsia City", "target_x": 10, "target_y": 18}
+            (6, 8): {"target_map": "Fuchsia City", "target_x": 13, "target_y": 18}
         },
         "trainers": ["juggler_nate", "gym_leader_koga"]
     },
